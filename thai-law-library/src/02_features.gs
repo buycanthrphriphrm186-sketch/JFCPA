@@ -413,7 +413,7 @@ function apiGetCatalog_(p) {
   }
   var counts = {}, sh = sheet_('Sections'), last = sh.getLastRow();
   if (last > 1) sh.getRange(2, 2, last - 1, 1).getValues().forEach(function (v) { counts[v[0]] = (counts[v[0]] || 0) + 1; });
-  var laws = rows_('Laws').map(function (r) { return { id: String(r.lawId), cat: r.category, title: r.title, short: r.shortName, year: String(r.year || ''), url: r.sourceUrl, status: r.status, updated: r.updatedAt, n: counts[String(r.lawId)] || 0 }; });
+  var laws = rows_('Laws').map(function (r) { return { id: String(r.lawId), cat: r.category, title: r.title, short: r.shortName, year: String(r.year || ''), url: r.sourceUrl, status: r.status, src: r.note, updated: r.updatedAt, n: counts[String(r.lawId)] || 0 }; });
   // ส่งตัวบทเฉพาะมาตราแนะนำ (ชุดตั้งต้น) ไปพร้อมรายชื่อ ส่วนมาตราอื่นโหลดตามกฎหมายที่เปิดอ่าน เพื่อให้หน้าเว็บเปิดเร็ว
   var featured = {}; SECTION_SEED.forEach(function (s) { featured[s[0] + '-' + s[1]] = 1; });
   var nFeat = Math.min(Math.max(last - 1, 0), SECTION_SEED.length + 200);

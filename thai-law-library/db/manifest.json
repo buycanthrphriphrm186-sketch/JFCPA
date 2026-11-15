@@ -1,0 +1,33 @@
+{
+ "version": "2026-11-15T13:14:36.274Z",
+ "laws": 4304,
+ "sections": 118803,
+ "shards": 20,
+ "categories": {
+  "ปร./ปว./คปค./คสช.": 640,
+  "ประมวลกฎหมาย": 8,
+  "พระราชบัญญัติ/พระราชกำหนด": 3620,
+  "พระราชบัญญัติประกอบรัฐธรรมนูญ": 26,
+  "รัฐธรรมนูญ": 10
+ },
+ "sources": [
+  {
+   "name": "NitiBench-statute",
+   "by": "VISTEC / VISAI",
+   "license": "MIT",
+   "url": "https://huggingface.co/datasets/VISAI-AI/nitibench-statute"
+  },
+  {
+   "name": "OCS Krisdika",
+   "by": "Open Law Data Thailand (ข้อมูลต้นทาง: สำนักงานคณะกรรมการกฤษฎีกา)",
+   "license": "CC-BY-4.0",
+   "url": "https://huggingface.co/datasets/Surathai21/ocs-krisdika"
+  },
+  {
+   "name": "thailaw-v1.0",
+   "by": "PyThaiNLP",
+   "license": "CC0-1.0",
+   "url": "https://huggingface.co/datasets/pythainlp/thailaw-v1.0"
+  }
+ ]
+}
