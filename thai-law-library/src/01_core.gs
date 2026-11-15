@@ -71,7 +71,7 @@ var DEFAULT_CONFIG = [
   ['FORCE_SAFE_MODE', 'off', 'on = ปิดฟีเจอร์เสริมทั้งหมดทันที (ย้อนกลับฉุกเฉิน)'],
   ['CANARY_PERCENT', '0', 'เปอร์เซ็นต์สมาชิกที่ได้ทดลองฟีเจอร์ใน CANARY_FLAGS'],
   ['CANARY_FLAGS', '', 'ชื่อ flag คั่นด้วยจุลภาค'],
-  ['SPLASH_SECONDS', '15', 'เวลาแสดงโลโก้ครั้งแรกของอุปกรณ์ (วินาที)'],
+  ['SPLASH_SECONDS', '3', 'เวลาขั้นต่ำที่แสดงโลโก้และแถบสถานะการเชื่อมต่อฐานข้อมูล (วินาที)'],
   ['LOCK_ATTEMPTS', '5', 'จำนวนครั้งที่ใส่รหัสผิดก่อนระงับชั่วคราว'],
   ['LOCK_MINUTES', '15', 'ระยะเวลาระงับชั่วคราว (นาที)'],
   ['IDLE_MINUTES', '0', '0 = ไม่ออกจากระบบอัตโนมัติ'],
@@ -182,6 +182,10 @@ var ROUTES = {
   saveUserData: { fn: apiSaveUserData_, auth: true, limit: 120 },
   getCatalog: { fn: apiGetCatalog_, limit: 60 },
   getTreaties: { fn: apiGetTreaties_, limit: 60 },
+  getSections: { fn: apiGetSections_, limit: 200 },
+  sectionsByIds: { fn: apiSectionsByIds_, limit: 100 },
+  searchSections: { fn: apiSearchSections_, limit: 120 },
+  importStatus: { fn: function () { return { status: getConfig_().IMPORT_STATUS || '' }; }, limit: 60 },
   updateProfile: { fn: apiUpdateProfile_, auth: true, limit: 30 },
   uploadAvatar: { fn: apiUploadAvatar_, auth: true, limit: 10 },
   changePassword: { fn: apiChangePassword_, auth: true, limit: 10 },
@@ -246,6 +250,7 @@ function installTriggers_() {
   ScriptApp.getProjectTriggers().forEach(function (t) { have[t.getHandlerFunction()] = true; });
   if (!have.dailySync) ScriptApp.newTrigger('dailySync').timeBased().everyDays(1).atHour(3).create();
   if (!have.healthCheck) ScriptApp.newTrigger('healthCheck').timeBased().everyHours(1).create();
+  if (!have.importTick) ScriptApp.newTrigger('importTick').timeBased().everyMinutes(10).create();
 }
 
 /** Health Check & Self-Healing: ทุกชั่วโมง สร้างชีตที่หาย ล้าง session หมดอายุ ตัด log เก่า */

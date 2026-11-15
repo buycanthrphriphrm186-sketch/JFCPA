@@ -411,8 +411,13 @@ function apiGetCatalog_(p) {
       return { version: ver, catalog: JSON.parse(s) };
     }
   }
-  var laws = rows_('Laws').map(function (r) { return { id: String(r.lawId), cat: r.category, title: r.title, short: r.shortName, year: String(r.year || ''), url: r.sourceUrl, status: r.status, updated: r.updatedAt }; });
-  var sections = rows_('Sections').map(function (r) { return { id: String(r.sectionId), law: String(r.lawId), no: String(r.sectionNo), name: r.popularName, text: String(r.text), tags: r.tags, url: r.sourceUrl }; });
+  var counts = {}, sh = sheet_('Sections'), last = sh.getLastRow();
+  if (last > 1) sh.getRange(2, 2, last - 1, 1).getValues().forEach(function (v) { counts[v[0]] = (counts[v[0]] || 0) + 1; });
+  var laws = rows_('Laws').map(function (r) { return { id: String(r.lawId), cat: r.category, title: r.title, short: r.shortName, year: String(r.year || ''), url: r.sourceUrl, status: r.status, updated: r.updatedAt, n: counts[String(r.lawId)] || 0 }; });
+  // ส่งตัวบทเฉพาะมาตราแนะนำ (ชุดตั้งต้น) ไปพร้อมรายชื่อ ส่วนมาตราอื่นโหลดตามกฎหมายที่เปิดอ่าน เพื่อให้หน้าเว็บเปิดเร็ว
+  var featured = {}; SECTION_SEED.forEach(function (s) { featured[s[0] + '-' + s[1]] = 1; });
+  var nFeat = Math.min(Math.max(last - 1, 0), SECTION_SEED.length + 200);
+  var sections = nFeat ? sh.getRange(2, 1, nFeat, 6).getValues().filter(function (v) { return featured[String(v[0])]; }).map(function (v) { return { id: String(v[0]), law: String(v[1]), no: String(v[2]), name: String(v[3]), text: String(v[4]), tags: String(v[5]) }; }) : [];
   var catalog = { laws: laws, sections: sections };
   var str = JSON.stringify(catalog);
   var parts = [];
@@ -471,7 +476,8 @@ function seedSources_() {
     ['อนุสัญญา', 'https://treaties.mfa.go.th/th/page/สนธิสัญญาที่น่าสนใจ-ฉบับมีคำเเปลภาษาไทย?menu=637f32926782f670c2691573', 'mfa-next', 'on'],
     ['อนุสัญญา', 'https://treaties.mfa.go.th/th/page/สนธิสัญญาที่น่าสนใจ-ฉบับไม่มีคำแปลภาษาไทย?menu=637f333186dac10a8f60e7f3', 'mfa-next', 'on'],
     ['อนุสัญญา', 'https://treaties.mfa.go.th/th/page/สนธิสัญญาของไทยในอดีต?menu=637c56ac18d444706f395263', 'mfa-next', 'on'],
-    ['ทุกประเภท', 'https://www.ocs.go.th/searchlaw-law', 'html-links', 'on']
+    ['ทุกประเภท', 'https://www.ocs.go.th/searchlaw-law', 'html-links', 'on'],
+    ['ตัวบทครบทุกมาตรา', 'https://datasets-server.huggingface.co (pythainlp/thailaw-v1.0, pythainlp/thailaw)', 'importTick (ทุก 10 นาที)', 'on']
   ].forEach(function (r) { appendRow_('Sources', { category: r[0], url: r[1], parser: r[2], enabled: r[3], lastRun: '', lastResult: '' }); });
 }
 
@@ -493,7 +499,8 @@ function dailySync() {
     if (String(src.enabled) !== 'on') return;
     var res;
     try {
-      if (src.parser === 'mfa-next') res = syncMfa_(src.url);
+      if (/^importTick/.test(src.parser)) res = 'ดู IMPORT_STATUS ในชีต Config';
+      else if (src.parser === 'mfa-next') res = syncMfa_(src.url);
       else if (src.parser === 'html-links') res = syncHtmlLinks_(src.url, src.category);
       else res = 'ไม่รู้จักตัวแปลง ' + src.parser;
     } catch (e) {
@@ -814,7 +821,13 @@ function apiMedia_(p) {
   });
   var seen = {};
   items = items.filter(function (x) { if (!x.src || seen[x.src]) return false; seen[x.src] = 1; return true; });
-  if (items.length) cache.put('media_v3', JSON.stringify(items).slice(0, 99000), 21600);
+  if (items.length < 12) {
+    // แหล่งภาพภายนอกขัดข้องหรือได้ภาพน้อย: ใช้ภาพสำรองที่ตรวจสัญญาอนุญาตแล้ว
+    FALLBACK_MEDIA.forEach(function (x) { if (!seen[x.src]) { seen[x.src] = 1; items.push(x); } });
+  }
+  var json = JSON.stringify(items);
+  while (json.length > 95000 && items.length > 10) { items.pop(); json = JSON.stringify(items); }
+  cache.put('media_v3', json, 21600);
   return { items: items };
 }
 

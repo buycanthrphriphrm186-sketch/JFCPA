@@ -11,23 +11,37 @@ var CONTACTS = [
 var NO_PASS_TEXT = 'การเข้าใช้งานคลังกฎหมายไทยต้องใช้รหัสผ่านชั้นที่ 1 ซึ่งผู้ดูแลระบบเป็นผู้ออกให้แก่สมาชิกเท่านั้น หากท่านยังไม่ได้รับรหัสผ่านดังกล่าว กรุณาติดต่อผู้ดูแลระบบผ่านช่องทางด้านล่าง โดยแจ้งชื่อ-นามสกุล และวัตถุประสงค์ในการใช้งาน ผู้ดูแลระบบจะตรวจสอบและแจ้งรหัสผ่านให้ท่านเป็นการส่วนตัวโดยเร็ว';
 var SYS_DOWN_TEXT = 'ขณะนี้ระบบไม่สามารถให้บริการได้ตามปกติ ข้อมูลของท่านยังคงได้รับการเก็บรักษาไว้อย่างปลอดภัย กรุณารอสักครู่แล้วลองใหม่อีกครั้ง หากยังพบปัญหาต่อเนื่อง กรุณาแจ้งผู้ดูแลระบบผ่านช่องทางติดต่อที่ระบุไว้ เพื่อให้ดำเนินการแก้ไขโดยเร็ว';
 
-/* ---------------- splash ---------------- */
-function runSplash(seconds, onDone) {
-  var sp = document.getElementById('splash');
-  var status = document.getElementById('splashStatus');
-  var skip = document.getElementById('splashSkip');
-  var msgs = ['กำลังเตรียมระบบ', 'กำลังตรวจสอบความปลอดภัยของการเชื่อมต่อ', 'กำลังเตรียมฐานข้อมูลกฎหมาย', 'กำลังเตรียมอนุสัญญาและสนธิสัญญา', 'พร้อมให้บริการ'];
-  var i = 0, ended = false;
-  var iv = setInterval(function () { i = Math.min(i + 1, msgs.length - 1); if (status) status.textContent = msgs[i]; }, Math.max(600, seconds * 1000 / msgs.length));
+/* ---------------- splash: โลโก้ + วงกลมแสดงระดับการเชื่อมต่อฐานข้อมูลจริง ---------------- */
+var SPLASH_STEPS = { server: 'เชื่อมต่อเซิร์ฟเวอร์', session: 'ตรวจสอบบัญชีผู้ใช้', laws: 'โหลดฐานข้อมูลกฎหมาย', treaties: 'โหลดอนุสัญญา' };
+var splashDone = {};
+function splashStep(k, ok) {
+  if (splashDone[k] !== undefined) return;
+  splashDone[k] = ok !== false;
+  var li = document.querySelector('#splashSteps li[data-k="' + k + '"]'); if (li) li.classList.add(ok === false ? 'bad' : 'ok');
+  var n = Object.keys(splashDone).length, pct = Math.round(n / 4 * 100);
+  splashPaint(pct, n >= 4 ? 'พร้อมให้บริการ' : (ok === false ? SPLASH_STEPS[k] + ' ไม่สำเร็จ ระบบใช้ข้อมูลสำรองแทน' : SPLASH_STEPS[k] + ' สำเร็จ'));
+}
+function splashPaint(pct, text) {
+  var arc = document.getElementById('spArc'); if (arc) arc.setAttribute('stroke-dasharray', pct + ' 100');
+  var p = document.getElementById('splashPct'); if (p) p.textContent = pct + '%';
+  var bar = document.getElementById('splashBar'); if (bar) bar.setAttribute('aria-valuenow', pct);
+  var st = document.getElementById('splashStatus'); if (st && text) st.textContent = text;
+}
+function runSplash(minSec, ready, onDone) {
+  var sp = document.getElementById('splash'), skip = document.getElementById('splashSkip');
+  var t0 = Date.now(), ended = false;
+  splashPaint(4, 'กำลังเชื่อมต่อเซิร์ฟเวอร์');
   function end() {
-    if (ended) return; ended = true; clearInterval(iv);
-    sp.classList.add('warp');
-    setTimeout(function () { sp.remove(); }, 900);
-    onDone();
+    if (ended) return; ended = true;
+    splashPaint(100);
+    setTimeout(function () { sp.classList.add('warp'); setTimeout(function () { sp.remove(); }, 900); onDone(); }, 280);
   }
-  if (seconds > 2 && skip) setTimeout(function () { skip.classList.remove('hidden'); }, 1800);
-  if (skip) skip.onclick = end;
-  setTimeout(end, seconds * 1000);
+  if (skip) { setTimeout(function () { skip.classList.remove('hidden'); }, 4000); skip.onclick = end; }
+  var maxT = setTimeout(end, 20000);
+  Promise.resolve(ready).catch(function () {}).then(function () {
+    var wait = Math.max(0, minSec * 1000 - (Date.now() - t0));
+    setTimeout(function () { clearTimeout(maxT); end(); }, wait);
+  });
 }
 
 /* ---------------- public header / footer ---------------- */

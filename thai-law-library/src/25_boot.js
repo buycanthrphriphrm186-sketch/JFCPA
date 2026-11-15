@@ -38,24 +38,38 @@ function boot() {
   }
   var hasSession = !!(S.token && S.member);
   if (hasSession) { loadLocalUD(); applySettings(); }
-  var first = !store.get('seenSplash', false);
-  var secs = BOOT.maintenance ? 1.2 : (BOOT.social ? 1 : hasSession ? 1.1 : first ? (+BOOT.splash || 15) : 2);
+  var secs = BOOT.maintenance ? 1 : hasSession ? 1 : (+BOOT.splash || 3);
   store.set('seenSplash', true);
 
-  /* โหลดล่วงหน้าระหว่างแสดงโลโก้ */
-  if (!BOOT.maintenance) { loadCatalog(); if (!hasSession) loadMedia(); }
+  /* ขั้นตอนเชื่อมต่อจริง: วงกลมบนหน้าโลโก้เติมตามความคืบหน้า */
+  function step(k, p) {
+    var tm = new Promise(function (res) { setTimeout(function () { res(false); }, 15000); });
+    return Promise.race([Promise.resolve(p).then(function (v) { return v !== false && v !== null && v !== undefined; }, function () { return false; }), tm]).then(function (ok) { splashStep(k, ok); return ok; });
+  }
+  var ready;
+  if (BOOT.maintenance) { splashStep('server', false); ready = Promise.resolve(); }
+  else {
+    ready = step('server', api('ping', {}, { timeout: 12000 }).then(function () { return true; })).then(function () {
+      return Promise.all([
+        step('session', hasSession ? bootstrap(false) : Promise.resolve(true)),
+        step('laws', loadCatalog()),
+        step('treaties', loadTreaties())
+      ]);
+    });
+    if (!hasSession) loadMedia();
+  }
 
-  runSplash(secs, function () {
+  runSplash(secs, ready, function () {
     try {
       if (BOOT.maintenance) { showMaintenance(BOOT.maintenance); return; }
       if (BOOT.social && !(hasSession && BOOT.social.mode === 'link') && handleSocialBoot(BOOT.social)) return;
       if (BOOT.social && BOOT.social.mode === 'link') handleSocialBoot(BOOT.social);
+      hasSession = !!(S.token && S.member);
       if (hasSession) {
+        if (!S.ud) loadLocalUD();
         renderApp();
         nav(S.ui.view || 'home', { noAnim: true });
-        bootstrap(false);
         startHeartbeat();
-        setTimeout(loadTreaties, 1500);
         setTimeout(loadMedia, 3000);
       } else {
         var ps = store.get('pubScreen', 'welcome');

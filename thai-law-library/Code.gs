@@ -71,7 +71,7 @@ var DEFAULT_CONFIG = [
   ['FORCE_SAFE_MODE', 'off', 'on = ปิดฟีเจอร์เสริมทั้งหมดทันที (ย้อนกลับฉุกเฉิน)'],
   ['CANARY_PERCENT', '0', 'เปอร์เซ็นต์สมาชิกที่ได้ทดลองฟีเจอร์ใน CANARY_FLAGS'],
   ['CANARY_FLAGS', '', 'ชื่อ flag คั่นด้วยจุลภาค'],
-  ['SPLASH_SECONDS', '15', 'เวลาแสดงโลโก้ครั้งแรกของอุปกรณ์ (วินาที)'],
+  ['SPLASH_SECONDS', '3', 'เวลาขั้นต่ำที่แสดงโลโก้และแถบสถานะการเชื่อมต่อฐานข้อมูล (วินาที)'],
   ['LOCK_ATTEMPTS', '5', 'จำนวนครั้งที่ใส่รหัสผิดก่อนระงับชั่วคราว'],
   ['LOCK_MINUTES', '15', 'ระยะเวลาระงับชั่วคราว (นาที)'],
   ['IDLE_MINUTES', '0', '0 = ไม่ออกจากระบบอัตโนมัติ'],
@@ -182,6 +182,10 @@ var ROUTES = {
   saveUserData: { fn: apiSaveUserData_, auth: true, limit: 120 },
   getCatalog: { fn: apiGetCatalog_, limit: 60 },
   getTreaties: { fn: apiGetTreaties_, limit: 60 },
+  getSections: { fn: apiGetSections_, limit: 200 },
+  sectionsByIds: { fn: apiSectionsByIds_, limit: 100 },
+  searchSections: { fn: apiSearchSections_, limit: 120 },
+  importStatus: { fn: function () { return { status: getConfig_().IMPORT_STATUS || '' }; }, limit: 60 },
   updateProfile: { fn: apiUpdateProfile_, auth: true, limit: 30 },
   uploadAvatar: { fn: apiUploadAvatar_, auth: true, limit: 10 },
   changePassword: { fn: apiChangePassword_, auth: true, limit: 10 },
@@ -246,6 +250,7 @@ function installTriggers_() {
   ScriptApp.getProjectTriggers().forEach(function (t) { have[t.getHandlerFunction()] = true; });
   if (!have.dailySync) ScriptApp.newTrigger('dailySync').timeBased().everyDays(1).atHour(3).create();
   if (!have.healthCheck) ScriptApp.newTrigger('healthCheck').timeBased().everyHours(1).create();
+  if (!have.importTick) ScriptApp.newTrigger('importTick').timeBased().everyMinutes(10).create();
 }
 
 /** Health Check & Self-Healing: ทุกชั่วโมง สร้างชีตที่หาย ล้าง session หมดอายุ ตัด log เก่า */
@@ -1156,8 +1161,13 @@ function apiGetCatalog_(p) {
       return { version: ver, catalog: JSON.parse(s) };
     }
   }
-  var laws = rows_('Laws').map(function (r) { return { id: String(r.lawId), cat: r.category, title: r.title, short: r.shortName, year: String(r.year || ''), url: r.sourceUrl, status: r.status, updated: r.updatedAt }; });
-  var sections = rows_('Sections').map(function (r) { return { id: String(r.sectionId), law: String(r.lawId), no: String(r.sectionNo), name: r.popularName, text: String(r.text), tags: r.tags, url: r.sourceUrl }; });
+  var counts = {}, sh = sheet_('Sections'), last = sh.getLastRow();
+  if (last > 1) sh.getRange(2, 2, last - 1, 1).getValues().forEach(function (v) { counts[v[0]] = (counts[v[0]] || 0) + 1; });
+  var laws = rows_('Laws').map(function (r) { return { id: String(r.lawId), cat: r.category, title: r.title, short: r.shortName, year: String(r.year || ''), url: r.sourceUrl, status: r.status, updated: r.updatedAt, n: counts[String(r.lawId)] || 0 }; });
+  // ส่งตัวบทเฉพาะมาตราแนะนำ (ชุดตั้งต้น) ไปพร้อมรายชื่อ ส่วนมาตราอื่นโหลดตามกฎหมายที่เปิดอ่าน เพื่อให้หน้าเว็บเปิดเร็ว
+  var featured = {}; SECTION_SEED.forEach(function (s) { featured[s[0] + '-' + s[1]] = 1; });
+  var nFeat = Math.min(Math.max(last - 1, 0), SECTION_SEED.length + 200);
+  var sections = nFeat ? sh.getRange(2, 1, nFeat, 6).getValues().filter(function (v) { return featured[String(v[0])]; }).map(function (v) { return { id: String(v[0]), law: String(v[1]), no: String(v[2]), name: String(v[3]), text: String(v[4]), tags: String(v[5]) }; }) : [];
   var catalog = { laws: laws, sections: sections };
   var str = JSON.stringify(catalog);
   var parts = [];
@@ -1216,7 +1226,8 @@ function seedSources_() {
     ['อนุสัญญา', 'https://treaties.mfa.go.th/th/page/สนธิสัญญาที่น่าสนใจ-ฉบับมีคำเเปลภาษาไทย?menu=637f32926782f670c2691573', 'mfa-next', 'on'],
     ['อนุสัญญา', 'https://treaties.mfa.go.th/th/page/สนธิสัญญาที่น่าสนใจ-ฉบับไม่มีคำแปลภาษาไทย?menu=637f333186dac10a8f60e7f3', 'mfa-next', 'on'],
     ['อนุสัญญา', 'https://treaties.mfa.go.th/th/page/สนธิสัญญาของไทยในอดีต?menu=637c56ac18d444706f395263', 'mfa-next', 'on'],
-    ['ทุกประเภท', 'https://www.ocs.go.th/searchlaw-law', 'html-links', 'on']
+    ['ทุกประเภท', 'https://www.ocs.go.th/searchlaw-law', 'html-links', 'on'],
+    ['ตัวบทครบทุกมาตรา', 'https://datasets-server.huggingface.co (pythainlp/thailaw-v1.0, pythainlp/thailaw)', 'importTick (ทุก 10 นาที)', 'on']
   ].forEach(function (r) { appendRow_('Sources', { category: r[0], url: r[1], parser: r[2], enabled: r[3], lastRun: '', lastResult: '' }); });
 }
 
@@ -1238,7 +1249,8 @@ function dailySync() {
     if (String(src.enabled) !== 'on') return;
     var res;
     try {
-      if (src.parser === 'mfa-next') res = syncMfa_(src.url);
+      if (/^importTick/.test(src.parser)) res = 'ดู IMPORT_STATUS ในชีต Config';
+      else if (src.parser === 'mfa-next') res = syncMfa_(src.url);
       else if (src.parser === 'html-links') res = syncHtmlLinks_(src.url, src.category);
       else res = 'ไม่รู้จักตัวแปลง ' + src.parser;
     } catch (e) {
@@ -1559,7 +1571,13 @@ function apiMedia_(p) {
   });
   var seen = {};
   items = items.filter(function (x) { if (!x.src || seen[x.src]) return false; seen[x.src] = 1; return true; });
-  if (items.length) cache.put('media_v3', JSON.stringify(items).slice(0, 99000), 21600);
+  if (items.length < 12) {
+    // แหล่งภาพภายนอกขัดข้องหรือได้ภาพน้อย: ใช้ภาพสำรองที่ตรวจสัญญาอนุญาตแล้ว
+    FALLBACK_MEDIA.forEach(function (x) { if (!seen[x.src]) { seen[x.src] = 1; items.push(x); } });
+  }
+  var json = JSON.stringify(items);
+  while (json.length > 95000 && items.length > 10) { items.pop(); json = JSON.stringify(items); }
+  cache.put('media_v3', json, 21600);
   return { items: items };
 }
 
@@ -2054,3 +2072,267 @@ var TREATY_SEED = [
   "summary": "เอกสารนี้เป็นหนังสือสัญญาทางพระราชไมตรีและการพาณิชย์ระหว่างสยามกับเดนมาร์ก ลงวันที่ในจุลศักราช 1220 ซึ่งตรงกับ ค.ศ. 1858 ในรัชสมัยพระบาทสมเด็จพระจอมเกล้าเจ้าอยู่หัว นับเป็นหนึ่งในสนธิสัญญายุคแรกที่สยามทำกับประเทศยุโรปหลังสนธิสัญญาเบาว์ริง\nสาระโดยทั่วไปประกอบด้วยการรับรองไมตรีถาวร การอนุญาตให้คนในบังคับเดนมาร์กเข้ามาค้าขายและพำนักในสยาม การกำหนดอัตราภาษี การตั้งกงสุล และเขตอำนาจของกงสุลเหนือคนในบังคับของตน ความสัมพันธ์กับเดนมาร์กในเวลาต่อมามีความสำคัญมาก เพราะชาวเดนมาร์กจำนวนหนึ่งเข้ามารับราชการในสยาม ทั้งในราชนาวีและการพาณิชย์นาวี\nการระบุศักราชเป็นจุลศักราชในชื่อเอกสารเป็นตัวอย่างระบบการนับศักราชที่ใช้ในเอกสารราชการไทยสมัยนั้น ผู้ศึกษาที่ต้องการอ้างอิงควรเทียบศักราชให้ถูกต้อง โดยจุลศักราชบวก 638 จะได้คริสต์ศักราช และบวก 1181 จะได้พุทธศักราช"
  }
 ];
+
+/* =========================================================================
+ *  LAW IMPORTER — นำเข้าตัวบทกฎหมายไทยครบทุกมาตรา จากแหล่งข้อมูลเปิดที่ใช้ได้ถูกกฎหมาย
+ *
+ *  ตัวบทกฎหมายไทยไม่มีลิขสิทธิ์ (พ.ร.บ.ลิขสิทธิ์ พ.ศ. 2537 มาตรา 7) จึงนำมาเผยแพร่ได้
+ *  ระบบดึงจากชุดข้อมูลเปิดผ่าน API สาธารณะที่มีเอกสารรองรับ (Hugging Face datasets-server)
+ *  ถ้าแหล่งใดเชื่อมต่อไม่ได้ จะสลับไปแหล่งถัดไปในรายการอัตโนมัติ (failover)
+ *  รายชื่อแหล่งแก้ไขได้ที่ Script Property LAW_DATASETS (คั่นด้วยจุลภาค)
+ *
+ *  การทำงาน: ทุก 10 นาทีนำเข้าเป็นชุด (ไม่เกิน ~4.5 นาทีต่อรอบ ตามข้อจำกัด Apps Script)
+ *  และจำตำแหน่งล่าสุดไว้ เมื่อครบทั้งชุดข้อมูลจะเริ่มรอบตรวจการแก้ไขใหม่ทุก 7 วัน
+ *  ดูความคืบหน้าได้ที่ชีต Config คีย์ IMPORT_STATUS
+ * ========================================================================= */
+
+var DEFAULT_LAW_DATASETS = ['pythainlp/thailaw-v1.0', 'pythainlp/thailaw'];
+var HF_API = 'https://datasets-server.huggingface.co';
+
+var CAT_RULES = [
+  [/^(รัฐธรรมนูญ|ธรรมนูญการปกครอง|พระราชบัญญัติธรรมนูญการปกครอง)/, 'รัฐธรรมนูญ'],
+  [/^พระราชบัญญัติประกอบรัฐธรรมนูญ/, 'พระราชบัญญัติประกอบรัฐธรรมนูญ'],
+  [/^(ประมวลกฎหมาย|ประมวลรัษฎากร)/, 'ประมวลกฎหมาย'],
+  [/^(ประกาศของคณะปฏิวัติ|ประกาศคณะปฏิวัติ|คำสั่งคณะปฏิวัติ|ประกาศคณะปฏิรูป|คำสั่งคณะปฏิรูป|ประกาศของคณะปฏิรูป|ประกาศคณะรักษาความสงบ|คำสั่งหัวหน้าคณะรักษาความสงบ|คำสั่งคณะรักษาความสงบ|ประกาศคณะมนตรีความมั่นคง|ประกาศคณะรัฐประหาร)/, 'ปร./ปว./คปค./คสช.'],
+  [/^(พระราชบัญญัติ|พระราชกำหนด)/, 'พระราชบัญญัติ/พระราชกำหนด']
+];
+
+function lawCategory_(title) {
+  var t = String(title || '').replace(/^\s+/, '');
+  for (var i = 0; i < CAT_RULES.length; i++) if (CAT_RULES[i][0].test(t)) return CAT_RULES[i][1];
+  return null;
+}
+
+function thaiNum_(s) { return String(s || '').replace(/[๐-๙]/g, function (d) { return String('๐๑๒๓๔๕๖๗๘๙'.indexOf(d)); }); }
+
+/**
+ * แยกตัวบททั้งฉบับเป็นรายมาตรา
+ * ชื่อมาตรา (popularName) ใช้ชื่อหมวด/ส่วน/ลักษณะที่มาตรานั้นสังกัดตามตัวบทจริง จึงเกี่ยวข้องกับเนื้อหาเสมอ
+ * และถ้ามีชื่อที่นิยมในวงวิชาการอยู่แล้ว (ชีต Sections เดิม) ระบบจะคงชื่อเดิมไว้
+ */
+function parseSections_(text) {
+  var src = String(text || '').replace(/\r/g, '').replace(/\u00a0/g, ' ');
+  var re = /(^|\n)[ \t]*มาตรา[ \t]+([0-9๐-๙]+(?:\/[0-9๐-๙]+)?)((?:[ \t]*(?:ทวิ|ตรี|จัตวา|เบญจ|ฉ|สัตต|อัฏฐ|นว|ทศ)(?=[ \t\n]))?)[ \t]*/g;
+  var marks = [], m;
+  while ((m = re.exec(src))) marks.push({ idx: m.index + m[1].length, end: re.lastIndex, no: thaiNum_(m[2]) + (m[3] ? ' ' + m[3].trim() : '') });
+  var HEAD = /^(ภาค|บรรพ|ลักษณะ|หมวด|ส่วนที่)[ \t]*[0-9๐-๙]+/;
+  /* แยกหัวข้อ (หมวด/ส่วน/ลักษณะ + ชื่อหัวข้อบรรทัดถัดไป) ที่ท้ายข้อความออกจากเนื้อหา */
+  function splitTail(chunk) {
+    var lines = chunk.split('\n').map(function (l) { return l.replace(/\s+/g, ' ').trim(); }).filter(function (l) { return l; });
+    var cut = -1;
+    for (var k = lines.length - 1; k >= 0 && k >= lines.length - 8; k--) {
+      if (HEAD.test(lines[k])) {
+        var tail = lines.slice(k + 1);
+        if (tail.every(function (t) { return t.length <= 90 && !/^\(/.test(t); }) && tail.length <= 2) cut = k;
+        break;
+      }
+    }
+    if (cut < 0) return { body: lines, head: '' };
+    var rest = lines.slice(0, cut), head = lines.slice(cut).join(' ');
+    /* หัวข้อซ้อน เช่น ลักษณะ 1 ภายใต้ บรรพ 1 — ใช้หัวข้อที่อยู่ใกล้มาตราที่สุด */
+    return { body: rest, head: head };
+  }
+  var out = [], heading = '', seen = {};
+  if (marks.length) {
+    var pre = src.slice(0, marks[0].idx).split('\n').map(function (l) { return l.replace(/\s+/g, ' ').trim(); }).filter(String);
+    for (var p = 0; p < pre.length; p++) if (HEAD.test(pre[p])) heading = pre[p] + (pre[p + 1] && !HEAD.test(pre[p + 1]) && pre[p + 1].length <= 90 ? ' ' + pre[p + 1] : '');
+  }
+  for (var i = 0; i < marks.length; i++) {
+    var chunk = src.slice(marks[i].end, i + 1 < marks.length ? marks[i + 1].idx : src.length);
+    var sp = splitTail(chunk);
+    var body = sp.body.join('\n').trim();
+    var name = heading || 'บทบัญญัติเบื้องต้น';
+    if (sp.head) heading = sp.head;
+    if (!body) continue;
+    var key = marks[i].no;
+    if (seen[key]) { key = key + '#' + (++seen[key]); } else seen[key] = 1;
+    out.push({ no: key, name: name, text: body.slice(0, 45000) });
+  }
+  return out;
+}
+
+function pickField_(row, names) {
+  for (var i = 0; i < names.length; i++) if (row[names[i]] !== undefined && row[names[i]] !== null && String(row[names[i]]).length) return String(row[names[i]]);
+  var keys = Object.keys(row);
+  for (var k = 0; k < keys.length; k++) if (typeof row[keys[k]] === 'string' && row[keys[k]].length > 200) return row[keys[k]];
+  return '';
+}
+
+function hfJson_(url) {
+  var r = UrlFetchApp.fetch(url, { muteHttpExceptions: true, headers: { 'User-Agent': 'ThaiLawLibrary/3.0 (educational, Google Apps Script)' } });
+  if (r.getResponseCode() >= 400) throw new Error('HTTP ' + r.getResponseCode() + ' ' + url);
+  return JSON.parse(r.getContentText('UTF-8'));
+}
+
+/** หา config/split ของชุดข้อมูล และตรวจสัญญาอนุญาตจาก dataset card */
+function datasetInfo_(name) {
+  var cache = CacheService.getScriptCache(), ck = 'dsinfo_' + name;
+  var c = cache.get(ck); if (c) return JSON.parse(c);
+  var sp = hfJson_(HF_API + '/splits?dataset=' + encodeURIComponent(name));
+  var s = (sp.splits || [])[0];
+  if (!s) throw new Error('ไม่พบ split ของชุดข้อมูล ' + name);
+  var size = 0;
+  try { var sz = hfJson_(HF_API + '/size?dataset=' + encodeURIComponent(name)); (sz.size && sz.size.splits || []).forEach(function (x) { if (x.config === s.config && x.split === s.split) size = x.num_rows; }); } catch (e) {}
+  var license = '';
+  try { var card = hfJson_('https://huggingface.co/api/datasets/' + encodeURIComponent(name).replace('%2F', '/')); license = (card.cardData && card.cardData.license) || ''; } catch (e) {}
+  var info = { name: name, config: s.config, split: s.split, size: size, license: String(license) };
+  cache.put(ck, JSON.stringify(info), 21600);
+  return info;
+}
+
+function importStatus_(o) {
+  setConfigValue_('IMPORT_STATUS', new Date().toISOString() + ' ' + JSON.stringify(o));
+}
+
+/** รันอัตโนมัติทุก 10 นาที (ติดตั้งโดย setup) — ปลอดภัยต่อการรันซ้ำ */
+function importTick() {
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(1000)) return 'busy';
+  var started = Date.now(), props = PropertiesService.getScriptProperties();
+  try {
+    var state = json_(props.getProperty('IMPORT_STATE'), { ds: 0, offset: 0, done: false, finishedAt: 0, added: 0, sections: 0 });
+    if (state.done) {
+      if (Date.now() - state.finishedAt < 7 * 864e5) return 'up-to-date';
+      state = { ds: 0, offset: 0, done: false, finishedAt: 0, added: 0, sections: 0, refresh: true };
+    }
+    var list = String(props.getProperty('LAW_DATASETS') || DEFAULT_LAW_DATASETS.join(',')).split(',').map(function (x) { return x.trim(); }).filter(String);
+    var info = null, errors = [];
+    while (state.ds < list.length && !info) {
+      try { info = datasetInfo_(list[state.ds]); }
+      catch (e) { errors.push(list[state.ds] + ': ' + e.message); logError_('import.dataset', e, ''); state.ds++; state.offset = 0; }
+    }
+    if (!info) { importStatus_({ ok: false, msg: 'เชื่อมต่อแหล่งข้อมูลกฎหมายไม่ได้ทุกแหล่ง จะลองใหม่รอบถัดไป', errors: errors }); state.ds = 0; props.setProperty('IMPORT_STATE', JSON.stringify(state)); return 'no-source'; }
+    var idx = lawIndex_();
+    var page = 50;
+    while (Date.now() - started < 270000) {
+      var url = HF_API + '/rows?dataset=' + encodeURIComponent(info.name) + '&config=' + encodeURIComponent(info.config) + '&split=' + encodeURIComponent(info.split) + '&offset=' + state.offset + '&length=' + page;
+      var data;
+      try { data = hfJson_(url); }
+      catch (e) { logError_('import.rows', e, ''); importStatus_({ ok: false, msg: 'ดึงข้อมูลชุดที่ ' + state.offset + ' ไม่สำเร็จ จะลองใหม่รอบถัดไป', source: info.name }); break; }
+      var rows = data.rows || [];
+      if (!rows.length) { state.done = true; state.finishedAt = Date.now(); break; }
+      rows.forEach(function (r) {
+        var row = r.row || {};
+        var title = pickField_(row, ['title', 'name', 'law_name', 'sysname']).replace(/\s+/g, ' ').trim();
+        var text = pickField_(row, ['text', 'content', 'body', 'law_text']);
+        var cat = lawCategory_(title);
+        if (!title || !text || !cat) return;
+        var res = upsertLaw_(idx, title, cat, text, info.name);
+        state.added += res.newLaw ? 1 : 0; state.sections += res.sections;
+      });
+      state.offset += rows.length;
+      if (info.size && state.offset >= info.size) { state.done = true; state.finishedAt = Date.now(); break; }
+    }
+    props.setProperty('IMPORT_STATE', JSON.stringify(state));
+    bumpCatalogVersion_();
+    importStatus_({ ok: true, source: info.name, license: info.license, offset: state.offset, total: info.size, lawsAdded: state.added, sectionsAdded: state.sections, done: state.done });
+    return 'ok ' + state.offset;
+  } finally { lock.releaseLock(); }
+}
+
+function lawIndex_() {
+  var map = {};
+  rows_('Laws').forEach(function (l) { map[String(l.title).replace(/\s+/g, '')] = { id: String(l.lawId), row: l._row, status: l.status }; });
+  return map;
+}
+
+/** เพิ่มหรือปรับปรุงกฎหมายหนึ่งฉบับพร้อมทุกมาตรา */
+function upsertLaw_(idx, title, cat, text, source) {
+  var key = title.replace(/\s+/g, '');
+  var now = new Date().toISOString();
+  var rec = idx[key], newLaw = false;
+  var yr = thaiNum_((title.match(/(?:พ\.ศ\.|พุทธศักราช)\s*([0-9๐-๙]{4})/) || [])[1] || '');
+  var secs = parseSections_(text);
+  if (!rec) {
+    var id = 'L' + sha256Hex_(title).slice(0, 10);
+    appendRow_('Laws', { lawId: id, category: cat, title: cell_(title), shortName: '', year: yr, sourceUrl: 'https://searchlaw.ocs.go.th/', status: secs.length ? 'มีตัวบทครบทุกมาตรา' : 'มีตัวบทฉบับเต็ม', updatedAt: now, note: 'นำเข้าจากชุดข้อมูลเปิด ' + source });
+    rec = idx[key] = { id: id, row: sheet_('Laws').getLastRow(), status: 'มีตัวบทครบทุกมาตรา' };
+    newLaw = true;
+  }
+  var sh = sheet_('Sections');
+  var existing = {};
+  var found = sh.getRange('B:B').createTextFinder(rec.id).matchEntireCell(true).findAll();
+  var rowsIdx = found.map(function (r) { return r.getRow(); });
+  if (rowsIdx.length) {
+    var first = Math.min.apply(null, rowsIdx), last = Math.max.apply(null, rowsIdx);
+    sh.getRange(first, 1, last - first + 1, 8).getValues().forEach(function (v, i) { if (String(v[1]) === rec.id) existing[String(v[2])] = { row: first + i, text: String(v[4]), name: String(v[3]) }; });
+  }
+  var add = [], changed = 0;
+  if (!secs.length) secs = [{ no: 'ฉบับเต็ม', name: 'ตัวบทฉบับเต็ม', text: String(text).slice(0, 45000) }];
+  secs.forEach(function (s) {
+    var ex = existing[s.no];
+    if (!ex) add.push([rec.id + '-' + s.no, rec.id, s.no, cell_(s.name), cell_(s.text), '', '', now]);
+    else if (ex.text.replace(/\s+/g, '') !== s.text.replace(/\s+/g, '')) {
+      sh.getRange(ex.row, 5, 1, 1).setValues([[cell_(s.text)]]); sh.getRange(ex.row, 8, 1, 1).setValues([[now]]); changed++;
+    }
+  });
+  if (add.length) sh.getRange(sh.getLastRow() + 1, 1, add.length, 8).setNumberFormat('@').setValues(add);
+  if (add.length || changed) {
+    updateRow_('Laws', rec.row, { status: 'มีตัวบทครบทุกมาตรา', updatedAt: now });
+    CacheService.getScriptCache().remove('secs_' + rec.id + '_n');
+  }
+  delete _rowsCache.Sections;
+  return { newLaw: newLaw, sections: add.length };
+}
+
+/* ---------- API: ดึงมาตราตามกฎหมาย / ค้นหา / ตาม ID ---------- */
+
+function sectionsOfLaw_(lawId) {
+  var cache = CacheService.getScriptCache();
+  var n = Number(cache.get('secs_' + lawId + '_n') || 0);
+  if (n) {
+    var keys = []; for (var i = 0; i < n; i++) keys.push('secs_' + lawId + '_' + i);
+    var got = cache.getAll(keys);
+    if (Object.keys(got).length === n) { var s = ''; for (var j = 0; j < n; j++) s += got['secs_' + lawId + '_' + j]; return JSON.parse(s); }
+  }
+  var sh = sheet_('Sections');
+  var found = sh.getRange('B:B').createTextFinder(String(lawId)).matchEntireCell(true).findAll();
+  var out = [];
+  if (found.length) {
+    var rowsIdx = found.map(function (r) { return r.getRow(); });
+    var first = Math.min.apply(null, rowsIdx), last = Math.max.apply(null, rowsIdx);
+    sh.getRange(first, 1, last - first + 1, 7).getValues().forEach(function (v) {
+      if (String(v[1]) === String(lawId)) out.push({ id: String(v[0]), law: String(v[1]), no: String(v[2]), name: String(v[3]), text: String(v[4]), tags: String(v[5]) });
+    });
+  }
+  var str = JSON.stringify(out), parts = [];
+  for (var k = 0; k < str.length; k += 90000) parts.push(str.slice(k, k + 90000));
+  if (parts.length <= 50) { var put = {}; parts.forEach(function (p, i) { put['secs_' + lawId + '_' + i] = p; }); try { cache.putAll(put, 21600); cache.put('secs_' + lawId + '_n', String(parts.length), 21600); } catch (e) {} }
+  return out;
+}
+
+function apiGetSections_(p) {
+  var law = String(p.law || '');
+  if (!law) return fail_('INVALID', 'ไม่ได้ระบุกฎหมาย');
+  return { law: law, sections: sectionsOfLaw_(law) };
+}
+
+function apiSectionsByIds_(p) {
+  var ids = (p.ids || []).slice(0, 200).map(String), byLaw = {};
+  ids.forEach(function (id) { var law = id.split('-')[0]; (byLaw[law] = byLaw[law] || {})[id] = 1; });
+  var out = [];
+  Object.keys(byLaw).slice(0, 30).forEach(function (law) { sectionsOfLaw_(law).forEach(function (s) { if (byLaw[law][s.id]) out.push(s); }); });
+  return { sections: out };
+}
+
+/** ค้นหาข้อความภายในมาตราทั่วทั้งฐานข้อมูล (ใช้ TextFinder ของ Sheets ซึ่งเร็ว) */
+function apiSearchSections_(p) {
+  var q = String(p.q || '').trim();
+  if (q.length < 2) return { sections: [] };
+  var sh = sheet_('Sections'), last = sh.getLastRow();
+  if (last < 2) return { sections: [] };
+  var hits = sh.getRange(2, 3, last - 1, 3).createTextFinder(q).findAll().slice(0, 300);
+  var rowsSet = {}; hits.forEach(function (r) { rowsSet[r.getRow()] = 1; });
+  var lawCat = {};
+  if (p.cat) rows_('Laws').forEach(function (l) { lawCat[String(l.lawId)] = l.category; });
+  var out = [];
+  Object.keys(rowsSet).slice(0, 120).forEach(function (r) {
+    var v = sh.getRange(Number(r), 1, 1, 6).getValues()[0];
+    if (p.cat && lawCat[String(v[1])] !== p.cat) return;
+    out.push({ id: String(v[0]), law: String(v[1]), no: String(v[2]), name: String(v[3]), text: String(v[4]), tags: String(v[5]) });
+  });
+  return { sections: out.slice(0, 60) };
+}
+
+/* ภาพสำรองจาก Wikimedia Commons — ตรวจสัญญาอนุญาตแล้ว (CC0 / CC BY / CC BY-SA / Public domain) ใช้เมื่อบริการคลังภาพภายนอกขัดข้อง */
+var FALLBACK_MEDIA = [{"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/41/Bangkok_-_The_Supreme_Court_of_Thailand_%282025%29_-_img_01.jpg/1280px-Bangkok_-_The_Supreme_Court_of_Thailand_%282025%29_-_img_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail", "page": "https://commons.wikimedia.org/wiki/File:Bangkok_-_The_Supreme_Court_of_Thailand_(2025)_-_img_01.jpg", "author": "Chainwit.", "license": "CC BY 4.0", "source": "Wikimedia Commons", "alt": "ศาลฎีกา ประเทศไทย"}, {"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/06/Bangkok_-_The_Supreme_Court_of_Thailand_%282025%29_-_img_02.jpg/1280px-Bangkok_-_The_Supreme_Court_of_Thailand_%282025%29_-_img_02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail", "page": "https://commons.wikimedia.org/wiki/File:Bangkok_-_The_Supreme_Court_of_Thailand_(2025)_-_img_02.jpg", "author": "Chainwit.", "license": "CC BY 4.0", "source": "Wikimedia Commons", "alt": "ศาลฎีกา ประเทศไทย"}, {"src": "https://upload.wikimedia.org/wikipedia/commons/b/b2/Flag_of_Thailand_in_Supreme_court_of_Thailand.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled", "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Thailand_in_Supreme_court_of_Thailand.jpg", "author": "ผู้สร้างสรรค์ผลงาน/ส่งข้อมูลเก็บในคลังข้อมูลเสรีวิกิมีเดียคอมมอนส์ - เทวประภาส ม", "license": "CC BY 3.0", "source": "Wikimedia Commons", "alt": "ศาลฎีกา ประเทศไทย"}, {"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bf/Supreme_Court_Building_of_Thailand_01.JPG/1280px-Supreme_Court_Building_of_Thailand_01.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail", "page": "https://commons.wikimedia.org/wiki/File:Supreme_Court_Building_of_Thailand_01.JPG", "author": "Abasaa", "license": "Public domain", "source": "Wikimedia Commons", "alt": "ศาลฎีกา ประเทศไทย"}, {"src": "https://upload.wikimedia.org/wikipedia/commons/f/fa/Supreme_Court_of_Thailand.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled", "page": "https://commons.wikimedia.org/wiki/File:Supreme_Court_of_Thailand.JPG", "author": "Wattana Songpetchmongkol", "license": "CC BY-SA 4.0", "source": "Wikimedia Commons", "alt": "ศาลฎีกา ประเทศไทย"}, {"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/81/%E0%B8%A8%E0%B8%B2%E0%B8%A5%E0%B8%8E%E0%B8%B5%E0%B8%81%E0%B8%B2_%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B9%80%E0%B8%97%E0%B8%A8%E0%B9%84%E0%B8%97%E0%B8%A2_April2021_Supreme_Court_of_Justice_of_Thailand_01.jpg/1280px-%E0%B8%A8%E0%B8%B2%E0%B8%A5%E0%B8%8E%E0%B8%B5%E0%B8%81%E0%B8%B2_%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B9%80%E0%B8%97%E0%B8%A8%E0%B9%84%E0%B8%97%E0%B8%A2_April2021_Supreme_Court_of_Justice_of_Thailand_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail", "page": "https://commons.wikimedia.org/wiki/File:%E0%B8%A8%E0%B8%B2%E0%B8%A5%E0%B8%8E%E0%B8%B5%E0%B8%81%E0%B8%B2_%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B9%80%E0%B8%97%E0%B8%A8%E0%B9%84%E0%B8%97%E0%B8%A2_April2021_Supreme_Court_of_Justice_of_Thailand_01.jpg", "author": "Chainwit.", "license": "CC BY-SA 4.0", "source": "Wikimedia Commons", "alt": "ศาลฎีกา ประเทศไทย"}, {"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a8/%E0%B8%A8%E0%B8%B2%E0%B8%A5%E0%B8%8E%E0%B8%B5%E0%B8%81%E0%B8%B2_%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B9%80%E0%B8%97%E0%B8%A8%E0%B9%84%E0%B8%97%E0%B8%A2_April2021_Supreme_Court_of_Justice_of_Thailand_02.jpg/1280px-%E0%B8%A8%E0%B8%B2%E0%B8%A5%E0%B8%8E%E0%B8%B5%E0%B8%81%E0%B8%B2_%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B9%80%E0%B8%97%E0%B8%A8%E0%B9%84%E0%B8%97%E0%B8%A2_April2021_Supreme_Court_of_Justice_of_Thailand_02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail", "page": "https://commons.wikimedia.org/wiki/File:%E0%B8%A8%E0%B8%B2%E0%B8%A5%E0%B8%8E%E0%B8%B5%E0%B8%81%E0%B8%B2_%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B9%80%E0%B8%97%E0%B8%A8%E0%B9%84%E0%B8%97%E0%B8%A2_April2021_Supreme_Court_of_Justice_of_Thailand_02.jpg", "author": "Chainwit.", "license": "CC BY-SA 4.0", "source": "Wikimedia Commons", "alt": "ศาลฎีกา ประเทศไทย"}, {"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/aa/Sappaya-Sapasathan_%28I%29.jpg/1280px-Sappaya-Sapasathan_%28I%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail", "page": "https://commons.wikimedia.org/wiki/File:Sappaya-Sapasathan_(I).jpg", "author": "This Photo was taken by Supanut Arunoprayote.\n\nFeel free to use any of my images", "license": "CC BY 4.0", "source": "Wikimedia Commons", "alt": "อาคารรัฐสภา สัปปายะสภาสถาน"}, {"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0c/Sappaya-Sapasathan_02.jpg/1280px-Sappaya-Sapasathan_02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail", "page": "https://commons.wikimedia.org/wiki/File:Sappaya-Sapasathan_02.jpg", "author": "Gunofficial1998", "license": "CC BY-SA 4.0", "source": "Wikimedia Commons", "alt": "อาคารรัฐสภา สัปปายะสภาสถาน"}, {"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/00/Sappaya-Sapasathan_03.jpg/1280px-Sappaya-Sapasathan_03.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail", "page": "https://commons.wikimedia.org/wiki/File:Sappaya-Sapasathan_03.jpg", "author": "Gunofficial1998", "license": "CC BY-SA 4.0", "source": "Wikimedia Commons", "alt": "อาคารรัฐสภา สัปปายะสภาสถาน"}, {"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/58/Sappaya-Sapasathan_04.jpg/1280px-Sappaya-Sapasathan_04.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail", "page": "https://commons.wikimedia.org/wiki/File:Sappaya-Sapasathan_04.jpg", "author": "Gunofficial1998", "license": "CC BY-SA 4.0", "source": "Wikimedia Commons", "alt": "อาคารรัฐสภา สัปปายะสภาสถาน"}, {"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/40/Sappaya-Sapasathan_05.jpg/1280px-Sappaya-Sapasathan_05.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail", "page": "https://commons.wikimedia.org/wiki/File:Sappaya-Sapasathan_05.jpg", "author": "Gunofficial1998", "license": "CC BY-SA 4.0", "source": "Wikimedia Commons", "alt": "อาคารรัฐสภา สัปปายะสภาสถาน"}, {"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c8/Sappaya-Sapasathan_08.jpg/1280px-Sappaya-Sapasathan_08.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail", "page": "https://commons.wikimedia.org/wiki/File:Sappaya-Sapasathan_08.jpg", "author": "Gunofficial1998", "license": "CC BY-SA 4.0", "source": "Wikimedia Commons", "alt": "อาคารรัฐสภา สัปปายะสภาสถาน"}, {"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9a/Sappaya-Sapasathan_2019-07-25.jpg/1280px-Sappaya-Sapasathan_2019-07-25.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail", "page": "https://commons.wikimedia.org/wiki/File:Sappaya-Sapasathan_2019-07-25.jpg", "author": "Sry85", "license": "CC BY-SA 4.0", "source": "Wikimedia Commons", "alt": "อาคารรัฐสภา สัปปายะสภาสถาน"}, {"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/07/Sappaya-Sapasathan_Pano_%28I%29.jpg/1280px-Sappaya-Sapasathan_Pano_%28I%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail", "page": "https://commons.wikimedia.org/wiki/File:Sappaya-Sapasathan_Pano_(I).jpg", "author": "This Photo was taken by Supanut Arunoprayote.\n\nFeel free to use any of my images", "license": "CC BY 4.0", "source": "Wikimedia Commons", "alt": "อาคารรัฐสภา สัปปายะสภาสถาน"}, {"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4b/Allegory_of_Justice_with_the_Coat_of_Arms_of_Anthoni_Wyss_Detail_1.jpg/1280px-Allegory_of_Justice_with_the_Coat_of_Arms_of_Anthoni_Wyss_Detail_1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail", "page": "https://commons.wikimedia.org/wiki/File:Allegory_of_Justice_with_the_Coat_of_Arms_of_Anthoni_Wyss_Detail_1.jpg", "author": "Henrysz", "license": "CC BY 4.0", "source": "Wikimedia Commons", "alt": "เทพีแห่งความยุติธรรม"}, {"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/41/Burggarten_Graz%2C_Justitia.jpg/1280px-Burggarten_Graz%2C_Justitia.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail", "page": "https://commons.wikimedia.org/wiki/File:Burggarten_Graz,_Justitia.jpg", "author": "Liuthalas", "license": "CC BY-SA 3.0", "source": "Wikimedia Commons", "alt": "เทพีแห่งความยุติธรรม"}, {"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1a/Justitia_Churer_Rathaus_um_1600.jpg/1280px-Justitia_Churer_Rathaus_um_1600.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail", "page": "https://commons.wikimedia.org/wiki/File:Justitia_Churer_Rathaus_um_1600.jpg", "author": "Paebi", "license": "CC BY-SA 4.0", "source": "Wikimedia Commons", "alt": "เทพีแห่งความยุติธรรม"}, {"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/76/Stiftsbrunnen_Backnang%2C_Justitia%2C_img10947.jpg/1280px-Stiftsbrunnen_Backnang%2C_Justitia%2C_img10947.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail", "page": "https://commons.wikimedia.org/wiki/File:Stiftsbrunnen_Backnang,_Justitia,_img10947.jpg", "author": "Vux", "license": "CC BY-SA 4.0", "source": "Wikimedia Commons", "alt": "เทพีแห่งความยุติธรรม"}, {"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a2/Vrouwe_Justitia_28juli.png/1280px-Vrouwe_Justitia_28juli.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail", "page": "https://commons.wikimedia.org/wiki/File:Vrouwe_Justitia_28juli.png", "author": "Jari Asselman", "license": "CC BY-SA 4.0", "source": "Wikimedia Commons", "alt": "เทพีแห่งความยุติธรรม"}, {"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8c/A_courtroom_at_the_Cherokee_County_Courthouse_in_North_Carolina%2C_United_States_02.jpg/1280px-A_courtroom_at_the_Cherokee_County_Courthouse_in_North_Carolina%2C_United_States_02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail", "page": "https://commons.wikimedia.org/wiki/File:A_courtroom_at_the_Cherokee_County_Courthouse_in_North_Carolina,_United_States_02.jpg", "author": "Harrison Keely", "license": "CC BY 4.0", "source": "Wikimedia Commons", "alt": "ห้องพิจารณาคดี"}, {"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2a/Beverley_Guildhall_Courtroom.jpg/1280px-Beverley_Guildhall_Courtroom.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail", "page": "https://commons.wikimedia.org/wiki/File:Beverley_Guildhall_Courtroom.jpg", "author": "Michael D Beckwith", "license": "CC0", "source": "Wikimedia Commons", "alt": "ห้องพิจารณาคดี"}, {"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/61/Boone_County_Courthouse_courtroom_front.jpg/1280px-Boone_County_Courthouse_courtroom_front.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail", "page": "https://commons.wikimedia.org/wiki/File:Boone_County_Courthouse_courtroom_front.jpg", "author": "Brandonrush", "license": "CC0", "source": "Wikimedia Commons", "alt": "ห้องพิจารณาคดี"}, {"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/54/Courtroom_European_Court_of_Human_Rights_02.JPG/1280px-Courtroom_European_Court_of_Human_Rights_02.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail", "page": "https://commons.wikimedia.org/wiki/File:Courtroom_European_Court_of_Human_Rights_02.JPG", "author": "Adrian Grycuk", "license": "CC BY-SA 3.0 pl", "source": "Wikimedia Commons", "alt": "ห้องพิจารณาคดี"}, {"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c3/Courtroom_of_Cleburne_County_Courthouse_in_Heber_Springs%2C_Arkansas.jpg/1280px-Courtroom_of_Cleburne_County_Courthouse_in_Heber_Springs%2C_Arkansas.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail", "page": "https://commons.wikimedia.org/wiki/File:Courtroom_of_Cleburne_County_Courthouse_in_Heber_Springs,_Arkansas.jpg", "author": "Brandonrush", "license": "CC0", "source": "Wikimedia Commons", "alt": "ห้องพิจารณาคดี"}, {"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c8/Courtroom_of_the_Supreme_Court%2C_Singapore_-_01.jpg/1280px-Courtroom_of_the_Supreme_Court%2C_Singapore_-_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail", "page": "https://commons.wikimedia.org/wiki/File:Courtroom_of_the_Supreme_Court,_Singapore_-_01.jpg", "author": "Sgconlaw", "license": "CC BY-SA 4.0", "source": "Wikimedia Commons", "alt": "ห้องพิจารณาคดี"}, {"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b6/Courtroom_of_the_Supreme_Court%2C_Singapore_-_02.jpg/1280px-Courtroom_of_the_Supreme_Court%2C_Singapore_-_02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail", "page": "https://commons.wikimedia.org/wiki/File:Courtroom_of_the_Supreme_Court,_Singapore_-_02.jpg", "author": "Sgconlaw", "license": "CC BY-SA 4.0", "source": "Wikimedia Commons", "alt": "ห้องพิจารณาคดี"}, {"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/50/Judge_seat_in_3rd_floor_courtroom_of_the_Conway_County_Courthouse_in_Morrilton%2C_AR.jpg/1280px-Judge_seat_in_3rd_floor_courtroom_of_the_Conway_County_Courthouse_in_Morrilton%2C_AR.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail", "page": "https://commons.wikimedia.org/wiki/File:Judge_seat_in_3rd_floor_courtroom_of_the_Conway_County_Courthouse_in_Morrilton,_AR.jpg", "author": "Brandonrush", "license": "CC0", "source": "Wikimedia Commons", "alt": "ห้องพิจารณาคดี"}, {"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/35/Close-up_of_Lady_Justice_statue_holding_scales%2C_symbolizing_justice_and_fairness.jpg/1280px-Close-up_of_Lady_Justice_statue_holding_scales%2C_symbolizing_justice_and_fairness.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail", "page": "https://commons.wikimedia.org/wiki/File:Close-up_of_Lady_Justice_statue_holding_scales,_symbolizing_justice_and_fairness.jpg", "author": "DP Singh Bhullar", "license": "CC BY-SA 4.0", "source": "Wikimedia Commons", "alt": "ตาชั่งแห่งความยุติธรรม"}, {"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/aa/Scales_of_Justice_%283285348799%29.jpg/1280px-Scales_of_Justice_%283285348799%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail", "page": "https://commons.wikimedia.org/wiki/File:Scales_of_Justice_(3285348799).jpg", "author": "frankieleon", "license": "CC BY 2.0", "source": "Wikimedia Commons", "alt": "ตาชั่งแห่งความยุติธรรม"}, {"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d1/Scales_of_Justice_statue%2C_Middlesbrough%2C_Oct_2019.png/1280px-Scales_of_Justice_statue%2C_Middlesbrough%2C_Oct_2019.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail", "page": "https://commons.wikimedia.org/wiki/File:Scales_of_Justice_statue,_Middlesbrough,_Oct_2019.png", "author": "Londisland", "license": "CC BY 3.0", "source": "Wikimedia Commons", "alt": "ตาชั่งแห่งความยุติธรรม"}, {"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d4/Unbalanced_scales_of_justice_bookstore.jpg/1280px-Unbalanced_scales_of_justice_bookstore.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail", "page": "https://commons.wikimedia.org/wiki/File:Unbalanced_scales_of_justice_bookstore.jpg", "author": "P1898", "license": "CC BY 4.0", "source": "Wikimedia Commons", "alt": "ตาชั่งแห่งความยุติธรรม"}];

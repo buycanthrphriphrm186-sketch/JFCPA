@@ -19,6 +19,7 @@ function periodSeg(cur) {
 VIEWS.saved = function (el) {
   var st = S.ui.sv || (S.ui.sv = { p: 'day', folder: '', q: '', sort: 'new' });
   var ud = S.ud;
+  ensureIds(Object.keys(ud.favorites), function () { if (S.ui.view === 'saved') refreshCurrent(); });
   el.innerHTML = '<div class="view-head"><div><h2>' + tr('saved') + '</h2><p class="sub">มาตราที่ท่านบันทึกเป็นรายการโปรด แยกตามวัน เดือน และปีที่บันทึก</p></div>' + periodSeg(st.p) + '</div>' +
     '<div class="row wrapr" style="gap:8px;margin-bottom:10px"><div class="input grow" style="min-width:min(100%,240px)">' + ic('search') + '<input id="svQ" placeholder="ค้นหาเอกสารที่บันทึก" value="' + esc(st.q) + '"></div><div class="seg" id="svSort"><button data-s="new" class="' + (st.sort === 'new' ? 'on' : '') + '">ใหม่ล่าสุด</button><button data-s="old" class="' + (st.sort === 'old' ? 'on' : '') + '">เก่าสุด</button></div><button class="btn" id="newFolder">' + ic('plus') + ' โฟลเดอร์ใหม่</button></div>' +
     '<div class="hscroll" id="fdChips"></div><div id="svList"></div>';
@@ -91,6 +92,7 @@ VIEWS.saved = function (el) {
 /* ---------------- HISTORY ---------------- */
 VIEWS.history = function (el) {
   var st = S.ui.hs || (S.ui.hs = { p: 'day', tab: 'read' });
+  ensureIds(S.ud.history.slice(0, 300).map(function (x) { return x.id; }).concat(Object.keys(S.ud.favorites)), function () { if (S.ui.view === 'history') refreshCurrent(); });
   el.innerHTML = '<div class="view-head"><div><h2>' + tr('history') + '</h2><p class="sub">ระบบบันทึกอัตโนมัติทุกครั้งที่เปิดอ่านป้ายพลิกมาตรา แยกตามวัน เดือน ปี</p></div>' + periodSeg(st.p) + '</div>' +
     '<div class="hscroll" id="hsTabs">' + [['read', 'book', 'การอ่านเอกสาร'], ['search', 'search', 'การค้นหากฎหมาย'], ['saved', 'bookmark', 'การบันทึกเอกสาร'], ['login', 'shield', 'การเข้าสู่ระบบและอุปกรณ์']].map(function (x) { return '<button class="chip ' + (st.tab === x[0] ? 'on' : '') + '" data-t="' + x[0] + '">' + ic(x[1]) + esc(x[2]) + '</button>'; }).join('') + '</div><div id="hsList" style="margin-top:6px"></div>';
   function draw() {
@@ -129,6 +131,7 @@ VIEWS.time = function (el) {
   flushUsage();
   var st = S.ui.tm || (S.ui.tm = { p: 'day' });
   var ud = S.ud, today = dayKey();
+  ensureIds(Object.keys(ud.opens), function () { if (S.ui.view === 'time') refreshCurrent(); });
   function sumBy(mode) {
     var g = {};
     Object.keys(ud.time).forEach(function (k) { var a = k.split('-'); var key = mode === 'year' ? a[0] : mode === 'month' ? a[0] + '-' + a[1] : k; g[key] = (g[key] || 0) + ud.time[k]; });

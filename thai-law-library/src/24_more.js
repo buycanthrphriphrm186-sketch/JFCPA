@@ -305,9 +305,9 @@ var TOOL_UI = {
   },
   compare: function (b) {
     if (!S.catalog) { b.innerHTML = '<div class="skeleton" style="height:120px"></div>'; loadCatalog().then(function () { TOOL_UI.compare(b); }); return; }
-    var opts = S.catalog.sections.map(function (s) { return '<option value="' + esc(s.id) + '">' + esc(lawShort(LAWS[s.law]) + ' ม. ' + s.no + ' ' + s.name) + '</option>'; }).join('');
+    var opts = allSecs().sort(function (a, b) { return a.law === b.law ? secCmp(a, b) : a.law.localeCompare(b.law); }).map(function (s) { return '<option value="' + esc(s.id) + '">' + esc(lawShort(LAWS[s.law]) + ' ม. ' + s.no + ' ' + s.name) + '</option>'; }).join('');
     b.innerHTML = '<div class="grid g2"><div class="field"><label for="cmA">บทบัญญัติที่ 1</label><div class="input"><select id="cmA">' + opts + '</select></div></div><div class="field"><label for="cmB">บทบัญญัติที่ 2</label><div class="input"><select id="cmB">' + opts + '</select></div></div></div><p class="tiny muted" style="margin:8px 0">ข้อความที่ไฮไลต์คือถ้อยคำที่ปรากฏในบทบัญญัติฉบับนั้นเพียงฝั่งเดียว</p><div class="grid g2" id="cmOut"></div>';
-    if (S.catalog.sections.length > 1) $('#cmB', b).selectedIndex = 1;
+    if (allSecs().length > 1) $('#cmB', b).selectedIndex = 1;
     function words(s) { try { if (window.Intl && Intl.Segmenter) return Array.from(new Intl.Segmenter('th', { granularity: 'word' }).segment(s)).map(function (x) { return x.segment; }); } catch (e) {} return s.split(/(\s+)/); }
     function calc() {
       var A = SECS[$('#cmA', b).value], B = SECS[$('#cmB', b).value]; if (!A || !B) return;

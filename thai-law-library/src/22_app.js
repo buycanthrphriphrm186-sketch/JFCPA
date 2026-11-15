@@ -147,7 +147,8 @@ function bootstrap(fresh) {
     if (r.alerts && r.alerts.length) securityAlert(r.alerts[r.alerts.length - 1]);
     flushOutbox();
     if (r.catalogVersion && r.catalogVersion !== S.catVer) loadCatalog(true);
-  }).catch(function (e) { dlog('bootstrap', e.msg || e.code); });
+    return true;
+  }).catch(function (e) { dlog('bootstrap', e.msg || e.code); return false; });
 }
 function reactivatePrompt() {
   modal({ title: 'บัญชีของท่านปิดใช้งานชั่วคราว', icon: 'power', tone: 'o', html: '<p class="muted" style="margin-bottom:10px">กรุณากรอกรหัสผ่านส่วนตัวเพื่อเปิดใช้งานบัญชีอีกครั้ง</p>' + pwField('raPass', 'รหัสผ่านส่วนตัว', {}), ok: 'เปิดใช้งานบัญชี', dismiss: false, cancel: 'ออกจากระบบ',
@@ -333,15 +334,49 @@ function loadCatalog(force) {
 }
 var LAWS = {}, SECS = {}, SECS_BY_LAW = {};
 function indexCatalog() {
-  LAWS = {}; SECS = {}; SECS_BY_LAW = {};
+  LAWS = {};
   if (!S.catalog) return;
-  S.catalog.laws.forEach(function (l) { LAWS[l.id] = l; SECS_BY_LAW[l.id] = []; });
-  S.catalog.sections.forEach(function (s) { SECS[s.id] = s; (SECS_BY_LAW[s.law] = SECS_BY_LAW[s.law] || []).push(s); });
-  Object.keys(SECS_BY_LAW).forEach(function (k) { SECS_BY_LAW[k].sort(secCmp); });
+  S.catalog.laws.forEach(function (l) { LAWS[l.id] = l; if (!SECS_BY_LAW[l.id]) SECS_BY_LAW[l.id] = []; });
+  if (typeof LAW_LOADED !== 'undefined' && indexCatalog.ver !== S.catVer) { LAW_LOADED = {}; IDS_TRIED = {}; }
+  indexCatalog.ver = S.catVer;
+  addSections(S.catalog.sections || []);
 }
+function allSecs() { return Object.keys(SECS).map(function (k) { return SECS[k]; }); }
 function secNum(no) { var p = String(no).split('/'); return (parseFloat(thaiDigitsToArabic(p[0])) || 0) * 1000 + (parseFloat(p[1]) || 0); }
 function secCmp(a, b) { return secNum(a.no) - secNum(b.no); }
 function lawShort(l) { return l ? (l.short || l.title) : ''; }
+function addSections(list) {
+  var touched = {};
+  (list || []).forEach(function (s) {
+    if (SECS[s.id]) { Object.assign(SECS[s.id], s); return; }
+    SECS[s.id] = s; (SECS_BY_LAW[s.law] = SECS_BY_LAW[s.law] || []).push(s); touched[s.law] = 1;
+  });
+  Object.keys(touched).forEach(function (k) { SECS_BY_LAW[k].sort(secCmp); });
+}
+var LAW_LOADED = {}, LAW_LOADING = {}, IDS_TRIED = {};
+function ensureLaw(id) {
+  if (LAW_LOADED[id]) return Promise.resolve(true);
+  if (LAW_LOADING[id]) return LAW_LOADING[id];
+  var ck = 'law.' + id, cached = store.get(ck, null);
+  if (cached && cached.v === S.catVer) { addSections(cached.s); LAW_LOADED[id] = 1; return Promise.resolve(true); }
+  LAW_LOADING[id] = api('getSections', { law: id }, { timeout: 45000 }).then(function (r) {
+    addSections(r.sections); LAW_LOADED[id] = 1; delete LAW_LOADING[id];
+    var lru = store.get('lawLru', []).filter(function (x) { return x !== id; }); lru.unshift(id);
+    lru.slice(25).forEach(function (old) { store.del('law.' + old); });
+    store.set('lawLru', lru.slice(0, 25));
+    store.set(ck, { v: S.catVer, s: r.sections });
+    return true;
+  }).catch(function (e) { delete LAW_LOADING[id]; toast('โหลดตัวบทไม่สำเร็จ', e.msg, 'warn'); return false; });
+  return LAW_LOADING[id];
+}
+/* ดึงมาตราที่ยังไม่มีในเครื่อง (เช่น รายการโปรด/ประวัติ) แล้วแสดงผลใหม่ */
+function ensureIds(ids, cb) {
+  var miss = (ids || []).filter(function (id) { return id && !SECS[id] && !IDS_TRIED[id]; });
+  if (!miss.length) return false;
+  miss.forEach(function (id) { IDS_TRIED[id] = 1; });
+  api('sectionsByIds', { ids: miss.slice(0, 200) }).then(function (r) { addSections(r.sections); if (cb) cb(); }).catch(function () {});
+  return true;
+}
 
 /* ---------------- search engine (ชื่อกฎหมาย / เลขมาตรา / ข้อความ / ปี / ประเภท) ---------------- */
 function searchAll(q, opt) {
@@ -361,7 +396,7 @@ function searchAll(q, opt) {
     var hay = norm(l.title + ' ' + (l.short || '') + ' ' + l.year);
     if (!q || (rest && hay.indexOf(rest) > -1) || (!no && hay.indexOf(norm(q)) > -1)) res.laws.push(l);
   });
-  S.catalog.sections.forEach(function (s) {
+  allSecs().forEach(function (s) {
     var l = LAWS[s.law]; if (!l) return;
     if (opt.cat && l.cat !== opt.cat) return;
     if (yearQ && String(l.year) !== String(yearQ)) return;
@@ -384,7 +419,7 @@ function recordSearch(q) {
 function suggestions(q) {
   var out = [], nq = norm(q); if (!S.catalog || !nq) return out;
   S.catalog.laws.forEach(function (l) { if (norm(l.title).indexOf(nq) > -1 && out.length < 6) out.push(l.title); });
-  S.catalog.sections.forEach(function (s) { if (norm(s.name).indexOf(nq) > -1 && out.length < 10) out.push(lawShort(LAWS[s.law]) + ' มาตรา ' + s.no + ' ' + s.name); });
+  allSecs().forEach(function (s) { if (norm(s.name).indexOf(nq) > -1 && out.length < 10) out.push(lawShort(LAWS[s.law]) + ' มาตรา ' + s.no + ' ' + s.name); });
   return out;
 }
 
@@ -407,9 +442,15 @@ function openQuickSearch(initial) {
         if (!q && !opt.cat && !opt.year) { box.innerHTML = ''; return; }
         if (!r.laws.length && !r.sections.length) { box.innerHTML = '<div class="empty"><div class="eic">' + ic('search') + '</div><h3>ไม่พบผลการค้นหา</h3><p>ไม่พบกฎหมายหรือมาตราที่ตรงกับ “' + esc(q) + '” กรุณาตรวจสอบตัวสะกด ลองใช้คำที่สั้นลง หรือเลือกประเภทกฎหมายใหม่</p></div>'; return; }
         box.innerHTML = '<div class="col anim-list">' + r.sections.slice(0, 30).map(function (s) { var l = LAWS[s.law]; return '<button class="law-item" data-sec="' + esc(s.id) + '"><span class="li-ic">' + ic('file') + '</span><span class="grow"><span class="li-t">' + highlight(esc(lawShort(l) + ' มาตรา ' + s.no + ' ' + s.name), q) + '</span><br><span class="li-s">' + highlight(esc(s.text.slice(0, 120)), q) + '…</span></span>' + ic('chevR') + '</button>'; }).join('') +
-          r.laws.slice(0, 20).map(function (l) { return '<button class="law-item" data-law="' + esc(l.id) + '"><span class="li-ic">' + ic(CAT_ICON[l.cat] || 'book') + '</span><span class="grow"><span class="li-t">' + highlight(esc(l.title), q) + '</span><br><span class="li-s">' + esc(l.cat) + ' · ' + (SECS_BY_LAW[l.id] || []).length + ' มาตรา</span></span>' + ic('chevR') + '</button>'; }).join('') + '</div>';
+          r.laws.slice(0, 20).map(function (l) { return '<button class="law-item" data-law="' + esc(l.id) + '"><span class="li-ic">' + ic(CAT_ICON[l.cat] || 'book') + '</span><span class="grow"><span class="li-t">' + highlight(esc(l.title), q) + '</span><br><span class="li-s">' + esc(l.cat) + ' · ' + (l.n || (SECS_BY_LAW[l.id] || []).length) + ' มาตรา</span></span>' + ic('chevR') + '</button>'; }).join('') + '</div>';
       }
-      var deb = debounce(run, 180);
+      var srvDone = {};
+      var srv = debounce(function () {
+        var q = inp.value.trim(); var key = q + '|' + $('#qsCat', m).value;
+        if (q.length < 2 || srvDone[key]) return; srvDone[key] = 1;
+        api('searchSections', { q: thaiDigitsToArabic(q).replace(/^(มาตรา|ม\.)\s*/, ''), cat: $('#qsCat', m).value }).then(function (r) { if (r.sections && r.sections.length) { addSections(r.sections); if (m.isConnected) run(); } }).catch(function () {});
+      }, 450);
+      var deb = debounce(function () { run(); srv(); }, 180);
       inp.addEventListener('input', deb); $$('select,#qsYear', m).forEach(function (s) { s.addEventListener('input', deb); s.addEventListener('change', deb); });
       inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { recordSearch(inp.value.trim()); run(); } });
       on(m, 'click', '[data-q]', function (e, b) { inp.value = b.getAttribute('data-q'); run(); });
@@ -430,6 +471,7 @@ VIEWS.home = function (el) {
   var latest = S.catalog ? S.catalog.laws.slice().sort(function (a, b) { return String(b.updated).localeCompare(String(a.updated)); }).slice(0, 5) : [];
   var catUse = {}; ud.history.forEach(function (h) { var s = SECS[h.id]; if (s && LAWS[s.law]) catUse[LAWS[s.law].cat] = (catUse[LAWS[s.law].cat] || 0) + 1; });
   var plan = m.plan || {};
+  ensureIds(recent.map(function (x) { return x.id; }).concat(popular), refreshCurrent);
   el.innerHTML =
     '<section class="panel corner" style="margin-bottom:18px"><div class="row wrapr" style="gap:16px;align-items:center">' + avatarHtml(72) +
       '<div class="grow"><div class="muted small" id="homeClock">' + fmtDate(new Date(), true) + ' · ' + fmtTime(new Date()) + '</div><h2>สวัสดี ' + esc(m.displayName || m.firstName || '') + '</h2><div class="row wrapr small" style="gap:6px;margin-top:4px"><span class="tag k">' + esc(m.memberId || '') + '</span><span class="tag">' + esc(m.memberType || '') + '</span>' + (plan.trial ? '<span class="tag o">ทดลองใช้งาน เหลือ ' + plan.daysLeft + ' วัน</span>' : plan.tier === 'free' ? '<span class="tag bad">หมดระยะทดลองใช้งาน</span>' : '<span class="tag ok">แพ็กเกจ ' + esc(plan.tier) + '</span>') + '</div></div></div>' +
@@ -536,7 +578,7 @@ VIEWS.content = function (el) {
     box.innerHTML = '<div class="group-h">ผลการค้นหา <span class="cnt">' + match.length + ' รายการ</span></div><div class="col anim-list">' + match.map(function (l) { return lawItem(l, q); }).join('') + '</div>';
   }
   function lawItem(l, q) {
-    var n = (SECS_BY_LAW[l.id] || []).length;
+    var n = l.n || (SECS_BY_LAW[l.id] || []).length;
     return '<button class="law-item" data-law="' + esc(l.id) + '"><span class="li-ic">' + ic(CAT_ICON[l.cat]) + '</span><span class="grow"><span class="li-t">' + (q ? highlight(esc(l.title), q) : esc(l.title)) + '</span><br><span class="li-s">' + (n ? n + ' มาตรา' : 'รอนำเข้าตัวบท') + (l.year ? ' · พ.ศ. ' + esc(l.year) : '') + '</span></span>' + ic('chevR') + '</button>';
   }
   on(el, 'click', '.law-item[data-law]', function (e, b) { tap(); st.law = b.getAttribute('data-law'); st.q = LAWS[st.law].title; store.set('ui', S.ui); recordSearch(st.q); var inp = $('#ctQ', el); if (inp) inp.value = st.q; results(); });
@@ -544,6 +586,11 @@ VIEWS.content = function (el) {
 };
 function renderLaw(box, l) {
   var st = S.ui.content;
+  if (l.n && !LAW_LOADED[l.id] && (SECS_BY_LAW[l.id] || []).length < l.n) {
+    box.innerHTML = '<div class="panel"><div class="row"><div class="spin" style="width:28px;height:28px;border-width:3px"></div><span class="muted">กำลังโหลดตัวบท ' + esc(l.title) + ' (' + l.n + ' มาตรา)</span></div></div><div class="cards" style="margin-top:14px"><div class="skeleton" style="height:280px"></div><div class="skeleton" style="height:280px"></div><div class="skeleton" style="height:280px"></div></div>';
+    ensureLaw(l.id).then(function (ok) { if (box.isConnected) { if (!ok) LAW_LOADED[l.id] = 1; renderLaw(box, l); } });
+    return;
+  }
   var secs = (SECS_BY_LAW[l.id] || []).slice();
   box.innerHTML = '<section class="panel corner" style="margin-bottom:14px"><div class="row wrapr" style="align-items:flex-start">' +
     '<button class="icon-btn" id="lawBack" aria-label="กลับไปผลการค้นหา">' + ic('arrowL') + '</button><div class="grow"><span class="tag">' + esc(l.cat) + '</span><h3 style="margin-top:6px">' + esc(l.title) + '</h3><div class="muted small">' + secs.length + ' มาตราในฐานข้อมูล' + (l.updated ? ' · ปรับปรุง ' + fmtDate(l.updated) : '') + '</div></div>' +
@@ -634,7 +681,7 @@ function closeFocus() { if (focusEl) { focusEl.remove(); focusEl = null; documen
 function openFocus(id, opt) {
   opt = opt || {};
   var s = SECS[id];
-  if (!s) { if (!S.catalog) loadCatalog().then(function () { if (SECS[id]) openFocus(id, opt); }); return; }
+  if (!s) { delete IDS_TRIED[id]; if (!ensureIds([id], function () { if (SECS[id]) openFocus(id, opt); else toast('ไม่พบมาตรานี้ในฐานข้อมูล', '', 'warn'); })) toast('ไม่พบมาตรานี้ในฐานข้อมูล', '', 'warn'); return; }
   closeFocus();
   logOpen(id);
   var l = LAWS[s.law] || {};
