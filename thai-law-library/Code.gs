@@ -1,0 +1,2056 @@
+/**
+ * ============================================================================
+ *  THAI LAW LIBRARY (คลังกฎหมายไทย) — Google Apps Script Backend (Code.gs)
+ * ============================================================================
+ *  ไฟล์นี้คือ "รหัส GS" ทั้งหมดของระบบ ให้วางในไฟล์ชื่อ Code.gs เท่านั้น
+ *  ห้ามวางโค้ด HTML ลงในไฟล์นี้ (หากวางผิดไฟล์ จะเกิดข้อผิดพลาด
+ *  "SyntaxError: Invalid regular expression: missing /" ตามที่เคยเกิด)
+ *
+ *  ไฟล์หน้าเว็บอยู่ในไฟล์ Index.html (สร้างผ่าน + > HTML > ตั้งชื่อ Index)
+ *
+ *  ขั้นตอนติดตั้ง (ครั้งแรกครั้งเดียว)
+ *   1) เปิด Apps Script แล้ววางไฟล์ Code.gs และ Index.html
+ *   2) เลือกฟังก์ชัน setup แล้วกด Run (อนุญาตสิทธิ์ตามที่ระบบขอ)
+ *   3) Deploy > New deployment > Web app
+ *        Execute as: Me   |   Who has access: Anyone
+ *   4) เปิด URL ที่ลงท้ายด้วย /exec
+ *
+ *  อีเมลรับแจ้งเตือนความปลอดภัย: ระบบใช้อีเมลของบัญชีเจ้าของสคริปต์โดยอัตโนมัติ
+ *  หากต้องการเปลี่ยน ให้ตั้ง Script Property ชื่อ ADMIN_EMAIL
+ * ============================================================================
+ */
+
+var CONFIG = {
+  SHEET_ID: '1Pddk_3GswY2_kuSzuNGIP6KVBeeBnGOHcGCqUvag-7E',
+  APP_NAME_EN: 'THAI LAW LIBRARY',
+  APP_NAME_TH: 'คลังกฎหมายไทย',
+  ADMIN_NAME: 'นายบุญจันทร์ พรีพรม',
+  // รหัสผ่านชั้นที่ 1 (จากผู้ดูแลระบบ) — setup() จะเก็บเป็นค่า Hash ใน Script Properties
+  // ค่านี้อยู่ฝั่งเซิร์ฟเวอร์เท่านั้น ไม่เคยถูกส่งไปยังหน้าเว็บ
+  DEFAULT_ADMIN_PASSWORD: 'THAI LAW LIBRARY 13224520260606200899',
+  VERSION: '3.0.0',
+  HASH_ROUNDS: 120,
+  SESSION_DAYS: 180,
+  TRIAL_DAYS: 7
+};
+
+function adminEmail_() {
+  var p = PropertiesService.getScriptProperties().getProperty('ADMIN_EMAIL');
+  if (p) return p;
+  try { return Session.getEffectiveUser().getEmail(); } catch (e) { return ''; }
+}
+
+var SHEETS = {
+  Members: ['memberId', 'username', 'usernameLower', 'title', 'firstName', 'lastName', 'displayName', 'birthDate', 'gender', 'memberType', 'educationJson', 'workJson', 'phone', 'address', 'bio', 'avatar', 'adminHash', 'personalHash', 'salt', 'recoveryQ', 'recoveryAHash', 'plan', 'planCycle', 'planExpires', 'trialStart', 'createdAt', 'lastLogin', 'accountStatus', 'failCount', 'lockUntil', 'lockCount', 'socialJson', 'privacyJson', 'role', 'extraJson'],
+  Sessions: ['tokenHash', 'memberId', 'createdAt', 'lastSeen', 'device', 'os', 'browser', 'ip', 'location', 'revoked'],
+  UserData: ['memberId', 'rev', 'updatedAt', 'part', 'json'],
+  Laws: ['lawId', 'category', 'title', 'shortName', 'year', 'sourceUrl', 'status', 'updatedAt', 'note'],
+  Sections: ['sectionId', 'lawId', 'sectionNo', 'popularName', 'text', 'tags', 'sourceUrl', 'updatedAt'],
+  Treaties: ['treatyId', 'group', 'title', 'titleTh', 'date', 'sourceUrl', 'summary', 'updatedAt'],
+  LoginLog: ['time', 'username', 'memberId', 'result', 'reason', 'ip', 'location', 'isp', 'device', 'os', 'browser'],
+  Security: ['reportId', 'time', 'type', 'severity', 'memberId', 'username', 'ip', 'location', 'device', 'detail', 'attempts', 'action', 'status', 'pdfUrl'],
+  ErrorLog: ['time', 'memberId', 'where', 'message', 'stack', 'userAgent', 'version'],
+  AuditLog: ['time', 'memberId', 'action', 'detail'],
+  Config: ['key', 'value', 'note'],
+  Announcements: ['id', 'time', 'type', 'title', 'body', 'active'],
+  Reports: ['time', 'memberId', 'username', 'kind', 'subject', 'detail', 'status'],
+  Payments: ['time', 'memberId', 'username', 'plan', 'cycle', 'amount', 'status', 'note'],
+  Sources: ['category', 'url', 'parser', 'enabled', 'lastRun', 'lastResult']
+};
+
+var DEFAULT_CONFIG = [
+  ['MAINTENANCE', 'off', 'on = ปิดปรับปรุงระบบชั่วคราว (ข้อมูลผู้ใช้ยังเก็บอยู่ครบ)'],
+  ['MAINTENANCE_MESSAGE', 'ขณะนี้ระบบอยู่ระหว่างการปรับปรุงเพื่อเพิ่มประสิทธิภาพ ข้อมูลของท่านยังคงได้รับการเก็บรักษาไว้ครบถ้วน กรุณากลับมาใช้งานอีกครั้งภายหลัง', 'ข้อความหน้าปิดปรับปรุง'],
+  ['FLAG_AI', 'on', 'ผู้ช่วย AI (ต้องตั้ง GEMINI_API_KEY ใน Script Properties)'],
+  ['FLAG_GMAIL', 'on', 'AI สรุปอีเมล (เฉพาะผู้ดูแลระบบ)'],
+  ['FLAG_MEDIA', 'on', 'ดึงภาพจาก Wikimedia / Unsplash / Pexels / Pixabay'],
+  ['FLAG_SOCIAL_LOGIN', 'on', 'เข้าสู่ระบบด้วย Google / Apple / Facebook / LINE'],
+  ['FLAG_PDF', 'on', 'สร้างไฟล์ PDF'],
+  ['FLAG_IP_LOOKUP', 'on', 'ตรวจสอบ IP ขณะเข้าสู่ระบบ'],
+  ['FLAG_SOUND', 'on', 'เสียงตัวจับเวลา'],
+  ['FORCE_SAFE_MODE', 'off', 'on = ปิดฟีเจอร์เสริมทั้งหมดทันที (ย้อนกลับฉุกเฉิน)'],
+  ['CANARY_PERCENT', '0', 'เปอร์เซ็นต์สมาชิกที่ได้ทดลองฟีเจอร์ใน CANARY_FLAGS'],
+  ['CANARY_FLAGS', '', 'ชื่อ flag คั่นด้วยจุลภาค'],
+  ['SPLASH_SECONDS', '15', 'เวลาแสดงโลโก้ครั้งแรกของอุปกรณ์ (วินาที)'],
+  ['LOCK_ATTEMPTS', '5', 'จำนวนครั้งที่ใส่รหัสผิดก่อนระงับชั่วคราว'],
+  ['LOCK_MINUTES', '15', 'ระยะเวลาระงับชั่วคราว (นาที)'],
+  ['IDLE_MINUTES', '0', '0 = ไม่ออกจากระบบอัตโนมัติ'],
+  ['AI_DAILY_LIMIT_STANDARD', '30', 'จำนวนคำถาม AI ต่อวัน แพ็กเกจมาตรฐาน'],
+  ['AI_DAILY_LIMIT_PRO', '200', 'จำนวนคำถาม AI ต่อวัน แพ็กเกจมืออาชีพ'],
+  ['GEMINI_MODEL', 'gemini-2.5-flash', 'รุ่นโมเดล Gemini']
+];
+
+/* =========================================================================
+ *  ENTRY POINTS
+ * ========================================================================= */
+
+function doGet(e) {
+  var p = (e && e.parameter) || {};
+  var boot = { v: CONFIG.VERSION, url: safeUrl_(), social: null, maintenance: null };
+  try {
+    ensureInit_();
+    var cfg = getConfig_();
+    if (cfg.MAINTENANCE === 'on' && p.admin !== '1') boot.maintenance = cfg.MAINTENANCE_MESSAGE;
+    if (p.code && p.state) boot.social = oauthCallback_(p.code, p.state, null);
+    if (p.error && p.state) boot.social = { ok: false, msg: 'ผู้ให้บริการยกเลิกหรือปฏิเสธการเข้าสู่ระบบ (' + String(p.error).slice(0, 60) + ')' };
+    boot.splash = Number(cfg.SPLASH_SECONDS) || 15;
+    boot.flags = publicFlags_(cfg, null);
+  } catch (err) {
+    logError_('doGet', err, '');
+    boot.bootError = 'ระบบไม่สามารถเชื่อมต่อฐานข้อมูลได้ชั่วคราว';
+  }
+  return renderIndex_(boot);
+}
+
+/** Apple Sign in ส่งผลลัพธ์กลับแบบ form_post */
+function doPost(e) {
+  var p = (e && e.parameter) || {};
+  var boot = { v: CONFIG.VERSION, url: safeUrl_(), social: null };
+  try {
+    ensureInit_();
+    boot.flags = publicFlags_(getConfig_(), null);
+    if (p.code && p.state) boot.social = oauthCallback_(p.code, p.state, p.user || null);
+  } catch (err) {
+    logError_('doPost', err, '');
+  }
+  return renderIndex_(boot);
+}
+
+function renderIndex_(boot) {
+  var t = HtmlService.createTemplateFromFile('Index');
+  t.bootJson = JSON.stringify(boot).replace(/</g, '\\u003c').split(String.fromCharCode(0x2028)).join('\\u2028').split(String.fromCharCode(0x2029)).join('\\u2029');
+  return t.evaluate()
+    .setTitle('THAI LAW LIBRARY | คลังกฎหมายไทย')
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1, viewport-fit=cover')
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.DEFAULT);
+}
+
+function safeUrl_() {
+  try { return ScriptApp.getService().getUrl() || ''; } catch (e) { return ''; }
+}
+
+/**
+ * จุดเรียกใช้เดียวจากหน้าเว็บ: google.script.run.api(action, payload, token)
+ * ทุกคำขอผ่านการตรวจสอบ rate limit, feature flag และ session ที่นี่
+ */
+function api(action, payload, token) {
+  var started = Date.now();
+  payload = payload || {};
+  try {
+    if (typeof action !== 'string' || !ROUTES.hasOwnProperty(action)) return fail_('BAD_ACTION', 'ไม่พบคำสั่งที่ร้องขอ');
+    var route = ROUTES[action];
+    var cfg = getConfig_();
+    if (cfg.MAINTENANCE === 'on' && action !== 'ping') return fail_('MAINTENANCE', cfg.MAINTENANCE_MESSAGE);
+    if (!rateLimit_(action, token, route.limit || 60)) return fail_('RATE_LIMIT', 'ท่านส่งคำขอถี่เกินกำหนด กรุณารอสักครู่แล้วดำเนินการอีกครั้ง');
+    var threat = scanPayload_(payload);
+    if (threat) {
+      var who = token ? sessionMember_(token) : null;
+      raiseIncident_({ type: 'XSS/Injection attempt', severity: 'HIGH', memberId: who ? who.memberId : '', username: who ? who.username : String(payload.username || ''), detail: 'พบรูปแบบข้อมูลอันตรายในคำสั่ง ' + action + ': ' + threat, action: 'ปฏิเสธคำขอและบันทึกเหตุการณ์' });
+      return fail_('REJECTED', 'ข้อมูลที่ส่งมามีรูปแบบที่ระบบไม่อนุญาต ระบบได้ปฏิเสธคำขอนี้และบันทึกเหตุการณ์ไว้แล้ว');
+    }
+    var ctx = { cfg: cfg, token: token, member: null };
+    if (route.auth) {
+      var m = sessionMember_(token);
+      if (!m) return fail_('NO_SESSION', 'สิทธิ์การเข้าใช้งานหมดอายุ กรุณาเข้าสู่ระบบอีกครั้ง');
+      if (m.accountStatus === 'ระงับ') return fail_('ACCOUNT_SUSPENDED', 'บัญชีนี้ถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบเพื่อดำเนินการปลดล็อก');
+      if (m.accountStatus === 'ปิดใช้งาน' && action !== 'setAccountStatus' && action !== 'bootstrap') return fail_('ACCOUNT_DISABLED', 'บัญชีนี้ปิดใช้งานชั่วคราว กรุณาเปิดใช้งานบัญชีในหน้าการตั้งค่า');
+      ctx.member = m;
+    }
+    if (route.flag && !flagOn_(route.flag, cfg, ctx.member)) return fail_('FEATURE_OFF', 'ฟีเจอร์นี้ถูกปิดใช้งานชั่วคราวโดยผู้ดูแลระบบ');
+    if (route.admin && (!ctx.member || ctx.member.role !== 'admin')) return fail_('FORBIDDEN', 'คำสั่งนี้สงวนไว้สำหรับผู้ดูแลระบบ');
+    var out = route.fn(payload, ctx) || {};
+    if (out.ok === undefined) out.ok = true;
+    out.ms = Date.now() - started;
+    return out;
+  } catch (err) {
+    logError_('api:' + action, err, '');
+    return fail_('SERVER_ERROR', 'ระบบขัดข้องชั่วคราวระหว่างดำเนินการ หากยังพบปัญหาซ้ำ กรุณาติดต่อผู้ดูแลระบบ');
+  }
+}
+
+var ROUTES = {
+  ping: { fn: function () { return { t: Date.now(), v: CONFIG.VERSION }; }, limit: 120 },
+  checkUsername: { fn: apiCheckUsername_, limit: 60 },
+  register: { fn: apiRegister_, limit: 10 },
+  login: { fn: apiLogin_, limit: 20 },
+  socialLogin: { fn: apiSocialLogin_, limit: 20, flag: 'FLAG_SOCIAL_LOGIN' },
+  forgotPassword: { fn: apiForgot_, limit: 10 },
+  oauthStart: { fn: apiOauthStart_, limit: 20, flag: 'FLAG_SOCIAL_LOGIN' },
+  bootstrap: { fn: apiBootstrap_, auth: true, limit: 60 },
+  logout: { fn: apiLogout_, auth: true },
+  logoutAll: { fn: apiLogoutAll_, auth: true, limit: 10 },
+  saveUserData: { fn: apiSaveUserData_, auth: true, limit: 120 },
+  getCatalog: { fn: apiGetCatalog_, limit: 60 },
+  getTreaties: { fn: apiGetTreaties_, limit: 60 },
+  updateProfile: { fn: apiUpdateProfile_, auth: true, limit: 30 },
+  uploadAvatar: { fn: apiUploadAvatar_, auth: true, limit: 10 },
+  changePassword: { fn: apiChangePassword_, auth: true, limit: 10 },
+  changeUsername: { fn: apiChangeUsername_, auth: true, limit: 10 },
+  setPrivacy: { fn: apiSetPrivacy_, auth: true, limit: 30 },
+  setAccountStatus: { fn: apiSetAccountStatus_, auth: true, limit: 5 },
+  deleteAccount: { fn: apiDeleteAccount_, auth: true, limit: 5 },
+  exportData: { fn: apiExportData_, auth: true, limit: 10 },
+  loginHistory: { fn: apiLoginHistory_, auth: true },
+  devices: { fn: apiDevices_, auth: true },
+  secureAccount: { fn: apiSecureAccount_, auth: true, limit: 5 },
+  linkSocial: { fn: apiLinkSocial_, auth: true, limit: 10 },
+  aiChat: { fn: apiAiChat_, auth: true, limit: 20, flag: 'FLAG_AI' },
+  gmailThreads: { fn: apiGmailThreads_, auth: true, limit: 20, flag: 'FLAG_GMAIL', admin: true },
+  gmailSummarize: { fn: apiGmailSummarize_, auth: true, limit: 10, flag: 'FLAG_GMAIL', admin: true },
+  media: { fn: apiMedia_, limit: 30, flag: 'FLAG_MEDIA' },
+  makePdf: { fn: apiMakePdf_, auth: true, limit: 10, flag: 'FLAG_PDF' },
+  reportProblem: { fn: apiReportProblem_, auth: true, limit: 10 },
+  reportPublic: { fn: apiReportPublic_, limit: 5 },
+  clientError: { fn: apiClientError_, limit: 30 },
+  clientSecurity: { fn: apiClientSecurity_, limit: 10 },
+  paymentRequest: { fn: apiPaymentRequest_, auth: true, limit: 5 },
+  adminSync: { fn: apiAdminSync_, auth: true, admin: true, limit: 3 },
+  adminIssuePassword: { fn: apiAdminIssuePassword_, auth: true, admin: true, limit: 10 }
+};
+
+function fail_(code, msg) { return { ok: false, code: code, msg: msg }; }
+
+/* =========================================================================
+ *  SETUP / INIT / HEALTH
+ * ========================================================================= */
+
+function setup() {
+  var props = PropertiesService.getScriptProperties();
+  if (!props.getProperty('PEPPER')) props.setProperty('PEPPER', randomToken_(32));
+  props.setProperty('ADMIN_HASH', hashPassword_(normalizeAdminPass_(CONFIG.DEFAULT_ADMIN_PASSWORD), 'admin-global'));
+  var ss = ss_();
+  Object.keys(SHEETS).forEach(function (name) { sheet_(name); });
+  var def = ss.getSheetByName('Sheet1');
+  if (def && def.getLastRow() === 0 && ss.getSheets().length > 1) { try { ss.deleteSheet(def); } catch (e) {} }
+  seedConfig_();
+  seedCatalog_(false);
+  seedTreaties_(false);
+  seedSources_();
+  seedAnnouncements_();
+  try { installTriggers_(); } catch (e) { Logger.log('ติดตั้ง trigger ไม่สำเร็จ: ' + e.message); }
+  props.setProperty('INIT_DONE', CONFIG.VERSION);
+  bumpCatalogVersion_();
+  Logger.log('ติดตั้งเรียบร้อย — Deploy เป็น Web app ได้ทันที');
+}
+
+function ensureInit_() {
+  var props = PropertiesService.getScriptProperties();
+  if (props.getProperty('INIT_DONE')) return;
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(25000)) return;
+  try { if (!props.getProperty('INIT_DONE')) setup(); } finally { lock.releaseLock(); }
+}
+
+function installTriggers_() {
+  var have = {};
+  ScriptApp.getProjectTriggers().forEach(function (t) { have[t.getHandlerFunction()] = true; });
+  if (!have.dailySync) ScriptApp.newTrigger('dailySync').timeBased().everyDays(1).atHour(3).create();
+  if (!have.healthCheck) ScriptApp.newTrigger('healthCheck').timeBased().everyHours(1).create();
+}
+
+/** Health Check & Self-Healing: ทุกชั่วโมง สร้างชีตที่หาย ล้าง session หมดอายุ ตัด log เก่า */
+function healthCheck() {
+  var report = [];
+  try {
+    Object.keys(SHEETS).forEach(function (name) { sheet_(name); });
+    report.push('sheets:ok');
+    var cut = Date.now() - CONFIG.SESSION_DAYS * 864e5;
+    var sh = sheet_('Sessions');
+    var data = sh.getDataRange().getValues();
+    for (var i = data.length - 1; i >= 1; i--) {
+      var revoked = data[i][9] === true || data[i][9] === 'TRUE';
+      var old = new Date(data[i][3]).getTime() < cut;
+      var revokedOld = revoked && new Date(data[i][3]).getTime() < Date.now() - 864e5;
+      if (old || revokedOld) sh.deleteRow(i + 1);
+    }
+    report.push('sessions:pruned');
+    ['LoginLog', 'ErrorLog', 'AuditLog'].forEach(function (n) {
+      var s = sheet_(n), max = 20000, last = s.getLastRow();
+      if (last > max) s.deleteRows(2, last - max);
+    });
+    report.push('logs:trimmed');
+    CacheService.getScriptCache().remove('cfg');
+  } catch (err) {
+    report.push('error:' + err.message);
+    logError_('healthCheck', err, '');
+  }
+  setConfigValue_('LAST_HEALTH', new Date().toISOString() + ' ' + report.join(','));
+}
+
+/* =========================================================================
+ *  SHEET HELPERS
+ * ========================================================================= */
+
+var _ss = null;
+function ss_() { if (!_ss) _ss = SpreadsheetApp.openById(CONFIG.SHEET_ID); return _ss; }
+
+var _sheetCache = {};
+function sheet_(name) {
+  if (_sheetCache[name]) return _sheetCache[name];
+  var ss = ss_(), sh = ss.getSheetByName(name);
+  if (!sh) {
+    sh = ss.insertSheet(name);
+    sh.getRange(1, 1, 1, SHEETS[name].length).setValues([SHEETS[name]]).setFontWeight('bold').setBackground('#EAF4FC');
+    sh.setFrozenRows(1);
+    sh.getRange(2, 1, sh.getMaxRows() - 1, SHEETS[name].length).setNumberFormat('@');
+  }
+  _sheetCache[name] = sh;
+  return sh;
+}
+
+var _rowsCache = {};
+function rows_(name) {
+  if (_rowsCache[name]) return _rowsCache[name];
+  var sh = sheet_(name), last = sh.getLastRow();
+  if (last < 2) return (_rowsCache[name] = []);
+  var head = SHEETS[name];
+  var vals = sh.getRange(2, 1, last - 1, head.length).getValues();
+  _rowsCache[name] = vals.map(function (r, i) {
+    var o = { _row: i + 2 };
+    head.forEach(function (h, j) { o[h] = r[j]; });
+    return o;
+  });
+  return _rowsCache[name];
+}
+
+function appendRow_(name, obj) {
+  var head = SHEETS[name];
+  sheet_(name).appendRow(head.map(function (h) { return obj[h] === undefined || obj[h] === null ? '' : obj[h]; }));
+  delete _rowsCache[name];
+}
+
+function updateRow_(name, rowIndex, obj) {
+  var head = SHEETS[name], sh = sheet_(name);
+  var cur = sh.getRange(rowIndex, 1, 1, head.length).getValues()[0];
+  head.forEach(function (h, j) { if (obj[h] !== undefined) cur[j] = obj[h]; });
+  sh.getRange(rowIndex, 1, 1, head.length).setValues([cur]);
+  delete _rowsCache[name];
+}
+
+/* =========================================================================
+ *  CONFIG / FEATURE FLAGS / CANARY RELEASE
+ * ========================================================================= */
+
+function getConfig_() {
+  var cache = CacheService.getScriptCache();
+  var c = cache.get('cfg');
+  if (c) return JSON.parse(c);
+  var cfg = {};
+  DEFAULT_CONFIG.forEach(function (r) { cfg[r[0]] = r[1]; });
+  try { rows_('Config').forEach(function (r) { if (r.key) cfg[String(r.key)] = String(r.value); }); } catch (e) {}
+  cache.put('cfg', JSON.stringify(cfg), 60);
+  return cfg;
+}
+
+function setConfigValue_(key, value) {
+  var list = rows_('Config');
+  for (var i = 0; i < list.length; i++) {
+    if (list[i].key === key) { updateRow_('Config', list[i]._row, { value: value }); CacheService.getScriptCache().remove('cfg'); return; }
+  }
+  appendRow_('Config', { key: key, value: value, note: '' });
+  CacheService.getScriptCache().remove('cfg');
+}
+
+function seedConfig_() {
+  var have = {};
+  rows_('Config').forEach(function (r) { have[r.key] = true; });
+  DEFAULT_CONFIG.forEach(function (r) { if (!have[r[0]]) appendRow_('Config', { key: r[0], value: r[1], note: r[2] }); });
+}
+
+function flagOn_(flag, cfg, member) {
+  if (cfg.FORCE_SAFE_MODE === 'on' && flag !== 'FLAG_SOCIAL_LOGIN') return false;
+  if (cfg[flag] === 'on') return true;
+  var canary = String(cfg.CANARY_FLAGS || '').split(',').map(function (s) { return s.trim(); });
+  if (member && canary.indexOf(flag) > -1) {
+    var pct = Number(cfg.CANARY_PERCENT) || 0;
+    var bucket = parseInt(sha256Hex_(member.memberId).slice(0, 4), 16) % 100;
+    return bucket < pct;
+  }
+  return false;
+}
+
+function publicFlags_(cfg, member) {
+  var f = {};
+  ['FLAG_AI', 'FLAG_GMAIL', 'FLAG_MEDIA', 'FLAG_SOCIAL_LOGIN', 'FLAG_PDF', 'FLAG_IP_LOOKUP', 'FLAG_SOUND'].forEach(function (k) { f[k] = flagOn_(k, cfg, member); });
+  f.SAFE_MODE = cfg.FORCE_SAFE_MODE === 'on';
+  f.IDLE_MINUTES = Number(cfg.IDLE_MINUTES) || 0;
+  var props = PropertiesService.getScriptProperties();
+  f.providers = {
+    google: !!props.getProperty('GOOGLE_CLIENT_ID'),
+    apple: !!props.getProperty('APPLE_CLIENT_ID'),
+    facebook: !!props.getProperty('FACEBOOK_APP_ID'),
+    line: !!props.getProperty('LINE_CHANNEL_ID')
+  };
+  f.ai = !!props.getProperty('GEMINI_API_KEY');
+  return f;
+}
+
+/* =========================================================================
+ *  CRYPTO / HASHING
+ * ========================================================================= */
+
+function bytesToHex_(bytes) {
+  return bytes.map(function (b) { var v = (b < 0 ? b + 256 : b).toString(16); return v.length === 1 ? '0' + v : v; }).join('');
+}
+function sha256Hex_(s) { return bytesToHex_(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(s), Utilities.Charset.UTF_8)); }
+
+function randomToken_(n) {
+  var s = '';
+  while (s.length < n) s += Utilities.getUuid().replace(/-/g, '');
+  return s.slice(0, n);
+}
+
+/**
+ * Apps Script ไม่มี bcrypt/Argon2 ในตัว จึงใช้ HMAC-SHA256 แบบวนซ้ำ (key stretching)
+ * + salt เฉพาะบุคคล + pepper ลับใน Script Properties (ไม่ได้เก็บในชีต)
+ */
+function hashPassword_(pw, salt) {
+  var pepper = PropertiesService.getScriptProperties().getProperty('PEPPER') || '';
+  var h = String(salt) + '|' + String(pw);
+  for (var i = 0; i < CONFIG.HASH_ROUNDS; i++) h = bytesToHex_(Utilities.computeHmacSha256Signature(h, pepper + String(salt)));
+  return 'h1$' + CONFIG.HASH_ROUNDS + '$' + h;
+}
+
+function verifyPassword_(pw, salt, stored) {
+  if (!stored) return false;
+  var calc = hashPassword_(pw, salt);
+  stored = String(stored);
+  if (calc.length !== stored.length) return false;
+  var diff = 0;
+  for (var i = 0; i < calc.length; i++) diff |= calc.charCodeAt(i) ^ stored.charCodeAt(i);
+  return diff === 0;
+}
+
+function normalizeAdminPass_(p) { return String(p || '').trim().replace(/\s+/g, ' ').toUpperCase(); }
+
+/* =========================================================================
+ *  RATE LIMIT / THREAT SCAN
+ * ========================================================================= */
+
+function rateLimit_(action, token, perTenMin) {
+  var cache = CacheService.getScriptCache();
+  var key = 'rl_' + action + '_' + (token ? sha256Hex_(token).slice(0, 16) : 'anon');
+  var n = Number(cache.get(key) || 0) + 1;
+  cache.put(key, String(n), 600);
+  return n <= (token ? perTenMin : perTenMin * 20);
+}
+
+var THREAT_PATTERNS = [
+  /<\s*script\b/i, /javascript\s*:/i, /\bon(error|load|click|mouseover|focus)\s*=/i,
+  /<\s*iframe\b/i, /<\s*svg[^>]*on\w+\s*=/i, /\bunion\s+select\b/i, /;\s*drop\s+table\b/i,
+  /'\s*or\s+'1'\s*=\s*'1/i, /\bdocument\.cookie\b/i, /^\s*=\s*(HYPERLINK|IMPORTDATA|IMPORTRANGE|IMPORTXML|IMAGE)\s*\(/i
+];
+
+function scanPayload_(obj) {
+  var found = '';
+  var skip = { html: 1, dataUrl: 1, avatarDataUrl: 1, fileBase64: 1, messages: 1, data: 1, text: 1, content: 1, adminPass: 1, adminPass2: 1, personalPass: 1, personalPass2: 1, oldPass: 1, newPass: 1, recoveryA: 1, answer: 1 };
+  (function walk(o, depth, key) {
+    if (found || depth > 6 || o === null || o === undefined) return;
+    if (typeof o === 'string') {
+      if (skip[key]) return;
+      for (var i = 0; i < THREAT_PATTERNS.length; i++) if (THREAT_PATTERNS[i].test(o)) { found = String(THREAT_PATTERNS[i]); return; }
+      return;
+    }
+    if (typeof o === 'object') Object.keys(o).forEach(function (k) { if (!skip[k]) walk(o[k], depth + 1, k); });
+  })(obj, 0, '');
+  return found;
+}
+
+/** กันสูตร Google Sheets ถูกฉีดผ่านข้อมูลที่ผู้ใช้กรอก */
+function cell_(v) {
+  var s = v === undefined || v === null ? '' : String(v);
+  if (/^[=+\-@]/.test(s)) s = "'" + s;
+  return s.slice(0, 45000);
+}
+
+/* =========================================================================
+ *  SESSIONS (Remember Session จนกว่าจะออกจากระบบ)
+ * ========================================================================= */
+
+function createSession_(member, info) {
+  var token = randomToken_(48);
+  var th = sha256Hex_(token);
+  info = info || {};
+  appendRow_('Sessions', { tokenHash: th, memberId: member.memberId, createdAt: new Date().toISOString(), lastSeen: new Date().toISOString(), device: cell_(info.device), os: cell_(info.os), browser: cell_(info.browser), ip: cell_(info.ip), location: cell_(info.location), revoked: false });
+  CacheService.getScriptCache().put('sess_' + th, member.memberId, 21600);
+  return token;
+}
+
+function sessionMember_(token) {
+  if (!token || typeof token !== 'string' || token.length < 20) return null;
+  var th = sha256Hex_(token);
+  var cache = CacheService.getScriptCache();
+  var memberId = cache.get('sess_' + th);
+  if (memberId === 'X') return null;
+  if (!memberId) {
+    var list = rows_('Sessions');
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].tokenHash === th) {
+        if (list[i].revoked === true || list[i].revoked === 'TRUE') { cache.put('sess_' + th, 'X', 21600); return null; }
+        memberId = list[i].memberId;
+        updateRow_('Sessions', list[i]._row, { lastSeen: new Date().toISOString() });
+        break;
+      }
+    }
+    if (!memberId) return null;
+    cache.put('sess_' + th, memberId, 21600);
+  }
+  return findMemberById_(memberId);
+}
+
+function revokeSessions_(memberId, exceptToken) {
+  var keep = exceptToken ? sha256Hex_(exceptToken) : '';
+  var cache = CacheService.getScriptCache();
+  rows_('Sessions').slice().forEach(function (s) {
+    if (s.memberId === memberId && s.tokenHash !== keep && !(s.revoked === true || s.revoked === 'TRUE')) {
+      updateRow_('Sessions', s._row, { revoked: true });
+      cache.put('sess_' + s.tokenHash, 'X', 21600);
+    }
+  });
+}
+
+/* =========================================================================
+ *  MEMBERS
+ * ========================================================================= */
+
+function findMemberById_(id) {
+  if (!id) return null;
+  var list = rows_('Members');
+  for (var i = 0; i < list.length; i++) if (String(list[i].memberId) === String(id)) return list[i];
+  return null;
+}
+
+function findMemberByLogin_(login) {
+  var key = String(login || '').trim().toLowerCase();
+  if (!key) return null;
+  var list = rows_('Members');
+  for (var i = 0; i < list.length; i++) {
+    if (String(list[i].usernameLower) === key || String(list[i].memberId).toLowerCase() === key) return list[i];
+  }
+  return null;
+}
+
+function newMemberId_() {
+  var be = Number(Utilities.formatDate(new Date(), 'Asia/Bangkok', 'yyyy')) + 543;
+  var existing = {};
+  rows_('Members').forEach(function (m) { existing[m.memberId] = true; });
+  for (var tries = 0; tries < 50; tries++) {
+    var id = 'TLL-' + be + '-' + Math.floor(100000 + Math.random() * 900000);
+    if (!existing[id]) return id;
+  }
+  return 'TLL-' + be + '-' + Date.now();
+}
+
+function json_(s, def) { try { return s ? JSON.parse(s) : def; } catch (e) { return def; } }
+
+function publicMember_(m) {
+  return {
+    memberId: m.memberId, username: m.username, title: m.title, firstName: m.firstName, lastName: m.lastName,
+    displayName: m.displayName, birthDate: m.birthDate ? String(m.birthDate) : '', gender: m.gender, memberType: m.memberType,
+    education: json_(m.educationJson, {}), work: json_(m.workJson, {}), phone: m.phone, address: m.address, bio: m.bio,
+    avatar: m.avatar || '', recoveryQ: m.recoveryQ, createdAt: m.createdAt, lastLogin: m.lastLogin,
+    accountStatus: m.accountStatus || 'ปกติ', privacy: json_(m.privacyJson, {}), role: m.role || 'member',
+    social: Object.keys(json_(m.socialJson, {})), extra: json_(m.extraJson, {}), plan: planState_(m)
+  };
+}
+
+function planState_(m) {
+  var now = Date.now();
+  var trialStart = m.trialStart ? new Date(m.trialStart).getTime() : now;
+  var trialEnd = trialStart + CONFIG.TRIAL_DAYS * 864e5;
+  var expires = m.planExpires ? new Date(m.planExpires).getTime() : 0;
+  if (m.role === 'admin') return { tier: 'pro', cycle: 'yearly', active: true, label: 'ผู้ดูแลระบบ', trial: false };
+  if (m.plan && expires > now) return { tier: String(m.plan), cycle: m.planCycle || 'monthly', active: true, expires: new Date(expires).toISOString(), trial: false };
+  if (now < trialEnd) return { tier: 'pro', cycle: 'yearly', active: true, trial: true, trialEnds: new Date(trialEnd).toISOString(), daysLeft: Math.ceil((trialEnd - now) / 864e5) };
+  return { tier: 'free', cycle: '', active: false, trial: false, trialEnds: new Date(trialEnd).toISOString() };
+}
+
+/* =========================================================================
+ *  AUTH: REGISTER / LOGIN / FORGOT
+ * ========================================================================= */
+
+function validUsername_(u) { return /^[A-Za-z0-9_.]{4,24}$/.test(u); }
+function strongPassword_(p) { return typeof p === 'string' && p.length >= 10 && /[A-Z]/.test(p) && /[a-z]/.test(p) && /[0-9]/.test(p); }
+
+function apiCheckUsername_(p) {
+  var u = String(p.username || '').trim();
+  if (!validUsername_(u)) return { available: false, msg: 'ชื่อผู้ใช้งานต้องเป็นภาษาอังกฤษหรือตัวเลข 4–24 ตัวอักษร (ใช้ _ และ . ได้)' };
+  var taken = !!findMemberByLogin_(u);
+  return { available: !taken, msg: taken ? 'ชื่อผู้ใช้งานนี้มีผู้ใช้แล้ว' : 'ใช้ชื่อนี้ได้' };
+}
+
+function checkAdminPass_(input, member) {
+  var norm = normalizeAdminPass_(input);
+  if (member && member.adminHash) return verifyPassword_(norm, 'admin-' + member.memberId, member.adminHash);
+  return verifyPassword_(norm, 'admin-global', PropertiesService.getScriptProperties().getProperty('ADMIN_HASH'));
+}
+
+function apiRegister_(p) {
+  var errors = [];
+  var f = p.form || {};
+  var u = String(f.username || '').trim();
+  if (!f.title) errors.push('กรุณาเลือกคำนำหน้าชื่อ');
+  if (!f.firstName || !f.lastName) errors.push('กรุณากรอกชื่อจริงและนามสกุล');
+  if (!f.displayName) errors.push('กรุณากรอกชื่อที่ใช้แสดงในระบบ');
+  if (!f.birthDate) errors.push('กรุณาระบุวันเดือนปีเกิด');
+  if (!f.memberType) errors.push('กรุณาเลือกสถานะของผู้สมัคร');
+  if (!validUsername_(u)) errors.push('ชื่อผู้ใช้งานต้องเป็นภาษาอังกฤษหรือตัวเลข 4–24 ตัวอักษร');
+  if (normalizeAdminPass_(f.adminPass) !== normalizeAdminPass_(f.adminPass2)) errors.push('รหัสผ่านจากผู้ดูแลระบบทั้งสองช่องไม่ตรงกัน');
+  else if (!checkAdminPass_(f.adminPass, null)) errors.push('รหัสผ่านจากผู้ดูแลระบบไม่ถูกต้อง');
+  if (!strongPassword_(f.personalPass)) errors.push('รหัสผ่านส่วนตัวต้องยาวอย่างน้อย 10 ตัวอักษร และมีตัวพิมพ์ใหญ่ ตัวพิมพ์เล็ก และตัวเลข');
+  if (f.personalPass !== f.personalPass2) errors.push('รหัสผ่านส่วนตัวทั้งสองช่องไม่ตรงกัน');
+  if (normalizeAdminPass_(f.personalPass) === normalizeAdminPass_(f.adminPass)) errors.push('รหัสผ่านส่วนตัวต้องไม่ซ้ำกับรหัสผ่านจากผู้ดูแลระบบ');
+  if (!f.recoveryQ || !f.recoveryA) errors.push('กรุณากำหนดคำถามและคำตอบสำหรับกู้คืนบัญชี');
+  if (!f.accept) errors.push('กรุณายอมรับข้อกำหนดการใช้งานและนโยบายความเป็นส่วนตัว');
+  if (errors.length) return { ok: false, code: 'INVALID', msg: errors[0], errors: errors };
+
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(15000)) return fail_('BUSY', 'มีผู้สมัครพร้อมกันจำนวนมาก กรุณากดสมัครอีกครั้ง');
+  try {
+    delete _rowsCache.Members;
+    if (findMemberByLogin_(u)) return fail_('DUP_USERNAME', 'ชื่อผู้ใช้งานนี้มีผู้ใช้แล้ว กรุณาเลือกชื่ออื่น');
+    var id = newMemberId_();
+    var salt = randomToken_(24);
+    var social = {};
+    if (p.socialTicket) {
+      var t = readTicket_(p.socialTicket, false);
+      if (t && t.sub) social[t.provider] = { sub: t.sub, name: t.name || '', linkedAt: new Date().toISOString() };
+    }
+    var now = new Date().toISOString();
+    appendRow_('Members', {
+      memberId: id, username: u, usernameLower: u.toLowerCase(), title: cell_(f.title), firstName: cell_(f.firstName), lastName: cell_(f.lastName),
+      displayName: cell_(f.displayName), birthDate: cell_(f.birthDate), gender: cell_(f.gender), memberType: cell_(f.memberType),
+      educationJson: cell_(JSON.stringify(f.education || {})), workJson: cell_(JSON.stringify(f.work || {})),
+      phone: cell_(f.phone), address: cell_(f.address), bio: cell_(f.bio), avatar: '',
+      adminHash: '', personalHash: hashPassword_(f.personalPass, salt), salt: salt,
+      recoveryQ: cell_(f.recoveryQ), recoveryAHash: hashPassword_(String(f.recoveryA).trim().toLowerCase(), salt + 'R'),
+      plan: '', planCycle: '', planExpires: '', trialStart: now, createdAt: now, lastLogin: '',
+      accountStatus: 'ปกติ', failCount: 0, lockUntil: '', lockCount: 0, socialJson: JSON.stringify(social),
+      privacyJson: JSON.stringify({ showProfile: true, showName: true, visibleTo: 'members', searchable: true }), role: 'member',
+      extraJson: cell_(JSON.stringify(f.extra || {}))
+    });
+    audit_(id, 'register', 'สมัครสมาชิก');
+    var m2 = findMemberById_(id);
+    if (f.avatarDataUrl && m2) { try { saveAvatar_(m2, f.avatarDataUrl); } catch (e) { logError_('register.avatar', e, id); } }
+    return { member: { memberId: id, username: u, name: f.title + f.firstName + ' ' + f.lastName, memberType: f.memberType, createdAt: now, accountStatus: 'Active' } };
+  } finally { lock.releaseLock(); }
+}
+
+function apiLogin_(p) {
+  var cfg = getConfig_();
+  var maxAttempts = Number(cfg.LOCK_ATTEMPTS) || 5;
+  var lockMin = Number(cfg.LOCK_MINUTES) || 15;
+  var info = p.client || {};
+  var m = findMemberByLogin_(p.username);
+  var logBase = { time: new Date().toISOString(), username: cell_(p.username), ip: cell_(info.ip), location: cell_(info.location), isp: cell_(info.isp), device: cell_(info.device), os: cell_(info.os), browser: cell_(info.browser) };
+
+  if (!m) {
+    logBase.result = 'FAIL'; logBase.reason = 'ไม่พบชื่อผู้ใช้'; appendRow_('LoginLog', logBase);
+    anonFail_(info);
+    return fail_('BAD_CREDENTIALS', 'ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบแล้วลองใหม่อีกครั้ง');
+  }
+  logBase.memberId = m.memberId;
+  if (m.accountStatus === 'ระงับ') {
+    logBase.result = 'BLOCKED'; logBase.reason = 'บัญชีถูกระงับ'; appendRow_('LoginLog', logBase);
+    return fail_('ACCOUNT_SUSPENDED', 'บัญชีของท่านถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบเพื่อดำเนินการปลดล็อก');
+  }
+  var lockUntil = m.lockUntil ? new Date(m.lockUntil).getTime() : 0;
+  if (lockUntil > Date.now()) {
+    var mins = Math.ceil((lockUntil - Date.now()) / 60000);
+    logBase.result = 'LOCKED'; logBase.reason = 'อยู่ระหว่างระงับชั่วคราว'; appendRow_('LoginLog', logBase);
+    return fail_('LOCKED', 'ระบบระงับการเข้าสู่ระบบของบัญชีนี้ชั่วคราว เนื่องจากกรอกรหัสผ่านไม่ถูกต้องติดต่อกันหลายครั้ง กรุณาลองใหม่ในอีก ' + mins + ' นาที');
+  }
+  var okAdmin = checkAdminPass_(p.adminPass, m);
+  var okPersonal = verifyPassword_(String(p.personalPass || ''), m.salt, m.personalHash);
+  if (!okAdmin || !okPersonal) {
+    var fc = Number(m.failCount || 0) + 1;
+    var upd = { failCount: fc };
+    var msg = 'ข้อมูลเข้าสู่ระบบไม่ถูกต้อง (ครั้งที่ ' + fc + ' จาก ' + maxAttempts + ')';
+    if (fc === 3) msg += ' ระบบได้เพิ่มระดับการตรวจสอบแล้ว';
+    if (fc === maxAttempts - 1) msg += ' หากผิดอีกหนึ่งครั้ง ระบบจะระงับการเข้าสู่ระบบชั่วคราว ' + lockMin + ' นาที';
+    if (fc >= maxAttempts) {
+      upd.lockUntil = new Date(Date.now() + lockMin * 60000).toISOString();
+      upd.failCount = 0;
+      upd.lockCount = Number(m.lockCount || 0) + 1;
+      msg = 'ท่านกรอกรหัสผ่านไม่ถูกต้องครบ ' + maxAttempts + ' ครั้ง ระบบจึงระงับการเข้าสู่ระบบชั่วคราว ' + lockMin + ' นาที';
+      var sev = upd.lockCount >= 3 ? 'CRITICAL' : (upd.lockCount >= 2 ? 'HIGH' : 'MEDIUM');
+      raiseIncident_({ type: 'Brute force / การสุ่มรหัสผ่าน', severity: sev, memberId: m.memberId, username: m.username, ip: info.ip, location: info.location, device: [info.device, info.os, info.browser].join(' / '), attempts: maxAttempts * upd.lockCount, detail: 'มีการกรอกรหัสผ่านผิดติดต่อกัน ' + maxAttempts + ' ครั้ง (การระงับสะสม ' + upd.lockCount + ' ครั้ง)', action: 'ระงับการเข้าสู่ระบบ ' + lockMin + ' นาที', alertMember: true });
+    }
+    updateRow_('Members', m._row, upd);
+    logBase.result = 'FAIL'; logBase.reason = !okAdmin ? 'รหัสชั้นที่ 1 ไม่ถูกต้อง' : 'รหัสชั้นที่ 2 ไม่ถูกต้อง'; appendRow_('LoginLog', logBase);
+    if (fc >= 3 && fc < maxAttempts) Utilities.sleep(300 * (fc - 2));
+    return fail_(fc >= maxAttempts ? 'LOCKED' : 'BAD_CREDENTIALS', msg);
+  }
+  return finishLogin_(m, info, logBase, 'รหัสผ่าน 2 ชั้น');
+}
+
+function finishLogin_(m, info, logBase, method) {
+  var known = rows_('Sessions').some(function (s) { return s.memberId === m.memberId && s.device === String(info.device || '') && s.browser === String(info.browser || ''); });
+  updateRow_('Members', m._row, { failCount: 0, lockUntil: '', lastLogin: new Date().toISOString() });
+  var token = createSession_(m, info);
+  logBase.result = 'SUCCESS'; logBase.reason = method; appendRow_('LoginLog', logBase);
+  var fresh = findMemberById_(m.memberId);
+  var notices = [];
+  if (!known) notices.push({ type: 'security', title: 'เข้าสู่ระบบจากอุปกรณ์ใหม่', body: 'มีการเข้าสู่ระบบจาก ' + [info.device, info.os, info.browser].filter(function (x) { return x; }).join(' / ') + (info.location ? ' (' + info.location + ')' : '') + ' หากไม่ใช่ท่าน กรุณาเปลี่ยนรหัสผ่านและออกจากระบบทุกอุปกรณ์ทันที', time: new Date().toISOString() });
+  return { token: token, member: publicMember_(fresh), notices: notices };
+}
+
+function anonFail_(info) {
+  var cache = CacheService.getScriptCache();
+  var key = 'anonfail_' + sha256Hex_(String(info.ip || '') + String(info.device || '')).slice(0, 16);
+  var n = Number(cache.get(key) || 0) + 1;
+  cache.put(key, String(n), 3600);
+  if (n === 15) raiseIncident_({ type: 'Username enumeration / การสุ่มบัญชีผู้ใช้', severity: 'HIGH', ip: info.ip, location: info.location, device: [info.device, info.os, info.browser].join(' / '), attempts: n, detail: 'มีการพยายามเข้าสู่ระบบด้วยชื่อผู้ใช้ที่ไม่มีอยู่จริง ' + n + ' ครั้งภายใน 1 ชั่วโมง', action: 'จำกัดความถี่คำขอและแจ้งผู้ดูแลระบบ' });
+}
+
+function apiForgot_(p) {
+  var m = findMemberByLogin_(p.username);
+  if (!m) return fail_('NOT_FOUND', 'ไม่พบชื่อผู้ใช้งานหรือรหัสสมาชิกนี้ในระบบ');
+  if (!p.step || p.step === 'question') return { question: m.recoveryQ };
+  var ok = verifyPassword_(String(p.answer || '').trim().toLowerCase(), m.salt + 'R', m.recoveryAHash) && checkAdminPass_(p.adminPass, m);
+  if (!ok) {
+    var fc = Number(m.failCount || 0) + 1;
+    updateRow_('Members', m._row, { failCount: fc });
+    if (fc >= 5) raiseIncident_({ type: 'Account recovery abuse', severity: 'HIGH', memberId: m.memberId, username: m.username, attempts: fc, detail: 'มีการพยายามกู้คืนบัญชีโดยตอบคำถามหรือรหัสชั้นที่ 1 ไม่ถูกต้องหลายครั้ง', action: 'บันทึกเหตุการณ์และแจ้งผู้ดูแลระบบ', alertMember: true });
+    return fail_('BAD_ANSWER', 'คำตอบสำหรับกู้คืนบัญชีหรือรหัสผ่านจากผู้ดูแลระบบไม่ถูกต้อง');
+  }
+  if (!strongPassword_(p.newPass)) return fail_('WEAK', 'รหัสผ่านใหม่ต้องยาวอย่างน้อย 10 ตัวอักษร และมีตัวพิมพ์ใหญ่ ตัวพิมพ์เล็ก และตัวเลข');
+  updateRow_('Members', m._row, { personalHash: hashPassword_(p.newPass, m.salt), failCount: 0, lockUntil: '' });
+  revokeSessions_(m.memberId, null);
+  audit_(m.memberId, 'password.reset', 'ตั้งรหัสผ่านใหม่ผ่านการกู้คืนบัญชี');
+  return { msg: 'ตั้งรหัสผ่านส่วนตัวใหม่เรียบร้อยแล้ว กรุณาเข้าสู่ระบบด้วยรหัสผ่านใหม่' };
+}
+
+function apiLogout_(p, ctx) {
+  var th = sha256Hex_(ctx.token);
+  rows_('Sessions').slice().forEach(function (s) { if (s.tokenHash === th) updateRow_('Sessions', s._row, { revoked: true }); });
+  CacheService.getScriptCache().put('sess_' + th, 'X', 21600);
+  return {};
+}
+
+function apiLogoutAll_(p, ctx) {
+  revokeSessions_(ctx.member.memberId, p.keepCurrent ? ctx.token : null);
+  audit_(ctx.member.memberId, 'logout.all', 'ออกจากระบบทุกอุปกรณ์');
+  return { msg: 'ออกจากระบบทุกอุปกรณ์เรียบร้อยแล้ว' };
+}
+
+function audit_(memberId, action, detail) {
+  try { appendRow_('AuditLog', { time: new Date().toISOString(), memberId: memberId, action: action, detail: cell_(detail) }); } catch (e) {}
+}
+
+function logError_(where, err, memberId) {
+  try {
+    appendRow_('ErrorLog', { time: new Date().toISOString(), memberId: memberId || '', where: where, message: cell_(err && err.message ? err.message : err), stack: cell_(err && err.stack ? String(err.stack).slice(0, 2000) : ''), userAgent: '', version: CONFIG.VERSION });
+  } catch (e) {}
+}
+
+/* =========================================================================
+ *  BOOTSTRAP & USER DATA (บันทึก / ประวัติ / เวลา / โน้ต / ตั้งค่า)
+ *  เก็บเป็น JSON แบ่งชิ้นละ 40,000 ตัวอักษรในชีต UserData — ข้อมูลไม่หาย
+ * ========================================================================= */
+
+function apiBootstrap_(p, ctx) {
+  var m = ctx.member;
+  var ud = readUserData_(m.memberId);
+  var ann = rows_('Announcements').filter(function (a) { return String(a.active) !== 'false' && String(a.active) !== 'FALSE'; })
+    .map(function (a) { return { id: String(a.id), time: a.time, type: a.type, title: a.title, body: a.body }; });
+  var alerts = pendingAlerts_(m.memberId);
+  return {
+    member: publicMember_(m),
+    flags: publicFlags_(ctx.cfg, m),
+    userData: ud.data, rev: ud.rev,
+    catalogVersion: catalogVersion_(),
+    announcements: ann,
+    alerts: alerts,
+    serverTime: new Date().toISOString()
+  };
+}
+
+function readUserData_(memberId) {
+  var list = rows_('UserData').filter(function (r) { return r.memberId === memberId; });
+  if (!list.length) return { data: null, rev: 0 };
+  list.sort(function (a, b) { return Number(a.part) - Number(b.part); });
+  var rev = Number(list[0].rev) || 0;
+  var json = list.filter(function (r) { return Number(r.rev) === rev; }).map(function (r) { return String(r.json); }).join('');
+  return { data: json_(json, null), rev: rev };
+}
+
+function apiSaveUserData_(p, ctx) {
+  var memberId = ctx.member.memberId;
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(10000)) return fail_('BUSY', 'ระบบกำลังบันทึกข้อมูลอื่นอยู่ จะบันทึกให้อัตโนมัติอีกครั้ง');
+  try {
+    delete _rowsCache.UserData;
+    var cur = readUserData_(memberId);
+    if (p.baseRev !== undefined && Number(p.baseRev) < cur.rev) {
+      return { ok: false, code: 'CONFLICT', serverData: cur.data, rev: cur.rev, msg: 'มีการแก้ไขจากอุปกรณ์อื่น ระบบจะรวมข้อมูลให้อัตโนมัติ' };
+    }
+    var s = JSON.stringify(p.data || {});
+    if (s.length > 4000000) return fail_('TOO_LARGE', 'ข้อมูลมีขนาดใหญ่เกินกำหนด กรุณาลบประวัติหรือโน้ตที่ไม่ใช้งานบางส่วน');
+    var rev = cur.rev + 1;
+    var parts = [];
+    for (var i = 0; i < s.length; i += 40000) parts.push(s.slice(i, i + 40000));
+    if (!parts.length) parts.push('{}');
+    var sh = sheet_('UserData');
+    var now = new Date().toISOString();
+    var rowsNew = parts.map(function (chunk, idx) { return [memberId, rev, now, idx, chunk]; });
+    sh.getRange(sh.getLastRow() + 1, 1, rowsNew.length, 5).setNumberFormat('@').setValues(rowsNew);
+    // ลบเวอร์ชันเก่าหลังเขียนเวอร์ชันใหม่สำเร็จแล้วเท่านั้น (กันข้อมูลหายระหว่างเขียน)
+    var data = sh.getDataRange().getValues();
+    for (var r = data.length - 1; r >= 1; r--) {
+      if (data[r][0] === memberId && Number(data[r][1]) < rev) sh.deleteRow(r + 1);
+    }
+    delete _rowsCache.UserData;
+    return { rev: rev, savedAt: now };
+  } finally { lock.releaseLock(); }
+}
+
+/* =========================================================================
+ *  PROFILE / ACCOUNT / PRIVACY
+ * ========================================================================= */
+
+var PROFILE_FIELDS = ['title', 'firstName', 'lastName', 'displayName', 'birthDate', 'gender', 'phone', 'address', 'bio', 'memberType'];
+
+function apiUpdateProfile_(p, ctx) {
+  var m = ctx.member, upd = {}, f = p.fields || {};
+  PROFILE_FIELDS.forEach(function (k) { if (f[k] !== undefined) upd[k] = cell_(f[k]); });
+  if (f.education) upd.educationJson = cell_(JSON.stringify(f.education));
+  if (f.work) upd.workJson = cell_(JSON.stringify(f.work));
+  if (f.extra) upd.extraJson = cell_(JSON.stringify(f.extra));
+  if (upd.firstName === '' || upd.lastName === '') return fail_('INVALID', 'ชื่อจริงและนามสกุลห้ามเว้นว่าง');
+  updateRow_('Members', m._row, upd);
+  audit_(m.memberId, 'profile.update', Object.keys(upd).join(','));
+  return { member: publicMember_(findMemberById_(m.memberId)), msg: 'บันทึกข้อมูลส่วนตัวเรียบร้อยแล้ว' };
+}
+
+/**
+ * รูปโปรไฟล์: หน้าเว็บย่อภาพเหลือ 320px ก่อนส่ง (ไฟล์ทุกชนิด/ทุกขนาดที่เบราว์เซอร์อ่านได้)
+ * ภาพเล็กเก็บในชีตโดยตรงเพื่อให้โหลดทันที ส่วนไฟล์ต้นฉบับ (ถ้าส่งมา) เก็บใน Google Drive
+ */
+function apiUploadAvatar_(p, ctx) {
+  var url = saveAvatar_(ctx.member, p.dataUrl, p);
+  return { avatar: url, msg: 'อัปเดตรูปโปรไฟล์เรียบร้อยแล้ว' };
+}
+
+function saveAvatar_(m, dataUrl, opt) {
+  opt = opt || {};
+  if (!dataUrl || !/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+\/=]+$/.test(dataUrl)) throw new Error('รูปแบบรูปภาพไม่ถูกต้อง');
+  if (dataUrl.length > 45000) throw new Error('รูปภาพหลังย่อมีขนาดใหญ่เกินไป');
+  var extra = json_(m.extraJson, {});
+  if (opt.fileBase64 && opt.fileName) {
+    try {
+      var folder = appFolder_('Avatars');
+      var blob = Utilities.newBlob(Utilities.base64Decode(opt.fileBase64), opt.fileMime || 'application/octet-stream', String(opt.fileName).slice(0, 120));
+      var file = folder.createFile(blob);
+      extra.avatarOriginal = file.getId();
+    } catch (e) { logError_('avatar.original', e, m.memberId); }
+  }
+  updateRow_('Members', m._row, { avatar: dataUrl, extraJson: JSON.stringify(extra) });
+  return dataUrl;
+}
+
+function appFolder_(sub) {
+  var props = PropertiesService.getScriptProperties();
+  var id = props.getProperty('FOLDER_ID'), root;
+  if (id) { try { root = DriveApp.getFolderById(id); } catch (e) { root = null; } }
+  if (!root) { root = DriveApp.createFolder('THAI LAW LIBRARY – Files'); props.setProperty('FOLDER_ID', root.getId()); }
+  if (!sub) return root;
+  var it = root.getFoldersByName(sub);
+  return it.hasNext() ? it.next() : root.createFolder(sub);
+}
+
+function apiChangePassword_(p, ctx) {
+  var m = ctx.member;
+  if (!verifyPassword_(String(p.oldPass || ''), m.salt, m.personalHash)) return fail_('BAD_OLD', 'รหัสผ่านเดิมไม่ถูกต้อง');
+  if (!strongPassword_(p.newPass)) return fail_('WEAK', 'รหัสผ่านใหม่ต้องยาวอย่างน้อย 10 ตัวอักษร และมีตัวพิมพ์ใหญ่ ตัวพิมพ์เล็ก และตัวเลข');
+  if (p.newPass === p.oldPass) return fail_('SAME', 'รหัสผ่านใหม่ต้องไม่ซ้ำกับรหัสผ่านเดิม');
+  if (checkAdminPass_(p.newPass, m)) return fail_('SAME_ADMIN', 'รหัสผ่านส่วนตัวต้องไม่ซ้ำกับรหัสผ่านจากผู้ดูแลระบบ');
+  updateRow_('Members', m._row, { personalHash: hashPassword_(p.newPass, m.salt) });
+  revokeSessions_(m.memberId, ctx.token);
+  audit_(m.memberId, 'password.change', 'เปลี่ยนรหัสผ่านส่วนตัว');
+  return { msg: 'เปลี่ยนรหัสผ่านเรียบร้อยแล้ว อุปกรณ์อื่นทั้งหมดถูกออกจากระบบเพื่อความปลอดภัย' };
+}
+
+function apiChangeUsername_(p, ctx) {
+  var m = ctx.member, u = String(p.username || '').trim();
+  if (!verifyPassword_(String(p.password || ''), m.salt, m.personalHash)) return fail_('BAD_PASS', 'รหัสผ่านส่วนตัวไม่ถูกต้อง');
+  if (!validUsername_(u)) return fail_('INVALID', 'ชื่อผู้ใช้งานต้องเป็นภาษาอังกฤษหรือตัวเลข 4–24 ตัวอักษร');
+  var other = findMemberByLogin_(u);
+  if (other && other.memberId !== m.memberId) return fail_('DUP', 'ชื่อผู้ใช้งานนี้มีผู้ใช้แล้ว');
+  updateRow_('Members', m._row, { username: u, usernameLower: u.toLowerCase() });
+  audit_(m.memberId, 'username.change', m.username + ' -> ' + u);
+  return { member: publicMember_(findMemberById_(m.memberId)), msg: 'เปลี่ยนชื่อผู้ใช้งานเรียบร้อยแล้ว' };
+}
+
+function apiSetPrivacy_(p, ctx) {
+  var cur = json_(ctx.member.privacyJson, {});
+  var allow = ['showProfile', 'showName', 'visibleTo', 'searchable'];
+  allow.forEach(function (k) { if (p.privacy && p.privacy[k] !== undefined) cur[k] = p.privacy[k]; });
+  updateRow_('Members', ctx.member._row, { privacyJson: JSON.stringify(cur) });
+  return { privacy: cur, msg: 'บันทึกการตั้งค่าความเป็นส่วนตัวแล้ว' };
+}
+
+function apiSetAccountStatus_(p, ctx) {
+  var m = ctx.member;
+  if (!verifyPassword_(String(p.password || ''), m.salt, m.personalHash)) return fail_('BAD_PASS', 'รหัสผ่านส่วนตัวไม่ถูกต้อง');
+  var status = p.status === 'ปิดใช้งาน' ? 'ปิดใช้งาน' : 'ปกติ';
+  updateRow_('Members', m._row, { accountStatus: status });
+  audit_(m.memberId, 'account.status', status);
+  return { status: status, msg: status === 'ปิดใช้งาน' ? 'ปิดใช้งานบัญชีชั่วคราวแล้ว ท่านสามารถเปิดใช้งานได้อีกครั้งเมื่อเข้าสู่ระบบ' : 'เปิดใช้งานบัญชีเรียบร้อยแล้ว' };
+}
+
+function apiDeleteAccount_(p, ctx) {
+  var m = ctx.member;
+  if (!verifyPassword_(String(p.password || ''), m.salt, m.personalHash) || !checkAdminPass_(p.adminPass, m)) return fail_('BAD_PASS', 'การยืนยันตัวตนไม่ถูกต้อง ระบบจึงยังไม่ลบบัญชี');
+  if (String(p.confirmText || '') !== m.username) return fail_('CONFIRM', 'กรุณาพิมพ์ชื่อผู้ใช้งานให้ตรงเพื่อยืนยันการลบบัญชี');
+  revokeSessions_(m.memberId, null);
+  var sh = sheet_('UserData'), data = sh.getDataRange().getValues();
+  for (var r = data.length - 1; r >= 1; r--) if (data[r][0] === m.memberId) sh.deleteRow(r + 1);
+  sheet_('Members').deleteRow(m._row);
+  delete _rowsCache.Members; delete _rowsCache.UserData;
+  audit_(m.memberId, 'account.delete', 'ลบบัญชีถาวรโดยเจ้าของบัญชี');
+  return { msg: 'ลบบัญชีและข้อมูลทั้งหมดเรียบร้อยแล้ว' };
+}
+
+function apiExportData_(p, ctx) {
+  var m = ctx.member;
+  return { data: { exportedAt: new Date().toISOString(), member: publicMember_(m), userData: readUserData_(m.memberId).data, loginHistory: loginHistory_(m.memberId, 200) } };
+}
+
+function loginHistory_(memberId, max) {
+  return rows_('LoginLog').filter(function (r) { return r.memberId === memberId; }).slice(-max).reverse()
+    .map(function (r) { return { time: r.time, result: r.result, reason: r.reason, ip: r.ip, location: r.location, device: r.device, os: r.os, browser: r.browser }; });
+}
+
+function apiLoginHistory_(p, ctx) { return { items: loginHistory_(ctx.member.memberId, 100) }; }
+
+function apiDevices_(p, ctx) {
+  var th = sha256Hex_(ctx.token);
+  return {
+    items: rows_('Sessions').filter(function (s) { return s.memberId === ctx.member.memberId && !(s.revoked === true || s.revoked === 'TRUE'); })
+      .map(function (s) { return { current: s.tokenHash === th, createdAt: s.createdAt, lastSeen: s.lastSeen, device: s.device, os: s.os, browser: s.browser, ip: s.ip, location: s.location }; })
+  };
+}
+
+/* =========================================================================
+ *  SECURITY INCIDENTS + PDF REPORT + EMAIL ALERT
+ * ========================================================================= */
+
+function raiseIncident_(o) {
+  var id = 'SIR-' + Utilities.formatDate(new Date(), 'Asia/Bangkok', 'yyyyMMdd-HHmmss') + '-' + randomToken_(4).toUpperCase();
+  var rec = {
+    reportId: id, time: new Date().toISOString(), type: o.type, severity: o.severity || 'LOW', memberId: o.memberId || '', username: cell_(o.username || ''),
+    ip: cell_(o.ip || ''), location: cell_(o.location || ''), device: cell_(o.device || ''), detail: cell_(o.detail || ''), attempts: o.attempts || '',
+    action: cell_(o.action || ''), status: 'OPEN', pdfUrl: ''
+  };
+  try {
+    if (rec.severity === 'HIGH' || rec.severity === 'CRITICAL') {
+      var cache = CacheService.getScriptCache();
+      var throttle = 'mail_' + sha256Hex_(rec.type + rec.memberId).slice(0, 12);
+      if (!cache.get(throttle)) {
+        cache.put(throttle, '1', 600);
+        var pdf = incidentPdf_(rec);
+        try { rec.pdfUrl = appFolder_('Security Reports').createFile(pdf).getUrl(); } catch (e) { logError_('incident.saveDrive', e, ''); }
+        var to = adminEmail_();
+        if (to) {
+          MailApp.sendEmail({
+            to: to,
+            subject: '[' + rec.severity + '] THAI LAW LIBRARY – SECURITY INCIDENT ' + id,
+            htmlBody: '<p>เรียน ผู้ดูแลระบบ</p><p>ระบบตรวจพบเหตุการณ์ด้านความปลอดภัย <b>' + esc_(rec.type) + '</b> ระดับ <b>' + rec.severity + '</b></p><p>บัญชีที่เกี่ยวข้อง: ' + esc_(rec.username || '-') + ' (' + esc_(rec.memberId || '-') + ')<br>IP: ' + esc_(rec.ip || '-') + '<br>รายละเอียด: ' + esc_(rec.detail) + '</p><p>รายละเอียดฉบับเต็มอยู่ในไฟล์ PDF ที่แนบมา (สถานะ: WAITING FOR AUTHORIZATION)</p>',
+            attachments: [pdf]
+          });
+        }
+      }
+    }
+  } catch (e) { logError_('raiseIncident', e, rec.memberId); }
+  appendRow_('Security', rec);
+  if (o.alertMember && rec.memberId) {
+    var cache2 = CacheService.getScriptCache();
+    var list = json_(cache2.get('alerts_' + rec.memberId), []);
+    list.push({ reportId: id, time: rec.time, type: rec.type, severity: rec.severity, detail: rec.detail, ip: rec.ip, location: rec.location, device: rec.device, action: rec.action });
+    cache2.put('alerts_' + rec.memberId, JSON.stringify(list.slice(-5)), 21600);
+  }
+  return rec;
+}
+
+function pendingAlerts_(memberId) {
+  var cache = CacheService.getScriptCache();
+  var list = json_(cache.get('alerts_' + memberId), []);
+  if (list.length) cache.remove('alerts_' + memberId);
+  return list;
+}
+
+function esc_(s) { return String(s === undefined || s === null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+function incidentPdf_(r) {
+  var sevText = { LOW: 'ความเสี่ยงต่ำ', MEDIUM: 'ความเสี่ยงปานกลาง', HIGH: 'ความเสี่ยงสูง', CRITICAL: 'เหตุการณ์ร้ายแรง ต้องแจ้งผู้ดูแลระบบทันที' };
+  var recs = {
+    LOW: 'เฝ้าระวังต่อเนื่อง ไม่ต้องดำเนินการเพิ่มเติม',
+    MEDIUM: 'ติดตามบัญชีที่เกี่ยวข้อง และแนะนำให้สมาชิกเปลี่ยนรหัสผ่านส่วนตัว',
+    HIGH: 'ตรวจสอบ IP ต้นทาง พิจารณาระงับบัญชีชั่วคราว และออกรหัสผ่านชั้นที่ 1 ใหม่ให้สมาชิก',
+    CRITICAL: 'ระงับบัญชีที่ได้รับผลกระทบทันที ออกจากระบบทุกอุปกรณ์ ตรวจสอบบันทึกทั้งหมด และพิจารณาแจ้งเจ้าหน้าที่ผู้มีอำนาจตามกฎหมาย'
+  };
+  var row = function (k, v) { return '<tr><th>' + k + '</th><td>' + esc_(v || '-') + '</td></tr>'; };
+  var html = '<html><head><meta charset="utf-8"><style>body{font-family:Sarabun,Arial,sans-serif;font-size:12pt;color:#111;margin:28px}h1{font-size:16pt;margin:0}h2{font-size:12pt;color:#2B6CB0;margin:18px 0 6px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #cfd8e3;padding:6px 8px;text-align:left;vertical-align:top}th{width:34%;background:#EAF4FC}.sig{margin-top:28px}.w{color:#C2410C;font-weight:bold}</style></head><body>' +
+    '<h1>THAI LAW LIBRARY – SECURITY INCIDENT REPORT</h1><div>รายงานเหตุการณ์ด้านความปลอดภัย คลังกฎหมายไทย</div>' +
+    '<h2>ข้อมูลเหตุการณ์</h2><table>' +
+    row('1. หมายเลขรายงาน (Report ID)', r.reportId) +
+    row('2. วันที่และเวลาที่เกิดเหตุ', Utilities.formatDate(new Date(r.time), 'Asia/Bangkok', 'dd/MM/yyyy HH:mm:ss') + ' (เวลาประเทศไทย)') +
+    row('3. ประเภทเหตุการณ์', r.type) +
+    row('4. ระดับความรุนแรง', r.severity + ' — ' + sevText[r.severity]) +
+    row('5. IP Address ต้นทาง', r.ip) +
+    row('6. ตำแหน่งทางภูมิศาสตร์โดยประมาณ', (r.location || '-') + ' (ประมาณการจาก IP ไม่สามารถระบุที่อยู่หรือตัวบุคคลได้)') +
+    row('7. อุปกรณ์ที่ใช้เชื่อมต่อ', r.device) +
+    row('8. บัญชีที่ได้รับผลกระทบ', (r.username || '-') + ' / ' + (r.memberId || '-')) +
+    row('9. รายละเอียดพฤติกรรมที่ตรวจพบ', r.detail) +
+    row('10. จำนวนครั้งที่พยายามเข้าสู่ระบบ', r.attempts) +
+    row('11. ผลการตรวจสอบเบื้องต้น', 'ระบบตรวจพบพฤติกรรมเข้าเกณฑ์เหตุการณ์ด้านความปลอดภัยตามนโยบาย MANDATORY SECURITY POLICY') +
+    row('12. มาตรการป้องกันที่ระบบดำเนินการ', r.action) +
+    row('13. สถานะการแก้ไขปัญหา', 'OPEN — อยู่ระหว่างการตรวจสอบ') +
+    row('14. ข้อเสนอแนะในการดำเนินการต่อ', recs[r.severity]) +
+    '</table><div class="sig"><h2>การรับรองรายงานเหตุการณ์ด้านความปลอดภัย</h2>' +
+    '<p>ข้าพเจ้า ' + CONFIG.ADMIN_NAME + ' ผู้ดูแลระบบเว็บไซต์ THAI LAW LIBRARY ขอรับรองว่า รายงานฉบับนี้จัดทำขึ้นจากข้อมูลบันทึกเหตุการณ์ของระบบรักษาความปลอดภัย เพื่อใช้ประกอบการตรวจสอบ วิเคราะห์ และดำเนินมาตรการป้องกันภัยคุกคามทางไซเบอร์</p>' +
+    '<p>ลายมือชื่อผู้ดูแลระบบ</p><p>…………………………………………………..</p><p>(' + CONFIG.ADMIN_NAME + ')</p><p>ผู้ดูแลระบบ THAI LAW LIBRARY</p><p>วันที่ ………./………./……….</p>' +
+    '<p class="w">สถานะการรับรอง: WAITING FOR AUTHORIZATION</p></div></body></html>';
+  return HtmlService.createHtmlOutput(html).getAs('application/pdf').setName(r.reportId + '.pdf');
+}
+
+/** ผู้ใช้ยืนยันในกล่องแจ้งเตือนการโจมตี: ตัด session ทุกเครื่อง และบันทึกเหตุการณ์ */
+function apiSecureAccount_(p, ctx) {
+  revokeSessions_(ctx.member.memberId, null);
+  raiseIncident_({ type: 'Member confirmed compromise / สมาชิกยืนยันเหตุการณ์', severity: 'HIGH', memberId: ctx.member.memberId, username: ctx.member.username, detail: 'สมาชิกยืนยันให้ระบบล้างข้อมูลบนอุปกรณ์และตัดการเชื่อมต่อทุกอุปกรณ์ หลังได้รับแจ้งเตือนเหตุการณ์ ' + String(p.reportId || ''), action: 'ออกจากระบบทุกอุปกรณ์ ล้างข้อมูลบนอุปกรณ์ ข้อมูลบัญชีบนเซิร์ฟเวอร์ถูกเก็บรักษาไว้อย่างปลอดภัย' });
+  return { msg: 'ระบบได้ตัดการเชื่อมต่อทุกอุปกรณ์และล้างข้อมูลบนอุปกรณ์นี้เรียบร้อยแล้ว' };
+}
+
+function apiClientSecurity_(p, ctx) {
+  var m = ctx.token ? sessionMember_(ctx.token) : null;
+  raiseIncident_({ type: String(p.type || 'Client anomaly').slice(0, 80), severity: p.severity === 'HIGH' ? 'HIGH' : 'MEDIUM', memberId: m ? m.memberId : '', username: m ? m.username : '', ip: p.ip, location: p.location, device: p.device, detail: String(p.detail || '').slice(0, 1000), action: 'บันทึกเหตุการณ์จากหน้าเว็บ' });
+  return {};
+}
+
+function apiClientError_(p) {
+  try {
+    (p.items || []).slice(0, 20).forEach(function (e) {
+      appendRow_('ErrorLog', { time: new Date().toISOString(), memberId: cell_(e.memberId || ''), where: cell_('client:' + (e.where || '')), message: cell_(e.message), stack: cell_(String(e.stack || '').slice(0, 2000)), userAgent: cell_(e.ua || ''), version: cell_(e.v || '') });
+    });
+  } catch (err) {}
+  return {};
+}
+
+function apiReportProblem_(p, ctx) {
+  appendRow_('Reports', { time: new Date().toISOString(), memberId: ctx.member.memberId, username: ctx.member.username, kind: cell_(p.kind), subject: cell_(p.subject), detail: cell_(p.detail), status: 'รอดำเนินการ' });
+  return { msg: 'ระบบได้รับเรื่องของท่านแล้ว ผู้ดูแลระบบจะตรวจสอบและดำเนินการโดยเร็ว' };
+}
+
+function apiReportPublic_(p) {
+  appendRow_('Reports', { time: new Date().toISOString(), memberId: '', username: cell_(p.name || 'ผู้ใช้ทั่วไป'), kind: cell_(p.kind || 'ติดต่อผู้ดูแลระบบ'), subject: cell_(p.subject), detail: cell_(p.detail), status: 'รอดำเนินการ' });
+  return { msg: 'ส่งข้อความถึงผู้ดูแลระบบเรียบร้อยแล้ว' };
+}
+
+/* =========================================================================
+ *  PLANS / PAYMENTS (ชำระผ่านผู้ดูแลระบบ — ผู้ดูแลอนุมัติในชีต Payments)
+ * ========================================================================= */
+
+var PLAN_PRICES = {
+  monthly: { basic: 99, standard: 249, pro: 449 },
+  yearly: { basic: 1190, standard: 2690, pro: 4790 }
+};
+
+function apiPaymentRequest_(p, ctx) {
+  var cycle = p.cycle === 'yearly' ? 'yearly' : 'monthly';
+  var plan = PLAN_PRICES[cycle][p.plan] ? p.plan : null;
+  if (!plan) return fail_('INVALID', 'ไม่พบแพ็กเกจที่เลือก');
+  appendRow_('Payments', { time: new Date().toISOString(), memberId: ctx.member.memberId, username: ctx.member.username, plan: plan, cycle: cycle, amount: PLAN_PRICES[cycle][plan], status: 'รอชำระเงิน', note: '' });
+  return { msg: 'ระบบได้บันทึกคำขอสมัครแพ็กเกจของท่านแล้ว ผู้ดูแลระบบจะติดต่อกลับเพื่อแจ้งช่องทางชำระเงินและเปิดสิทธิ์ให้โดยเร็ว' };
+}
+
+/** ผู้ดูแลรันจากเมนู: เปิดสิทธิ์แพ็กเกจให้รายการที่สถานะเป็น "ชำระแล้ว" */
+function activatePaidPlans() {
+  rows_('Payments').forEach(function (r) {
+    if (r.status !== 'ชำระแล้ว') return;
+    var m = findMemberById_(r.memberId);
+    if (!m) return;
+    var base = Math.max(Date.now(), m.planExpires ? new Date(m.planExpires).getTime() : 0);
+    var days = r.cycle === 'yearly' ? 365 : 30;
+    updateRow_('Members', m._row, { plan: r.plan, planCycle: r.cycle, planExpires: new Date(base + days * 864e5).toISOString() });
+    updateRow_('Payments', r._row, { status: 'เปิดสิทธิ์แล้ว', note: 'เปิดสิทธิ์ ' + new Date().toISOString() });
+  });
+}
+
+/* =========================================================================
+ *  ADMIN
+ * ========================================================================= */
+
+function apiAdminSync_() { return { result: dailySync() }; }
+
+function apiAdminIssuePassword_(p) {
+  var m = findMemberByLogin_(p.username);
+  if (!m) return fail_('NOT_FOUND', 'ไม่พบสมาชิก');
+  var code = issueAdminPasswordFor_(m);
+  return { code: code, msg: 'ออกรหัสผ่านชั้นที่ 1 ใหม่ให้ ' + m.username + ' แล้ว' };
+}
+
+function issueAdminPasswordFor_(m) {
+  var code = 'TLL ' + randomToken_(4).toUpperCase() + ' ' + randomToken_(4).toUpperCase() + ' ' + randomToken_(4).toUpperCase();
+  updateRow_('Members', m._row, { adminHash: hashPassword_(normalizeAdminPass_(code), 'admin-' + m.memberId), failCount: 0, lockUntil: '' });
+  audit_(m.memberId, 'admin.issue', 'ออกรหัสผ่านชั้นที่ 1 เฉพาะบุคคล');
+  return code;
+}
+
+/** เมนูในชีต (เมื่อสคริปต์ผูกกับชีต) */
+function onOpen() {
+  try {
+    SpreadsheetApp.getUi().createMenu('THAI LAW LIBRARY')
+      .addItem('ติดตั้ง/ซ่อมระบบ (setup)', 'setup')
+      .addItem('ซิงก์ฐานข้อมูลกฎหมายและอนุสัญญาตอนนี้', 'dailySync')
+      .addItem('ตรวจสุขภาพระบบ', 'healthCheck')
+      .addItem('ออกรหัสผ่านชั้นที่ 1 ให้สมาชิก', 'menuIssuePassword')
+      .addItem('ปลดล็อกบัญชีสมาชิก', 'menuUnlock')
+      .addItem('เปิดสิทธิ์แพ็กเกจที่ชำระแล้ว', 'activatePaidPlans')
+      .addToUi();
+  } catch (e) {}
+}
+
+function menuIssuePassword() {
+  var ui = SpreadsheetApp.getUi();
+  var r = ui.prompt('ออกรหัสผ่านชั้นที่ 1', 'กรอก Username หรือ Member ID', ui.ButtonSet.OK_CANCEL);
+  if (r.getSelectedButton() !== ui.Button.OK) return;
+  var m = findMemberByLogin_(r.getResponseText());
+  if (!m) { ui.alert('ไม่พบสมาชิก'); return; }
+  ui.alert('รหัสผ่านชั้นที่ 1 ของ ' + m.username + '\n\n' + issueAdminPasswordFor_(m) + '\n\nกรุณาแจ้งสมาชิกเป็นการส่วนตัว ระบบจะไม่แสดงรหัสนี้อีก');
+}
+
+function menuUnlock() {
+  var ui = SpreadsheetApp.getUi();
+  var r = ui.prompt('ปลดล็อกบัญชี', 'กรอก Username หรือ Member ID', ui.ButtonSet.OK_CANCEL);
+  if (r.getSelectedButton() !== ui.Button.OK) return;
+  var m = findMemberByLogin_(r.getResponseText());
+  if (!m) { ui.alert('ไม่พบสมาชิก'); return; }
+  updateRow_('Members', m._row, { accountStatus: 'ปกติ', failCount: 0, lockUntil: '' });
+  audit_(m.memberId, 'admin.unlock', 'ปลดล็อกบัญชี');
+  ui.alert('ปลดล็อกบัญชี ' + m.username + ' เรียบร้อยแล้ว');
+}
+
+/* =========================================================================
+ *  LAW CATALOG (ฐานข้อมูลกฎหมาย) — cache แบบแบ่งชิ้น เพื่อโหลดเร็ว
+ * ========================================================================= */
+
+function catalogVersion_() {
+  return PropertiesService.getScriptProperties().getProperty('CATALOG_VERSION') || '1';
+}
+function bumpCatalogVersion_() {
+  PropertiesService.getScriptProperties().setProperty('CATALOG_VERSION', String(Date.now()));
+  CacheService.getScriptCache().remove('catalog_meta');
+}
+
+function apiGetCatalog_(p) {
+  var ver = catalogVersion_();
+  if (p.version && p.version === ver) return { unchanged: true, version: ver };
+  var cache = CacheService.getScriptCache();
+  var meta = json_(cache.get('catalog_meta'), null);
+  if (meta && meta.version === ver) {
+    var keys = []; for (var i = 0; i < meta.parts; i++) keys.push('catalog_' + i);
+    var got = cache.getAll(keys);
+    if (Object.keys(got).length === meta.parts) {
+      var s = ''; for (var j = 0; j < meta.parts; j++) s += got['catalog_' + j];
+      return { version: ver, catalog: JSON.parse(s) };
+    }
+  }
+  var laws = rows_('Laws').map(function (r) { return { id: String(r.lawId), cat: r.category, title: r.title, short: r.shortName, year: String(r.year || ''), url: r.sourceUrl, status: r.status, updated: r.updatedAt }; });
+  var sections = rows_('Sections').map(function (r) { return { id: String(r.sectionId), law: String(r.lawId), no: String(r.sectionNo), name: r.popularName, text: String(r.text), tags: r.tags, url: r.sourceUrl }; });
+  var catalog = { laws: laws, sections: sections };
+  var str = JSON.stringify(catalog);
+  var parts = [];
+  for (var k = 0; k < str.length; k += 90000) parts.push(str.slice(k, k + 90000));
+  var put = {};
+  parts.forEach(function (c, idx) { put['catalog_' + idx] = c; });
+  if (parts.length <= 80) {
+    try { cache.putAll(put, 21600); cache.put('catalog_meta', JSON.stringify({ version: ver, parts: parts.length }), 21600); } catch (e) {}
+  }
+  return { version: ver, catalog: catalog };
+}
+
+function apiGetTreaties_() {
+  var cache = CacheService.getScriptCache();
+  var c = cache.get('treaties_' + catalogVersion_());
+  if (c) return { items: JSON.parse(c) };
+  var items = rows_('Treaties').map(function (r) { return { id: String(r.treatyId), group: r.group, title: r.title, titleTh: r.titleTh, date: String(r.date), url: r.sourceUrl, summary: r.summary }; });
+  try { cache.put('treaties_' + catalogVersion_(), JSON.stringify(items), 21600); } catch (e) {}
+  return { items: items };
+}
+
+function seedCatalog_(force) {
+  var lawSheet = sheet_('Laws');
+  var have = {};
+  rows_('Laws').forEach(function (r) { have[String(r.lawId)] = true; });
+  var now = new Date().toISOString();
+  var newLaws = LAW_SEED.filter(function (l) { return force || !have[l.id]; }).map(function (l) {
+    return [l.id, l.cat, l.title, l.short || '', l.year || '', l.url || '', l.status || 'มีตัวบทบางส่วน', now, l.note || ''];
+  });
+  if (newLaws.length) lawSheet.getRange(lawSheet.getLastRow() + 1, 1, newLaws.length, 9).setValues(newLaws);
+  var secSheet = sheet_('Sections');
+  var haveSec = {};
+  rows_('Sections').forEach(function (r) { haveSec[String(r.sectionId)] = true; });
+  var newSec = SECTION_SEED.filter(function (s) { return force || !haveSec[s[0] + '-' + s[1]]; }).map(function (s) {
+    return [s[0] + '-' + s[1], s[0], s[1], s[2], s[3], s[4] || '', '', now];
+  });
+  if (newSec.length) secSheet.getRange(secSheet.getLastRow() + 1, 1, newSec.length, 8).setNumberFormat('@').setValues(newSec);
+  delete _rowsCache.Laws; delete _rowsCache.Sections;
+}
+
+function seedTreaties_(force) {
+  var sh = sheet_('Treaties');
+  var have = {};
+  rows_('Treaties').forEach(function (r) { have[String(r.treatyId)] = true; });
+  var now = new Date().toISOString();
+  var add = TREATY_SEED.filter(function (t) { return force || !have[t.id]; }).map(function (t) {
+    return [t.id, t.group, t.title, t.th || '', t.date, t.url, t.summary, now];
+  });
+  if (add.length) sh.getRange(sh.getLastRow() + 1, 1, add.length, 8).setValues(add);
+  delete _rowsCache.Treaties;
+}
+
+function seedSources_() {
+  if (rows_('Sources').length) return;
+  [
+    ['อนุสัญญา', 'https://treaties.mfa.go.th/th/page/สนธิสัญญาที่น่าสนใจ-ฉบับมีคำเเปลภาษาไทย?menu=637f32926782f670c2691573', 'mfa-next', 'on'],
+    ['อนุสัญญา', 'https://treaties.mfa.go.th/th/page/สนธิสัญญาที่น่าสนใจ-ฉบับไม่มีคำแปลภาษาไทย?menu=637f333186dac10a8f60e7f3', 'mfa-next', 'on'],
+    ['อนุสัญญา', 'https://treaties.mfa.go.th/th/page/สนธิสัญญาของไทยในอดีต?menu=637c56ac18d444706f395263', 'mfa-next', 'on'],
+    ['ทุกประเภท', 'https://www.ocs.go.th/searchlaw-law', 'html-links', 'on']
+  ].forEach(function (r) { appendRow_('Sources', { category: r[0], url: r[1], parser: r[2], enabled: r[3], lastRun: '', lastResult: '' }); });
+}
+
+function seedAnnouncements_() {
+  if (rows_('Announcements').length) return;
+  appendRow_('Announcements', { id: 'A1', time: new Date().toISOString(), type: 'news', title: 'ยินดีต้อนรับสู่คลังกฎหมายไทย', body: 'ระบบเปิดให้สมาชิกทดลองใช้งานครบทุกฟังก์ชันเป็นเวลา 7 วันนับแต่วันสมัครสมาชิก หากพบข้อมูลกฎหมายที่อาจคลาดเคลื่อน กรุณาแจ้งผ่านเมนูความช่วยเหลือ', active: true });
+}
+
+/* =========================================================================
+ *  DAILY SYNC — ปรับปรุงเนื้อหาตามเว็บไซต์ต้นทางอัตโนมัติทุกวัน
+ *  - treaties.mfa.go.th : อ่านข้อมูล __NEXT_DATA__ ทุกหน้าของรายการ
+ *  - ocs.go.th          : อ่านลิงก์และชื่อกฎหมายจากหน้ารายการ (ตามโครงสร้างหน้าเว็บ)
+ *  ผลการซิงก์ทุกครั้งบันทึกไว้ในชีต Sources คอลัมน์ lastResult
+ * ========================================================================= */
+
+function dailySync() {
+  var results = [];
+  rows_('Sources').slice().forEach(function (src) {
+    if (String(src.enabled) !== 'on') return;
+    var res;
+    try {
+      if (src.parser === 'mfa-next') res = syncMfa_(src.url);
+      else if (src.parser === 'html-links') res = syncHtmlLinks_(src.url, src.category);
+      else res = 'ไม่รู้จักตัวแปลง ' + src.parser;
+    } catch (e) {
+      res = 'ERROR ' + e.message;
+      logError_('sync:' + src.url, e, '');
+    }
+    updateRow_('Sources', src._row, { lastRun: new Date().toISOString(), lastResult: cell_(res) });
+    results.push(res);
+  });
+  bumpCatalogVersion_();
+  return results.join(' | ');
+}
+
+function fetchText_(url) {
+  var r = UrlFetchApp.fetch(encodeURI(decodeURI(url)), { muteHttpExceptions: true, followRedirects: true, headers: { 'User-Agent': 'Mozilla/5.0 (compatible; ThaiLawLibrarySync/3.0)' } });
+  if (r.getResponseCode() >= 400) throw new Error('HTTP ' + r.getResponseCode());
+  return r.getContentText('UTF-8');
+}
+
+function syncMfa_(url) {
+  var added = 0, updated = 0, page = 1, total = 1, group = '';
+  var have = {};
+  rows_('Treaties').forEach(function (r) { have[String(r.sourceUrl).split('?')[0]] = r; });
+  do {
+    var html = fetchText_(url + (page > 1 ? '&p=' + page : ''));
+    var m = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
+    if (!m) throw new Error('ไม่พบโครงสร้างข้อมูลของหน้า');
+    var d = JSON.parse(m[1]).props.pageProps.components_meta.page.data;
+    total = (d.pagination && d.pagination.total_page) || 1;
+    group = /ไม่มีคำแปล/.test(decodeURI(url)) ? 'ฉบับไม่มีคำแปลภาษาไทย' : (/ในอดีต/.test(decodeURI(url)) ? 'สนธิสัญญาของไทยในอดีต' : 'ฉบับมีคำแปลภาษาไทย');
+    (d.items || []).forEach(function (it) {
+      var full = 'https://treaties.mfa.go.th' + it.url;
+      var key = full.split('?')[0];
+      var date = String(it.date || '').slice(0, 10);
+      if (have[key]) {
+        var row = have[key];
+        if (String(row.title).trim() !== String(it.title).trim() || String(row.date) !== date) { updateRow_('Treaties', row._row, { title: String(it.title).trim(), date: date, updatedAt: new Date().toISOString() }); updated++; }
+      } else {
+        appendRow_('Treaties', { treatyId: 'T' + sha256Hex_(key).slice(0, 8), group: group, title: String(it.title).trim(), titleTh: '', date: date, sourceUrl: full, summary: 'อยู่ระหว่างจัดทำคำอธิบายโดยผู้ดูแลระบบ ท่านสามารถกดอ่านฉบับเต็มจากแหล่งข้อมูลต้นทาง หรือใช้ผู้ช่วย AI อธิบายเบื้องต้นได้', updatedAt: new Date().toISOString() });
+        added++;
+      }
+    });
+    page++;
+  } while (page <= total && page <= 20);
+  return 'MFA ' + group + ': เพิ่ม ' + added + ' แก้ไข ' + updated;
+}
+
+function syncHtmlLinks_(url, category) {
+  var html = fetchText_(url);
+  var re = /<a[^>]+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g, m, added = 0;
+  var have = {};
+  rows_('Laws').forEach(function (r) { have[String(r.title).replace(/\s+/g, '')] = true; });
+  var base = url.match(/^https?:\/\/[^\/]+/)[0];
+  var catRules = [
+    [/^รัฐธรรมนูญ|^ธรรมนูญการปกครอง/, 'รัฐธรรมนูญ'],
+    [/^พระราชบัญญัติประกอบรัฐธรรมนูญ/, 'พระราชบัญญัติประกอบรัฐธรรมนูญ'],
+    [/^ประมวลกฎหมาย|^ประมวลรัษฎากร/, 'ประมวลกฎหมาย'],
+    [/^ประกาศของคณะปฏิวัติ|^ประกาศคณะปฏิวัติ|^ประกาศคณะปฏิรูป|^ประกาศคณะรักษาความสงบ|^คำสั่งหัวหน้าคณะรักษาความสงบ|^ประกาศคณะมนตรีความมั่นคง/, 'ปร./ปว./คปค./คสช.'],
+    [/^พระราชบัญญัติ|^พระราชกำหนด/, 'พระราชบัญญัติ/พระราชกำหนด']
+  ];
+  while ((m = re.exec(html)) && added < 500) {
+    var title = m[2].replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+    if (title.length < 12 || title.length > 300) continue;
+    var cat = null;
+    for (var i = 0; i < catRules.length; i++) if (catRules[i][0].test(title)) { cat = catRules[i][1]; break; }
+    if (!cat || have[title.replace(/\s+/g, '')]) continue;
+    var href = m[1].indexOf('http') === 0 ? m[1] : base + (m[1].charAt(0) === '/' ? '' : '/') + m[1];
+    var yr = (title.match(/พ\.ศ\.\s*(\d{4})/) || [])[1] || '';
+    appendRow_('Laws', { lawId: 'L' + sha256Hex_(title).slice(0, 10), category: cat, title: title, shortName: '', year: yr, sourceUrl: href, status: 'รอนำเข้าตัวบท', updatedAt: new Date().toISOString(), note: 'นำเข้าอัตโนมัติจาก ' + base });
+    have[title.replace(/\s+/g, '')] = true;
+    added++;
+  }
+  return 'OCS ' + category + ': เพิ่มรายการกฎหมาย ' + added;
+}
+
+/* =========================================================================
+ *  SOCIAL LOGIN (OAuth 2.0): Google, Apple, Facebook, LINE
+ *  ตั้งค่าใน Project Settings > Script Properties:
+ *   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
+ *   APPLE_CLIENT_ID (Services ID), APPLE_CLIENT_SECRET (JWT ที่สร้างจาก key .p8)
+ *   FACEBOOK_APP_ID, FACEBOOK_APP_SECRET
+ *   LINE_CHANNEL_ID, LINE_CHANNEL_SECRET
+ *  Redirect URI ที่ต้องลงทะเบียนกับผู้ให้บริการ = URL ของ Web app (ลงท้าย /exec)
+ * ========================================================================= */
+
+var OAUTH = {
+  google: { auth: 'https://accounts.google.com/o/oauth2/v2/auth', token: 'https://oauth2.googleapis.com/token', scope: 'openid email profile', id: 'GOOGLE_CLIENT_ID', secret: 'GOOGLE_CLIENT_SECRET' },
+  apple: { auth: 'https://appleid.apple.com/auth/authorize', token: 'https://appleid.apple.com/auth/token', scope: 'name email', id: 'APPLE_CLIENT_ID', secret: 'APPLE_CLIENT_SECRET' },
+  facebook: { auth: 'https://www.facebook.com/v19.0/dialog/oauth', token: 'https://graph.facebook.com/v19.0/oauth/access_token', scope: 'public_profile', id: 'FACEBOOK_APP_ID', secret: 'FACEBOOK_APP_SECRET' },
+  line: { auth: 'https://access.line.me/oauth2/v2.1/authorize', token: 'https://api.line.me/oauth2/v2.1/token', scope: 'openid profile', id: 'LINE_CHANNEL_ID', secret: 'LINE_CHANNEL_SECRET' }
+};
+
+function apiOauthStart_(p, ctx) {
+  var prov = OAUTH[p.provider];
+  if (!prov) return fail_('INVALID', 'ไม่รู้จักผู้ให้บริการ');
+  var props = PropertiesService.getScriptProperties();
+  var clientId = props.getProperty(prov.id);
+  if (!clientId) return fail_('NOT_CONFIGURED', 'ผู้ดูแลระบบยังไม่ได้เปิดใช้งานการเข้าสู่ระบบด้วยบัญชีนี้ กรุณาใช้ชื่อผู้ใช้และรหัสผ่าน หรือติดต่อผู้ดูแลระบบ');
+  var state = randomToken_(32);
+  var linkMember = '';
+  if (p.mode === 'link' && ctx.token) { var m = sessionMember_(ctx.token); if (m) linkMember = m.memberId; }
+  CacheService.getScriptCache().put('oauth_' + state, JSON.stringify({ provider: p.provider, mode: p.mode || 'login', memberId: linkMember }), 900);
+  var redirect = safeUrl_();
+  var q = { client_id: clientId, redirect_uri: redirect, response_type: 'code', scope: prov.scope, state: state };
+  if (p.provider === 'apple') q.response_mode = 'form_post';
+  if (p.provider === 'google') q.prompt = 'select_account';
+  var url = prov.auth + '?' + Object.keys(q).map(function (k) { return k + '=' + encodeURIComponent(q[k]); }).join('&');
+  return { url: url };
+}
+
+function decodeJwtPayload_(jwt) {
+  var part = String(jwt).split('.')[1] || '';
+  part = part.replace(/-/g, '+').replace(/_/g, '/');
+  while (part.length % 4) part += '=';
+  return JSON.parse(Utilities.newBlob(Utilities.base64Decode(part)).getDataAsString('UTF-8'));
+}
+
+function oauthCallback_(code, state, appleUser) {
+  var cache = CacheService.getScriptCache();
+  var st = json_(cache.get('oauth_' + state), null);
+  if (!st) return { ok: false, msg: 'คำขอเข้าสู่ระบบหมดอายุหรือไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง' };
+  cache.remove('oauth_' + state);
+  var prov = OAUTH[st.provider], props = PropertiesService.getScriptProperties();
+  var redirect = safeUrl_();
+  var payload = { code: code, client_id: props.getProperty(prov.id), client_secret: props.getProperty(prov.secret), redirect_uri: redirect, grant_type: 'authorization_code' };
+  var res;
+  if (st.provider === 'facebook') {
+    res = UrlFetchApp.fetch(prov.token + '?' + Object.keys(payload).map(function (k) { return k + '=' + encodeURIComponent(payload[k]); }).join('&'), { muteHttpExceptions: true });
+  } else {
+    res = UrlFetchApp.fetch(prov.token, { method: 'post', payload: payload, muteHttpExceptions: true });
+  }
+  var tok = json_(res.getContentText(), {});
+  if (res.getResponseCode() >= 400 || (!tok.id_token && !tok.access_token)) {
+    logError_('oauth:' + st.provider, new Error(res.getContentText().slice(0, 300)), '');
+    return { ok: false, msg: 'ไม่สามารถยืนยันตัวตนกับผู้ให้บริการได้ กรุณาลองใหม่ หรือเข้าสู่ระบบด้วยชื่อผู้ใช้และรหัสผ่าน' };
+  }
+  var sub = '', name = '';
+  if (tok.id_token) {
+    var claims = decodeJwtPayload_(tok.id_token);
+    sub = claims.sub; name = claims.name || '';
+  } else if (st.provider === 'facebook') {
+    var me = json_(UrlFetchApp.fetch('https://graph.facebook.com/me?fields=id,name&access_token=' + encodeURIComponent(tok.access_token), { muteHttpExceptions: true }).getContentText(), {});
+    sub = me.id; name = me.name || '';
+  }
+  if (appleUser) { var au = json_(appleUser, {}); if (au.name) name = [au.name.firstName, au.name.lastName].join(' ').trim(); }
+  if (!sub) return { ok: false, msg: 'ผู้ให้บริการไม่ได้ส่งข้อมูลยืนยันตัวตนกลับมา' };
+
+  if (st.mode === 'link' && st.memberId) {
+    var lm = findMemberById_(st.memberId);
+    if (lm) {
+      var soc = json_(lm.socialJson, {});
+      soc[st.provider] = { sub: sub, name: name, linkedAt: new Date().toISOString() };
+      updateRow_('Members', lm._row, { socialJson: JSON.stringify(soc) });
+      audit_(lm.memberId, 'social.link', st.provider);
+      return { ok: true, linked: true, provider: st.provider, mode: 'link', msg: 'เชื่อมต่อบัญชี ' + st.provider + ' เรียบร้อยแล้ว' };
+    }
+  }
+  var found = null;
+  rows_('Members').some(function (m) { var s = json_(m.socialJson, {}); if (s[st.provider] && s[st.provider].sub === sub) { found = m; return true; } return false; });
+  var ticket = randomToken_(40);
+  cache.put('ticket_' + ticket, JSON.stringify({ provider: st.provider, sub: sub, name: name, memberId: found ? found.memberId : '' }), 900);
+  return { ok: true, provider: st.provider, ticket: ticket, linked: !!found, username: found ? found.username : '', name: name };
+}
+
+function readTicket_(ticket, consume) {
+  var cache = CacheService.getScriptCache();
+  var t = json_(cache.get('ticket_' + ticket), null);
+  if (t && consume) cache.remove('ticket_' + ticket);
+  return t;
+}
+
+/** เข้าสู่ระบบด้วยบัญชีโซเชียลที่ผูกไว้ + ยืนยันรหัสผ่านส่วนตัว (ชั้นที่ 2) */
+function apiSocialLogin_(p) {
+  var t = readTicket_(p.ticket, false);
+  if (!t || !t.memberId) return fail_('NO_TICKET', 'การยืนยันตัวตนหมดอายุ กรุณาเข้าสู่ระบบด้วยบัญชีโซเชียลอีกครั้ง');
+  var m = findMemberById_(t.memberId);
+  if (!m) return fail_('NOT_FOUND', 'ไม่พบบัญชีที่ผูกไว้');
+  if (m.accountStatus === 'ระงับ') return fail_('ACCOUNT_SUSPENDED', 'บัญชีของท่านถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบ');
+  var info = p.client || {};
+  var logBase = { time: new Date().toISOString(), username: m.username, memberId: m.memberId, ip: cell_(info.ip), location: cell_(info.location), isp: cell_(info.isp), device: cell_(info.device), os: cell_(info.os), browser: cell_(info.browser) };
+  if (!verifyPassword_(String(p.personalPass || ''), m.salt, m.personalHash)) {
+    logBase.result = 'FAIL'; logBase.reason = 'โซเชียล + รหัสชั้นที่ 2 ไม่ถูกต้อง'; appendRow_('LoginLog', logBase);
+    return fail_('BAD_CREDENTIALS', 'รหัสผ่านส่วนตัวไม่ถูกต้อง');
+  }
+  readTicket_(p.ticket, true);
+  return finishLogin_(m, info, logBase, 'บัญชี ' + t.provider + ' + รหัสส่วนตัว');
+}
+
+function apiLinkSocial_(p, ctx) {
+  if (p.unlink) {
+    var soc = json_(ctx.member.socialJson, {});
+    delete soc[p.unlink];
+    updateRow_('Members', ctx.member._row, { socialJson: JSON.stringify(soc) });
+    return { social: Object.keys(soc), msg: 'ยกเลิกการเชื่อมต่อแล้ว' };
+  }
+  return apiOauthStart_({ provider: p.provider, mode: 'link' }, ctx);
+}
+
+/* =========================================================================
+ *  AI LEGAL ASSISTANT — Google Gemini API (+ Google Search grounding)
+ *  ตั้ง Script Property: GEMINI_API_KEY
+ * ========================================================================= */
+
+var AI_SYSTEM = [
+  'คุณคือผู้ช่วยค้นคว้าของเว็บไซต์ THAI LAW LIBRARY (คลังกฎหมายไทย) ตอบเป็นภาษาไทยที่สุภาพ เป็นทางการ อ่านเข้าใจง่าย เหมือนอาจารย์กฎหมายอธิบายให้นักศึกษาฟัง',
+  'ตอบได้ทุกเรื่องทั่วไป เช่น กฎหมาย ประวัติศาสตร์ เหตุการณ์ปัจจุบัน วิทยาศาสตร์ ภัยธรรมชาติ และความรู้รอบตัว โดยใช้การค้นหาข้อมูลล่าสุดเมื่อจำเป็น',
+  'สำหรับคำถามทางกฎหมาย ให้แยกหัวข้อ "ข้อกฎหมาย" (ตัวบทหรือหลักกฎหมาย พร้อมชื่อกฎหมายและเลขมาตรา) ออกจาก "คำอธิบาย"',
+  'ห้ามสร้างเลขมาตรา ข้อความตัวบท หรือเลขคำพิพากษาศาลฎีกาขึ้นเอง หากไม่แน่ใจให้แจ้งตรง ๆ ว่าไม่แน่ใจ และแนะนำให้ตรวจสอบกับราชกิจจานุเบกษาหรือสำนักงานคณะกรรมการกฤษฎีกา',
+  'ระบุแหล่งอ้างอิงที่ตรวจสอบได้ทุกครั้งที่ทำได้',
+  'ปิดท้ายคำตอบด้านกฎหมายด้วยหมายเหตุสั้น ๆ ว่า คำตอบนี้เป็นเครื่องมือช่วยค้นคว้า มิใช่คำปรึกษาทางกฎหมายจากผู้ประกอบวิชาชีพ',
+  'ใช้ Markdown แบบเรียบง่าย (หัวข้อ ##, ตัวหนา, รายการ) ห้ามใช้อีโมจิ'
+].join('\n');
+
+function aiLimit_(m, cfg) {
+  var st = planState_(m);
+  if (m.role === 'admin') return 1000;
+  if (st.tier === 'pro') return Number(cfg.AI_DAILY_LIMIT_PRO) || 200;
+  if (st.tier === 'standard') return Number(cfg.AI_DAILY_LIMIT_STANDARD) || 30;
+  return 0;
+}
+
+function apiAiChat_(p, ctx) {
+  var key = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
+  if (!key) return fail_('NOT_CONFIGURED', 'ผู้ดูแลระบบยังไม่ได้เชื่อมต่อบริการ AI (GEMINI_API_KEY) กรุณาติดต่อผู้ดูแลระบบ');
+  var limit = aiLimit_(ctx.member, ctx.cfg);
+  if (limit <= 0) return fail_('PLAN', 'แพ็กเกจปัจจุบันของท่านยังไม่รวมผู้ช่วย AI กรุณาอัปเกรดแพ็กเกจที่หน้าแพ็กเกจและราคา');
+  var cache = CacheService.getScriptCache();
+  var dayKey = 'ai_' + ctx.member.memberId + '_' + Utilities.formatDate(new Date(), 'Asia/Bangkok', 'yyyyMMdd');
+  var used = Number(cache.get(dayKey) || 0);
+  if (used >= limit) return fail_('QUOTA', 'ท่านใช้สิทธิ์ถามผู้ช่วย AI ครบ ' + limit + ' ครั้งของวันนี้แล้ว ระบบจะคืนสิทธิ์ให้ในวันถัดไป');
+  var msgs = (p.messages || []).slice(-16).map(function (m) {
+    return { role: m.role === 'model' ? 'model' : 'user', parts: [{ text: String(m.text || '').slice(0, 12000) }] };
+  });
+  if (!msgs.length) return fail_('EMPTY', 'กรุณาพิมพ์คำถาม');
+  var body = { systemInstruction: { parts: [{ text: AI_SYSTEM + (p.context ? '\n\nบริบทจากหน้าเว็บ:\n' + String(p.context).slice(0, 8000) : '') }] }, contents: msgs, generationConfig: { temperature: 0.4, maxOutputTokens: 4096 } };
+  if (p.search !== false) body.tools = [{ google_search: {} }];
+  var model = ctx.cfg.GEMINI_MODEL || 'gemini-2.5-flash';
+  var out = geminiCall_(model, key, body);
+  if (!out.ok && body.tools) { delete body.tools; out = geminiCall_(model, key, body); }
+  if (!out.ok) return fail_('AI_ERROR', out.msg);
+  cache.put(dayKey, String(used + 1), 86400);
+  return { text: out.text, sources: out.sources, used: used + 1, limit: limit };
+}
+
+/** Circuit breaker: ถ้า API ภายนอกล้มเหลวติดกัน จะพักการเรียก 2 นาทีแล้วค่อยลองใหม่ */
+function breakerOpen_(name) { return CacheService.getScriptCache().get('cb_' + name) === 'open'; }
+function breakerFail_(name) {
+  var c = CacheService.getScriptCache(), n = Number(c.get('cbn_' + name) || 0) + 1;
+  c.put('cbn_' + name, String(n), 300);
+  if (n >= 3) c.put('cb_' + name, 'open', 120);
+}
+function breakerOk_(name) { CacheService.getScriptCache().remove('cbn_' + name); }
+
+function geminiCall_(model, key, body) {
+  if (breakerOpen_('gemini')) return { ok: false, msg: 'บริการ AI ภายนอกขัดข้องชั่วคราว ระบบจะลองเชื่อมต่อใหม่อัตโนมัติภายใน 2 นาที' };
+  var url = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent';
+  var r = UrlFetchApp.fetch(url, { method: 'post', contentType: 'application/json', payload: JSON.stringify(body), headers: { 'x-goog-api-key': key }, muteHttpExceptions: true });
+  var code = r.getResponseCode(), j = json_(r.getContentText(), {});
+  if (code >= 500 || code === 429) { breakerFail_('gemini'); return { ok: false, msg: 'บริการ AI มีผู้ใช้งานหนาแน่น กรุณาลองใหม่อีกครั้ง' }; }
+  if (code >= 400) { logError_('gemini', new Error(r.getContentText().slice(0, 400)), ''); return { ok: false, msg: 'บริการ AI ปฏิเสธคำขอ กรุณาปรับคำถามแล้วลองใหม่' }; }
+  breakerOk_('gemini');
+  var cand = (j.candidates || [])[0] || {};
+  var text = ((cand.content || {}).parts || []).map(function (x) { return x.text || ''; }).join('');
+  var sources = [];
+  var gm = cand.groundingMetadata || {};
+  (gm.groundingChunks || []).forEach(function (c) { if (c.web && c.web.uri) sources.push({ title: c.web.title || c.web.uri, url: c.web.uri }); });
+  if (!text) return { ok: false, msg: 'AI ไม่ได้ส่งคำตอบกลับมา กรุณาลองถามใหม่' };
+  return { ok: true, text: text, sources: sources.slice(0, 8) };
+}
+
+/* ---------- AI Gmail Thread Summarizer & Reply Drafter (ผู้ดูแลระบบ) ---------- */
+
+function apiGmailThreads_(p) {
+  var q = String(p.query || 'in:inbox').slice(0, 200);
+  return {
+    items: GmailApp.search(q, 0, 20).map(function (t) {
+      return { id: t.getId(), subject: t.getFirstMessageSubject(), count: t.getMessageCount(), last: t.getLastMessageDate().toISOString(), from: t.getMessages()[0].getFrom() };
+    })
+  };
+}
+
+function apiGmailSummarize_(p, ctx) {
+  var key = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
+  if (!key) return fail_('NOT_CONFIGURED', 'ยังไม่ได้ตั้งค่า GEMINI_API_KEY');
+  var th = GmailApp.getThreadById(String(p.threadId));
+  if (!th) return fail_('NOT_FOUND', 'ไม่พบเธรดอีเมล');
+  var msgs = th.getMessages();
+  msgs.sort(function (a, b) { return a.getDate() - b.getDate(); });
+  var transcript = msgs.map(function (m, i) {
+    return '[ข้อความที่ ' + (i + 1) + '] ' + Utilities.formatDate(m.getDate(), 'Asia/Bangkok', 'dd/MM/yyyy HH:mm') + '\nจาก: ' + m.getFrom() + '\nถึง: ' + m.getTo() + '\nเรื่อง: ' + m.getSubject() + '\n\n' + m.getPlainBody().slice(0, 6000);
+  }).join('\n\n---\n\n');
+  var prompt = 'ต่อไปนี้คืออีเมลทั้งหมดในเธรดเดียวกัน เรียงจากเก่าไปใหม่\n\n' + transcript + '\n\nกรุณา (1) สรุปภาพรวมของทั้งเธรด (2) สรุปประเด็นสำคัญของแต่ละข้อความโดยอ้างอิงเลขข้อความ (3) ร่างคำตอบอีเมลฉบับถัดไปอย่างเป็นทางการ ที่ตอบครบทุกประเด็นที่ยังค้างอยู่' + (p.instruction ? '\nคำแนะนำเพิ่มเติม: ' + String(p.instruction).slice(0, 500) : '');
+  var out = geminiCall_(ctx.cfg.GEMINI_MODEL || 'gemini-2.5-flash', key, { systemInstruction: { parts: [{ text: AI_SYSTEM }] }, contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { temperature: 0.3, maxOutputTokens: 4096 } });
+  if (!out.ok) return fail_('AI_ERROR', out.msg);
+  return { text: out.text, count: msgs.length, subject: th.getFirstMessageSubject() };
+}
+
+/* =========================================================================
+ *  MULTI-SOURCE MEDIA (Wikimedia Commons, Unsplash, Pexels, Pixabay)
+ *  เฉพาะภาพที่เจ้าของอนุญาตให้ใช้ (สัญญาอนุญาตเปิด/เงื่อนไขของแพลตฟอร์ม) พร้อมเครดิต
+ * ========================================================================= */
+
+function apiMedia_(p) {
+  var cache = CacheService.getScriptCache();
+  var c = cache.get('media_v3');
+  if (c) return { items: JSON.parse(c) };
+  var props = PropertiesService.getScriptProperties(), items = [];
+  var tasks = [
+    function () { return wikimedia_(); },
+    function () { return props.getProperty('UNSPLASH_ACCESS_KEY') ? unsplash_(props.getProperty('UNSPLASH_ACCESS_KEY')) : []; },
+    function () { return props.getProperty('PEXELS_API_KEY') ? pexels_(props.getProperty('PEXELS_API_KEY')) : []; },
+    function () { return props.getProperty('PIXABAY_API_KEY') ? pixabay_(props.getProperty('PIXABAY_API_KEY')) : []; }
+  ];
+  tasks.forEach(function (t, i) {
+    var name = 'media' + i;
+    if (breakerOpen_(name)) return;
+    try { items = items.concat(t()); breakerOk_(name); } catch (e) { breakerFail_(name); logError_('media' + i, e, ''); }
+  });
+  var seen = {};
+  items = items.filter(function (x) { if (!x.src || seen[x.src]) return false; seen[x.src] = 1; return true; });
+  if (items.length) cache.put('media_v3', JSON.stringify(items).slice(0, 99000), 21600);
+  return { items: items };
+}
+
+function wikimedia_() {
+  var out = [];
+  ['scales of justice', 'courthouse interior', 'law library books', 'Supreme Court of Thailand', 'gavel', 'Bangkok Grand Palace', 'Thai Parliament Sappaya-Sapasathan', 'justice statue'].forEach(function (q) {
+    var url = 'https://commons.wikimedia.org/w/api.php?action=query&format=json&generator=search&gsrnamespace=6&gsrlimit=6&gsrsearch=' + encodeURIComponent('filetype:bitmap ' + q) + '&prop=imageinfo&iiprop=url|extmetadata|size&iiurlwidth=1280';
+    var j = json_(UrlFetchApp.fetch(url, { muteHttpExceptions: true, headers: { 'User-Agent': 'ThaiLawLibrary/3.0 (educational web app)' } }).getContentText(), {});
+    var pages = (j.query && j.query.pages) || {};
+    Object.keys(pages).forEach(function (k) {
+      var ii = (pages[k].imageinfo || [])[0];
+      if (!ii || !ii.thumburl || (ii.width || 0) < 900) return;
+      var md = ii.extmetadata || {};
+      var lic = (md.LicenseShortName && md.LicenseShortName.value) || '';
+      if (!/CC0|CC BY|Public domain|PD/i.test(lic) || /NC|ND/.test(lic)) return;
+      var artist = String((md.Artist && md.Artist.value) || 'Wikimedia Commons').replace(/<[^>]+>/g, '').trim().slice(0, 80);
+      out.push({ src: ii.thumburl, page: ii.descriptionurl, author: artist, license: lic, source: 'Wikimedia Commons', alt: q });
+    });
+  });
+  return out;
+}
+
+function unsplash_(key) {
+  var j = json_(UrlFetchApp.fetch('https://api.unsplash.com/search/photos?per_page=24&orientation=portrait&query=' + encodeURIComponent('law justice court'), { headers: { Authorization: 'Client-ID ' + key }, muteHttpExceptions: true }).getContentText(), {});
+  return (j.results || []).map(function (r) { return { src: r.urls.regular, page: r.links.html + '?utm_source=thai_law_library&utm_medium=referral', author: r.user.name, license: 'Unsplash License', source: 'Unsplash', alt: r.alt_description || 'law' }; });
+}
+
+function pexels_(key) {
+  var j = json_(UrlFetchApp.fetch('https://api.pexels.com/v1/search?per_page=24&query=' + encodeURIComponent('law justice court'), { headers: { Authorization: key }, muteHttpExceptions: true }).getContentText(), {});
+  var out = (j.photos || []).map(function (r) { return { src: r.src.large, page: r.url, author: r.photographer, license: 'Pexels License', source: 'Pexels', alt: r.alt || 'law' }; });
+  var v = json_(UrlFetchApp.fetch('https://api.pexels.com/videos/search?per_page=6&query=' + encodeURIComponent('law library'), { headers: { Authorization: key }, muteHttpExceptions: true }).getContentText(), {});
+  (v.videos || []).forEach(function (r) {
+    var f = (r.video_files || []).filter(function (x) { return x.width && x.width <= 1280 && /mp4/.test(x.file_type); })[0];
+    if (f) out.push({ video: f.link, src: r.image, page: r.url, author: r.user && r.user.name, license: 'Pexels License', source: 'Pexels', alt: 'video' });
+  });
+  return out;
+}
+
+function pixabay_(key) {
+  var j = json_(UrlFetchApp.fetch('https://pixabay.com/api/?image_type=photo&safesearch=true&per_page=24&q=' + encodeURIComponent('law justice') + '&key=' + encodeURIComponent(key), { muteHttpExceptions: true }).getContentText(), {});
+  return (j.hits || []).map(function (r) { return { src: r.webformatURL, page: r.pageURL, author: r.user, license: 'Pixabay Content License', source: 'Pixabay', alt: r.tags }; });
+}
+
+/* =========================================================================
+ *  PDF — สร้างจาก HTML ของหน้าโน้ต/ตัวบท แล้วส่งกลับเป็น base64 + เก็บสำเนาใน Drive
+ * ========================================================================= */
+
+function apiMakePdf_(p, ctx) {
+  var title = String(p.title || 'เอกสาร').replace(/[\\\/:*?"<>|]/g, ' ').slice(0, 80);
+  var bodyHtml = sanitizeHtml_(String(p.html || ''));
+  var html = '<html><head><meta charset="utf-8"><style>@page{size:A4;margin:2.5cm 2cm 2cm 3cm}body{font-family:"Sarabun","TH Sarabun New",Tahoma,sans-serif;font-size:14pt;line-height:1.55;color:#111}h1{font-size:20pt}h2{font-size:17pt}h3{font-size:15pt}p{margin:0 0 6pt;text-indent:2.5cm;text-align:justify}li p{text-indent:0}blockquote{border-left:3pt solid #5AA9E6;margin:0;padding-left:10pt;color:#333}table{border-collapse:collapse}td,th{border:1px solid #999;padding:4pt}.hdr{font-size:10pt;color:#555;border-bottom:1px solid #ccc;margin-bottom:12pt;padding-bottom:4pt}</style></head><body><div class="hdr">THAI LAW LIBRARY | คลังกฎหมายไทย — ' + esc_(title) + '</div>' + bodyHtml + '</body></html>';
+  var blob = HtmlService.createHtmlOutput(html).getAs('application/pdf').setName(title + '.pdf');
+  var url = '';
+  try {
+    var file = appFolder_('Notes PDF').createFile(blob);
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    url = file.getUrl();
+  } catch (e) { logError_('pdf.drive', e, ctx.member.memberId); }
+  return { base64: Utilities.base64Encode(blob.getBytes()), name: title + '.pdf', url: url };
+}
+
+function sanitizeHtml_(h) {
+  return h.replace(/<\s*(script|style|iframe|object|embed|link|meta)[\s\S]*?(<\s*\/\s*\1\s*>|$)/gi, '')
+    .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '')
+    .replace(/(href|src)\s*=\s*("|')\s*javascript:[^"']*\2/gi, '');
+}
+
+/* =========================================================================
+ *  ข้อมูลตั้งต้น (SEED) — ระบบนำลงชีตครั้งแรกเท่านั้น หลังจากนั้นแก้ไข/เพิ่มที่ชีตได้โดยตรง
+ *  ตัวบทที่ใส่ไว้เป็นตัวบทที่ใช้บังคับและเป็นที่รู้จักในการศึกษา ผู้ดูแลควรตรวจทานกับ
+ *  ต้นฉบับของสำนักงานคณะกรรมการกฤษฎีกาเป็นระยะ (ชีต Sections แก้ไขได้ทันที)
+ *  หมวดหมู่ (category) ต้องเป็นหนึ่งใน 5 ค่านี้:
+ *   รัฐธรรมนูญ | พระราชบัญญัติประกอบรัฐธรรมนูญ | พระราชบัญญัติ/พระราชกำหนด | ปร./ปว./คปค./คสช. | ประมวลกฎหมาย
+ * ========================================================================= */
+
+var OCS = 'https://www.ocs.go.th/searchlaw-law';
+
+var LAW_SEED = [
+  // ---------- รัฐธรรมนูญ ----------
+  { id: 'C01', cat: 'รัฐธรรมนูญ', title: 'พระราชบัญญัติธรรมนูญการปกครองแผ่นดินสยามชั่วคราว พุทธศักราช 2475', year: '2475', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'C02', cat: 'รัฐธรรมนูญ', title: 'รัฐธรรมนูญแห่งราชอาณาจักรสยาม พุทธศักราช 2475', year: '2475', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'C03', cat: 'รัฐธรรมนูญ', title: 'รัฐธรรมนูญแห่งราชอาณาจักรไทย พุทธศักราช 2489', year: '2489', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'C04', cat: 'รัฐธรรมนูญ', title: 'รัฐธรรมนูญแห่งราชอาณาจักรไทย (ฉบับชั่วคราว) พุทธศักราช 2490', year: '2490', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'C05', cat: 'รัฐธรรมนูญ', title: 'รัฐธรรมนูญแห่งราชอาณาจักรไทย พุทธศักราช 2492', year: '2492', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'C06', cat: 'รัฐธรรมนูญ', title: 'รัฐธรรมนูญแห่งราชอาณาจักรไทย พุทธศักราช 2475 แก้ไขเพิ่มเติม พุทธศักราช 2495', year: '2495', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'C07', cat: 'รัฐธรรมนูญ', title: 'ธรรมนูญการปกครองราชอาณาจักร พุทธศักราช 2502', year: '2502', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'C08', cat: 'รัฐธรรมนูญ', title: 'รัฐธรรมนูญแห่งราชอาณาจักรไทย พุทธศักราช 2511', year: '2511', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'C09', cat: 'รัฐธรรมนูญ', title: 'ธรรมนูญการปกครองราชอาณาจักร พุทธศักราช 2515', year: '2515', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'C10', cat: 'รัฐธรรมนูญ', title: 'รัฐธรรมนูญแห่งราชอาณาจักรไทย พุทธศักราช 2517', year: '2517', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'C11', cat: 'รัฐธรรมนูญ', title: 'รัฐธรรมนูญแห่งราชอาณาจักรไทย พุทธศักราช 2519', year: '2519', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'C12', cat: 'รัฐธรรมนูญ', title: 'ธรรมนูญการปกครองราชอาณาจักร พุทธศักราช 2520', year: '2520', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'C13', cat: 'รัฐธรรมนูญ', title: 'รัฐธรรมนูญแห่งราชอาณาจักรไทย พุทธศักราช 2521', year: '2521', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'C14', cat: 'รัฐธรรมนูญ', title: 'ธรรมนูญการปกครองราชอาณาจักร พุทธศักราช 2534', year: '2534', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'C15', cat: 'รัฐธรรมนูญ', title: 'รัฐธรรมนูญแห่งราชอาณาจักรไทย พุทธศักราช 2534', year: '2534', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'C16', cat: 'รัฐธรรมนูญ', title: 'รัฐธรรมนูญแห่งราชอาณาจักรไทย พุทธศักราช 2540', year: '2540', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'C17', cat: 'รัฐธรรมนูญ', title: 'รัฐธรรมนูญแห่งราชอาณาจักรไทย (ฉบับชั่วคราว) พุทธศักราช 2549', year: '2549', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'C18', cat: 'รัฐธรรมนูญ', title: 'รัฐธรรมนูญแห่งราชอาณาจักรไทย พุทธศักราช 2550', year: '2550', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'C19', cat: 'รัฐธรรมนูญ', title: 'รัฐธรรมนูญแห่งราชอาณาจักรไทย (ฉบับชั่วคราว) พุทธศักราช 2557', year: '2557', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'C20', cat: 'รัฐธรรมนูญ', title: 'รัฐธรรมนูญแห่งราชอาณาจักรไทย พุทธศักราช 2560', short: 'รธน. 2560', year: '2560', url: OCS },
+
+  // ---------- พระราชบัญญัติประกอบรัฐธรรมนูญ ----------
+  { id: 'O01', cat: 'พระราชบัญญัติประกอบรัฐธรรมนูญ', title: 'พระราชบัญญัติประกอบรัฐธรรมนูญว่าด้วยการเลือกตั้งสมาชิกสภาผู้แทนราษฎร พ.ศ. 2561', year: '2561', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'O02', cat: 'พระราชบัญญัติประกอบรัฐธรรมนูญ', title: 'พระราชบัญญัติประกอบรัฐธรรมนูญว่าด้วยการได้มาซึ่งสมาชิกวุฒิสภา พ.ศ. 2561', year: '2561', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'O03', cat: 'พระราชบัญญัติประกอบรัฐธรรมนูญ', title: 'พระราชบัญญัติประกอบรัฐธรรมนูญว่าด้วยพรรคการเมือง พ.ศ. 2560', year: '2560', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'O04', cat: 'พระราชบัญญัติประกอบรัฐธรรมนูญ', title: 'พระราชบัญญัติประกอบรัฐธรรมนูญว่าด้วยคณะกรรมการการเลือกตั้ง พ.ศ. 2560', year: '2560', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'O05', cat: 'พระราชบัญญัติประกอบรัฐธรรมนูญ', title: 'พระราชบัญญัติประกอบรัฐธรรมนูญว่าด้วยการป้องกันและปราบปรามการทุจริต พ.ศ. 2561', year: '2561', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'O06', cat: 'พระราชบัญญัติประกอบรัฐธรรมนูญ', title: 'พระราชบัญญัติประกอบรัฐธรรมนูญว่าด้วยวิธีพิจารณาคดีอาญาของผู้ดำรงตำแหน่งทางการเมือง พ.ศ. 2560', year: '2560', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'O07', cat: 'พระราชบัญญัติประกอบรัฐธรรมนูญ', title: 'พระราชบัญญัติประกอบรัฐธรรมนูญว่าด้วยวิธีพิจารณาของศาลรัฐธรรมนูญ พ.ศ. 2561', year: '2561', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'O08', cat: 'พระราชบัญญัติประกอบรัฐธรรมนูญ', title: 'พระราชบัญญัติประกอบรัฐธรรมนูญว่าด้วยผู้ตรวจการแผ่นดิน พ.ศ. 2560', year: '2560', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'O09', cat: 'พระราชบัญญัติประกอบรัฐธรรมนูญ', title: 'พระราชบัญญัติประกอบรัฐธรรมนูญว่าด้วยการตรวจเงินแผ่นดิน พ.ศ. 2561', year: '2561', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'O10', cat: 'พระราชบัญญัติประกอบรัฐธรรมนูญ', title: 'พระราชบัญญัติประกอบรัฐธรรมนูญว่าด้วยคณะกรรมการสิทธิมนุษยชนแห่งชาติ พ.ศ. 2560', year: '2560', url: OCS, status: 'รอนำเข้าตัวบท' },
+
+  // ---------- พระราชบัญญัติ/พระราชกำหนด ----------
+  { id: 'A01', cat: 'พระราชบัญญัติ/พระราชกำหนด', title: 'พระราชบัญญัติว่าด้วยการกระทำความผิดเกี่ยวกับคอมพิวเตอร์ พ.ศ. 2550', short: 'พ.ร.บ.คอมพิวเตอร์', year: '2550', url: OCS },
+  { id: 'A02', cat: 'พระราชบัญญัติ/พระราชกำหนด', title: 'พระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562', short: 'PDPA', year: '2562', url: OCS },
+  { id: 'A03', cat: 'พระราชบัญญัติ/พระราชกำหนด', title: 'พระราชบัญญัติความรับผิดทางละเมิดของเจ้าหน้าที่ พ.ศ. 2539', year: '2539', url: OCS },
+  { id: 'A04', cat: 'พระราชบัญญัติ/พระราชกำหนด', title: 'พระราชบัญญัติศาลเยาวชนและครอบครัวและวิธีพิจารณาคดีเยาวชนและครอบครัว พ.ศ. 2553', year: '2553', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'A05', cat: 'พระราชบัญญัติ/พระราชกำหนด', title: 'พระราชบัญญัติคุ้มครองแรงงาน พ.ศ. 2541', year: '2541', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'A06', cat: 'พระราชบัญญัติ/พระราชกำหนด', title: 'พระราชบัญญัติจราจรทางบก พ.ศ. 2522', year: '2522', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'A07', cat: 'พระราชบัญญัติ/พระราชกำหนด', title: 'พระราชบัญญัติวิธีปฏิบัติราชการทางปกครอง พ.ศ. 2539', year: '2539', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'A08', cat: 'พระราชบัญญัติ/พระราชกำหนด', title: 'พระราชบัญญัติข้อมูลข่าวสารของราชการ พ.ศ. 2540', year: '2540', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'A09', cat: 'พระราชบัญญัติ/พระราชกำหนด', title: 'พระราชบัญญัติล้มละลาย พุทธศักราช 2483', year: '2483', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'A10', cat: 'พระราชบัญญัติ/พระราชกำหนด', title: 'พระราชบัญญัติจัดตั้งศาลปกครองและวิธีพิจารณาคดีปกครอง พ.ศ. 2542', year: '2542', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'A11', cat: 'พระราชบัญญัติ/พระราชกำหนด', title: 'พระราชกำหนดการบริหารราชการในสถานการณ์ฉุกเฉิน พ.ศ. 2548', year: '2548', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'A12', cat: 'พระราชบัญญัติ/พระราชกำหนด', title: 'พระราชกำหนดมาตรการป้องกันและปราบปรามอาชญากรรมทางเทคโนโลยี พ.ศ. 2566', year: '2566', url: OCS, status: 'รอนำเข้าตัวบท' },
+
+  // ---------- ปร./ปว./คปค./คสช. ----------
+  { id: 'R01', cat: 'ปร./ปว./คปค./คสช.', title: 'ประกาศคณะปฏิรูปการปกครองในระบอบประชาธิปไตยอันมีพระมหากษัตริย์ทรงเป็นประมุข ฉบับที่ 1 (พ.ศ. 2549)', year: '2549', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'R02', cat: 'ปร./ปว./คปค./คสช.', title: 'ประกาศคณะรักษาความสงบแห่งชาติ ฉบับที่ 1/2557', year: '2557', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'R03', cat: 'ปร./ปว./คปค./คสช.', title: 'คำสั่งหัวหน้าคณะรักษาความสงบแห่งชาติ ที่ 3/2558', year: '2558', url: OCS, status: 'รอนำเข้าตัวบท' },
+
+  // ---------- ประมวลกฎหมาย ----------
+  { id: 'K01', cat: 'ประมวลกฎหมาย', title: 'ประมวลกฎหมายแพ่งและพาณิชย์', short: 'ป.พ.พ.', year: '2468', url: OCS },
+  { id: 'K02', cat: 'ประมวลกฎหมาย', title: 'ประมวลกฎหมายอาญา', short: 'ป.อ.', year: '2499', url: OCS },
+  { id: 'K03', cat: 'ประมวลกฎหมาย', title: 'ประมวลกฎหมายวิธีพิจารณาความแพ่ง', short: 'ป.วิ.พ.', year: '2477', url: OCS },
+  { id: 'K04', cat: 'ประมวลกฎหมาย', title: 'ประมวลกฎหมายวิธีพิจารณาความอาญา', short: 'ป.วิ.อ.', year: '2477', url: OCS },
+  { id: 'K05', cat: 'ประมวลกฎหมาย', title: 'ประมวลรัษฎากร', short: 'ป.รัษฎากร', year: '2481', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'K06', cat: 'ประมวลกฎหมาย', title: 'ประมวลกฎหมายที่ดิน', short: 'ป.ที่ดิน', year: '2497', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'K07', cat: 'ประมวลกฎหมาย', title: 'ประมวลกฎหมายอาญาทหาร', year: '2454', url: OCS, status: 'รอนำเข้าตัวบท' },
+  { id: 'K08', cat: 'ประมวลกฎหมาย', title: 'ประมวลกฎหมายยาเสพติด', year: '2564', url: OCS, status: 'รอนำเข้าตัวบท' }
+];
+
+/* [lawId, เลขมาตรา, ชื่อมาตราตามที่นิยมในวงวิชาการ, ตัวบท (ขึ้นวรรคใหม่ด้วย \n), แท็ก] */
+var SECTION_SEED = [
+  // ---- รัฐธรรมนูญ 2560 ----
+  ['C20', '1', 'ราชอาณาจักรอันหนึ่งอันเดียว', 'ประเทศไทยเป็นราชอาณาจักรอันหนึ่งอันเดียว จะแบ่งแยกมิได้', 'บททั่วไป'],
+  ['C20', '2', 'ระบอบการปกครอง', 'ประเทศไทยมีการปกครองระบอบประชาธิปไตยอันมีพระมหากษัตริย์ทรงเป็นประมุข', 'บททั่วไป'],
+  ['C20', '3', 'อำนาจอธิปไตยและหลักนิติธรรม', 'อำนาจอธิปไตยเป็นของปวงชนชาวไทย พระมหากษัตริย์ผู้ทรงเป็นประมุขทรงใช้อำนาจนั้นทางรัฐสภา คณะรัฐมนตรี และศาล ตามบทบัญญัติแห่งรัฐธรรมนูญ\nรัฐสภา คณะรัฐมนตรี ศาล องค์กรอิสระ และหน่วยงานของรัฐ ต้องปฏิบัติหน้าที่ให้เป็นไปตามรัฐธรรมนูญ กฎหมาย และหลักนิติธรรม เพื่อประโยชน์ส่วนรวมของประเทศชาติและความผาสุกของประชาชนโดยรวม', 'บททั่วไป'],
+  ['C20', '4', 'ศักดิ์ศรีความเป็นมนุษย์', 'ศักดิ์ศรีความเป็นมนุษย์ สิทธิ เสรีภาพ และความเสมอภาคของบุคคล ย่อมได้รับความคุ้มครอง\nปวงชนชาวไทยย่อมได้รับความคุ้มครองตามรัฐธรรมนูญเสมอกัน', 'บททั่วไป'],
+  ['C20', '5', 'ความเป็นกฎหมายสูงสุดของรัฐธรรมนูญ', 'รัฐธรรมนูญเป็นกฎหมายสูงสุดของประเทศ บทบัญญัติใดของกฎหมาย กฎ หรือข้อบังคับ หรือการกระทำใด ขัดหรือแย้งต่อรัฐธรรมนูญ บทบัญญัติหรือการกระทำนั้นเป็นอันใช้บังคับมิได้\nเมื่อไม่มีบทบัญญัติแห่งรัฐธรรมนูญนี้บังคับแก่กรณีใด ให้กระทำการนั้นหรือวินิจฉัยกรณีนั้นไปตามประเพณีการปกครองประเทศไทยในระบอบประชาธิปไตยอันมีพระมหากษัตริย์ทรงเป็นประมุข', 'บททั่วไป'],
+  ['C20', '6', 'พระมหากษัตริย์ทรงอยู่ในฐานะอันเป็นที่เคารพสักการะ', 'องค์พระมหากษัตริย์ทรงดำรงอยู่ในฐานะอันเป็นที่เคารพสักการะ ผู้ใดจะละเมิดมิได้\nผู้ใดจะกล่าวหาหรือฟ้องร้องพระมหากษัตริย์ในทางใด ๆ มิได้', 'พระมหากษัตริย์'],
+  ['C20', '26', 'เงื่อนไขการตรากฎหมายจำกัดสิทธิและเสรีภาพ', 'การตรากฎหมายที่มีผลเป็นการจำกัดสิทธิหรือเสรีภาพของบุคคล ต้องเป็นไปตามเงื่อนไขที่บัญญัติไว้ในรัฐธรรมนูญ ในกรณีที่รัฐธรรมนูญมิได้บัญญัติเงื่อนไขไว้ กฎหมายดังกล่าวต้องไม่ขัดต่อหลักนิติธรรม ไม่เพิ่มภาระหรือจำกัดสิทธิหรือเสรีภาพของบุคคลเกินสมควรแก่เหตุ และจะกระทบต่อศักดิ์ศรีความเป็นมนุษย์ของบุคคลมิได้ รวมทั้งต้องระบุเหตุผลความจำเป็นในการจำกัดสิทธิและเสรีภาพไว้ด้วย', 'สิทธิและเสรีภาพ'],
+  ['C20', '29', 'หลักไม่มีความผิดไม่มีโทษโดยไม่มีกฎหมาย และข้อสันนิษฐานว่าบริสุทธิ์', 'บุคคลไม่ต้องรับโทษอาญา เว้นแต่ได้กระทำการอันกฎหมายที่ใช้อยู่ในเวลาที่กระทำนั้นบัญญัติเป็นความผิดและกำหนดโทษไว้ และโทษที่จะลงแก่บุคคลนั้นจะหนักกว่าโทษที่กำหนดไว้ในกฎหมายที่ใช้อยู่ในเวลาที่กระทำความผิดมิได้\nในคดีอาญา ให้สันนิษฐานไว้ก่อนว่าผู้ต้องหาหรือจำเลยไม่มีความผิด และก่อนมีคำพิพากษาอันถึงที่สุดแสดงว่าบุคคลใดได้กระทำความผิด จะปฏิบัติต่อบุคคลนั้นเสมือนเป็นผู้กระทำความผิดมิได้\n(เนื้อความวรรคหนึ่งและวรรคสอง)', 'สิทธิและเสรีภาพ'],
+
+  // ---- ป.พ.พ. ----
+  ['K01', '4', 'การใช้และการตีความกฎหมาย', 'กฎหมายนั้น ต้องใช้ในบรรดากรณีซึ่งต้องด้วยบทบัญญัติใด ๆ แห่งกฎหมายตามตัวอักษรหรือตามความมุ่งหมายของบทบัญญัตินั้น ๆ\nเมื่อใดไม่มีบทกฎหมายที่จะยกมาปรับคดีได้ ให้วินิจฉัยคดีนั้นตามคลองจารีตประเพณีแห่งท้องถิ่น ถ้าไม่มีจารีตประเพณีเช่นว่านั้น ให้วินิจฉัยคดีอาศัยเทียบบทกฎหมายที่ใกล้เคียงอย่างยิ่ง และถ้าบทกฎหมายเช่นนั้นก็ไม่มีด้วยไซร้ ให้วินิจฉัยตามหลักกฎหมายทั่วไป', 'บทเบ็ดเสร็จทั่วไป'],
+  ['K01', '5', 'หลักสุจริต', 'ในการใช้สิทธิแห่งตนก็ดี ในการชำระหนี้ก็ดี บุคคลทุกคนต้องกระทำโดยสุจริต', 'บทเบ็ดเสร็จทั่วไป'],
+  ['K01', '6', 'ข้อสันนิษฐานความสุจริต', 'ท่านให้สันนิษฐานไว้ก่อนว่าบุคคลทุกคนกระทำการโดยสุจริต', 'บทเบ็ดเสร็จทั่วไป'],
+  ['K01', '15', 'สภาพบุคคล', 'สภาพบุคคลย่อมเริ่มแต่เมื่อคลอดแล้วอยู่รอดเป็นทารก และสิ้นสุดลงเมื่อตาย\nทารกในครรภ์มารดาก็สามารถมีสิทธิต่าง ๆ ได้ หากว่าภายหลังคลอดแล้วอยู่รอดเป็นทารก', 'บุคคล'],
+  ['K01', '19', 'การบรรลุนิติภาวะโดยอายุ', 'บุคคลย่อมพ้นจากภาวะผู้เยาว์และบรรลุนิติภาวะเมื่ออายุยี่สิบปีบริบูรณ์', 'บุคคล'],
+  ['K01', '21', 'ความสามารถของผู้เยาว์ในการทำนิติกรรม', 'ผู้เยาว์จะทำนิติกรรมใด ๆ ต้องได้รับความยินยอมของผู้แทนโดยชอบธรรมก่อน การใด ๆ ที่ผู้เยาว์ได้ทำลงปราศจากความยินยอมเช่นว่านั้นเป็นโมฆียะ เว้นแต่จะบัญญัติไว้เป็นอย่างอื่น', 'บุคคล'],
+  ['K01', '149', 'นิยามนิติกรรม', 'นิติกรรม หมายความว่า การใด ๆ อันทำลงโดยชอบด้วยกฎหมายและด้วยใจสมัคร มุ่งโดยตรงต่อการผูกนิติสัมพันธ์ขึ้นระหว่างบุคคล เพื่อจะก่อ เปลี่ยนแปลง โอน สงวน หรือระงับซึ่งสิทธิ', 'นิติกรรม'],
+  ['K01', '150', 'วัตถุประสงค์ของนิติกรรมต้องห้าม', 'การใดมีวัตถุประสงค์เป็นการต้องห้ามชัดแจ้งโดยกฎหมาย เป็นการพ้นวิสัย หรือเป็นการขัดต่อความสงบเรียบร้อยหรือศีลธรรมอันดีของประชาชน การนั้นเป็นโมฆะ', 'นิติกรรม'],
+  ['K01', '151', 'กฎหมายที่ไม่เกี่ยวกับความสงบเรียบร้อย', 'การใดเป็นการแตกต่างกับบทบัญญัติของกฎหมาย ถ้ามิใช่กฎหมายอันเกี่ยวกับความสงบเรียบร้อยหรือศีลธรรมอันดีของประชาชน การนั้นไม่เป็นโมฆะ', 'นิติกรรม'],
+  ['K01', '152', 'แบบของนิติกรรม', 'การใดมิได้ทำให้ถูกต้องตามแบบที่กฎหมายบังคับไว้ การนั้นเป็นโมฆะ', 'นิติกรรม'],
+  ['K01', '153', 'ความสามารถของบุคคลในการทำนิติกรรม', 'การใดมิได้เป็นไปตามบทบัญญัติของกฎหมายว่าด้วยความสามารถของบุคคล การนั้นเป็นโมฆียะ', 'นิติกรรม'],
+  ['K01', '154', 'เจตนาซ่อนเร้น', 'การแสดงเจตนาใด แม้ในใจจริงผู้แสดงจะมิได้เจตนาให้ตนต้องผูกพันตามที่ได้แสดงออกมาก็ตาม การแสดงเจตนานั้นไม่เป็นโมฆะ เว้นแต่คู่กรณีอีกฝ่ายหนึ่งจะได้รู้ถึงเจตนาซึ่งซ่อนอยู่ในใจของผู้แสดงนั้น', 'การแสดงเจตนา'],
+  ['K01', '155', 'เจตนาลวงและนิติกรรมอำพราง', 'การแสดงเจตนาลวงโดยสมรู้กับคู่กรณีอีกฝ่ายหนึ่งเป็นโมฆะ แต่จะยกขึ้นเป็นข้อต่อสู้บุคคลภายนอกผู้กระทำการโดยสุจริตและต้องเสียหายจากการแสดงเจตนาลวงนั้นมิได้\nถ้าการแสดงเจตนาลวงตามวรรคหนึ่งทำขึ้นเพื่ออำพรางนิติกรรมอื่น ให้นำบทบัญญัติของกฎหมายเกี่ยวกับนิติกรรมที่ถูกอำพรางมาใช้บังคับ', 'การแสดงเจตนา'],
+  ['K01', '156', 'สำคัญผิดในสิ่งซึ่งเป็นสาระสำคัญแห่งนิติกรรม', 'การแสดงเจตนาโดยสำคัญผิดในสิ่งซึ่งเป็นสาระสำคัญแห่งนิติกรรมเป็นโมฆะ\nความสำคัญผิดในสิ่งซึ่งเป็นสาระสำคัญแห่งนิติกรรมตามวรรคหนึ่ง ได้แก่ ความสำคัญผิดในลักษณะของนิติกรรม ความสำคัญผิดในตัวบุคคลซึ่งเป็นคู่กรณีแห่งนิติกรรม และความสำคัญผิดในทรัพย์สินซึ่งเป็นวัตถุแห่งนิติกรรม เป็นต้น', 'การแสดงเจตนา'],
+  ['K01', '157', 'สำคัญผิดในคุณสมบัติของบุคคลหรือทรัพย์สิน', 'การแสดงเจตนาโดยสำคัญผิดในคุณสมบัติของบุคคลหรือทรัพย์สินเป็นโมฆียะ\nความสำคัญผิดตามวรรคหนึ่ง ต้องเป็นความสำคัญผิดในคุณสมบัติซึ่งตามปกติถือว่าเป็นสาระสำคัญ ซึ่งหากมิได้มีความสำคัญผิดดังกล่าวการอันเป็นโมฆียะนั้นคงจะมิได้กระทำขึ้น', 'การแสดงเจตนา'],
+  ['K01', '159', 'กลฉ้อฉล', 'การแสดงเจตนาเพราะถูกกลฉ้อฉลเป็นโมฆียะ\nการถูกกลฉ้อฉลที่จะเป็นโมฆียะตามวรรคหนึ่ง จะต้องถึงขนาดซึ่งถ้ามิได้มีกลฉ้อฉลดังกล่าว การอันเป็นโมฆียะนั้นคงจะมิได้กระทำขึ้น\nถ้าคู่กรณีฝ่ายหนึ่งแสดงเจตนาเพราะถูกกลฉ้อฉลโดยบุคคลภายนอก การแสดงเจตนานั้นจะเป็นโมฆียะต่อเมื่อคู่กรณีอีกฝ่ายหนึ่งได้รู้หรือควรจะได้รู้ถึงกลฉ้อฉลนั้น', 'การแสดงเจตนา'],
+  ['K01', '172', 'ผลของโมฆะกรรม', 'โมฆะกรรมนั้นไม่อาจให้สัตยาบันแก่กันได้ และผู้มีส่วนได้เสียคนใดคนหนึ่งจะยกความเสียเปล่าแห่งโมฆะกรรมขึ้นกล่าวอ้างก็ได้\n(เนื้อความวรรคหนึ่ง)', 'โมฆะกรรมและโมฆียกรรม'],
+  ['K01', '193/9', 'หลักการขาดอายุความ', 'สิทธิเรียกร้องใด ๆ ถ้ามิได้ใช้บังคับภายในระยะเวลาที่กฎหมายกำหนด สิทธิเรียกร้องนั้นเป็นอันขาดอายุความ', 'อายุความ'],
+  ['K01', '193/30', 'อายุความทั่วไปสิบปี', 'อายุความนั้น ถ้าประมวลกฎหมายนี้หรือกฎหมายอื่นมิได้บัญญัติไว้โดยเฉพาะ ให้มีกำหนดสิบปี', 'อายุความ'],
+  ['K01', '194', 'อำนาจแห่งมูลหนี้', 'ด้วยอำนาจแห่งมูลหนี้ เจ้าหนี้ย่อมมีสิทธิจะเรียกให้ลูกหนี้ชำระหนี้ได้ อนึ่งการชำระหนี้ด้วยงดเว้นการอันใดอันหนึ่งก็ย่อมมีได้', 'หนี้'],
+  ['K01', '420', 'ละเมิด (หลักทั่วไป)', 'ผู้ใดจงใจหรือประมาทเลินเล่อ ทำต่อบุคคลอื่นโดยผิดกฎหมายให้เขาเสียหายถึงแก่ชีวิตก็ดี แก่ร่างกายก็ดี อนามัยก็ดี เสรีภาพก็ดี ทรัพย์สินหรือสิทธิอย่างหนึ่งอย่างใดก็ดี ท่านว่าผู้นั้นทำละเมิด จำต้องใช้ค่าสินไหมทดแทนเพื่อการนั้น', 'ละเมิด'],
+  ['K01', '421', 'การใช้สิทธิเกินส่วน', 'การใช้สิทธิซึ่งมีแต่จะให้เกิดเสียหายแก่บุคคลอื่นนั้น ท่านว่าเป็นการอันมิชอบด้วยกฎหมาย', 'ละเมิด'],
+  ['K01', '422', 'ข้อสันนิษฐานความผิดจากการฝ่าฝืนบทบังคับแห่งกฎหมาย', 'ถ้าความเสียหายเกิดแต่การฝ่าฝืนบทบังคับแห่งกฎหมายใดอันมีที่ประสงค์เพื่อจะปกป้องบุคคลอื่น ๆ ผู้ใดทำการฝ่าฝืนเช่นนั้น ท่านให้สันนิษฐานไว้ก่อนว่าผู้นั้นเป็นผู้ผิด', 'ละเมิด'],
+  ['K01', '425', 'ความรับผิดของนายจ้างในผลละเมิดของลูกจ้าง', 'นายจ้างต้องร่วมกันรับผิดกับลูกจ้างในผลแห่งละเมิด ซึ่งลูกจ้างได้กระทำไปในทางการที่จ้างนั้น', 'ละเมิด'],
+  ['K01', '437', 'ความรับผิดจากยานพาหนะอันเดินด้วยกำลังเครื่องจักรกล', 'บุคคลใดครอบครองหรือควบคุมดูแลยานพาหนะอย่างใด ๆ อันเดินด้วยกำลังเครื่องจักรกล บุคคลนั้นจะต้องรับผิดชอบเพื่อการเสียหายอันเกิดแต่ยานพาหนะนั้น เว้นแต่จะพิสูจน์ได้ว่าการเสียหายนั้นเกิดแต่เหตุสุดวิสัย หรือเกิดเพราะความผิดของผู้ต้องเสียหายนั้นเอง\n(เนื้อความวรรคหนึ่ง)', 'ละเมิด'],
+  ['K01', '448', 'อายุความละเมิด', 'สิทธิเรียกร้องค่าเสียหายอันเกิดแต่มูลละเมิดนั้น ท่านว่าขาดอายุความเมื่อพ้นปีหนึ่งนับแต่วันที่ผู้ต้องเสียหายรู้ถึงการละเมิดและรู้ตัวผู้จะพึงต้องใช้ค่าสินไหมทดแทน หรือเมื่อพ้นสิบปีนับแต่วันทำละเมิด\n(เนื้อความวรรคหนึ่ง)', 'ละเมิด'],
+  ['K01', '453', 'นิยามสัญญาซื้อขาย', 'อันว่าซื้อขายนั้น คือสัญญาซึ่งบุคคลฝ่ายหนึ่งเรียกว่าผู้ขาย โอนกรรมสิทธิ์แห่งทรัพย์สินให้แก่บุคคลอีกฝ่ายหนึ่งเรียกว่าผู้ซื้อ และผู้ซื้อตกลงว่าจะใช้ราคาทรัพย์สินนั้นให้แก่ผู้ขาย', 'ซื้อขาย'],
+  ['K01', '456', 'แบบของการซื้อขายอสังหาริมทรัพย์', 'การซื้อขายอสังหาริมทรัพย์ ถ้ามิได้ทำเป็นหนังสือและจดทะเบียนต่อพนักงานเจ้าหน้าที่ การซื้อขายนั้นเป็นโมฆะ วิธีนี้ให้ใช้ถึงซื้อขายเรือมีระวางตั้งแต่ห้าตันขึ้นไป ทั้งซื้อขายแพ และสัตว์พาหนะด้วย\n(เนื้อความวรรคหนึ่ง)', 'ซื้อขาย'],
+  ['K01', '537', 'นิยามสัญญาเช่าทรัพย์', 'อันว่าเช่าทรัพย์สินนั้น คือสัญญาซึ่งบุคคลคนหนึ่ง เรียกว่าผู้ให้เช่า ตกลงให้บุคคลอีกคนหนึ่ง เรียกว่าผู้เช่า ได้ใช้หรือได้รับประโยชน์ในทรัพย์สินอย่างใดอย่างหนึ่งชั่วระยะเวลาอันมีจำกัด และผู้เช่าตกลงจะให้ค่าเช่าเพื่อการนั้น', 'เช่าทรัพย์'],
+  ['K01', '653', 'หลักฐานการกู้ยืมเงิน', 'การกู้ยืมเงินกว่าสองพันบาทขึ้นไปนั้น ถ้ามิได้มีหลักฐานแห่งการกู้ยืมเป็นหนังสืออย่างใดอย่างหนึ่งลงลายมือชื่อผู้ยืมเป็นสำคัญ ท่านว่าจะฟ้องร้องให้บังคับคดีหาได้ไม่\n(เนื้อความวรรคหนึ่ง)', 'ยืม'],
+  ['K01', '654', 'อัตราดอกเบี้ยเงินกู้สูงสุด', 'ท่านห้ามมิให้คิดดอกเบี้ยเกินร้อยละสิบห้าต่อปี ถ้าในสัญญากำหนดดอกเบี้ยเกินกว่านั้น ก็ให้ลดลงมาเป็นร้อยละสิบห้าต่อปี', 'ยืม'],
+  ['K01', '1299', 'การได้มาโดยนิติกรรมซึ่งอสังหาริมทรัพย์', 'ภายในบังคับแห่งบทบัญญัติแห่งประมวลกฎหมายนี้หรือกฎหมายอื่น ท่านว่าการได้มาโดยนิติกรรมซึ่งอสังหาริมทรัพย์หรือทรัพยสิทธิอันเกี่ยวกับอสังหาริมทรัพย์นั้น ไม่บริบูรณ์ เว้นแต่นิติกรรมจะได้ทำเป็นหนังสือและได้จดทะเบียนการได้มากับพนักงานเจ้าหน้าที่\n(เนื้อความวรรคหนึ่ง)', 'ทรัพย์สิน'],
+  ['K01', '1336', 'แดนแห่งกรรมสิทธิ์', 'ภายในบังคับแห่งกฎหมาย เจ้าของทรัพย์สินมีสิทธิใช้สอยและจำหน่ายทรัพย์สินของตนและได้ซึ่งดอกผลแห่งทรัพย์สินนั้น กับทั้งมีสิทธิติดตามและเอาคืนซึ่งทรัพย์สินของตนจากบุคคลผู้ไม่มีสิทธิจะยึดถือไว้ และมีสิทธิขัดขวางมิให้ผู้อื่นสอดเข้าเกี่ยวข้องกับทรัพย์สินนั้นโดยมิชอบด้วยกฎหมาย', 'ทรัพย์สิน'],
+  ['K01', '1382', 'การครอบครองปรปักษ์', 'บุคคลใดครอบครองทรัพย์สินของผู้อื่นไว้โดยความสงบและโดยเปิดเผยด้วยเจตนาเป็นเจ้าของ ถ้าเป็นอสังหาริมทรัพย์ได้ครอบครองติดต่อกันเป็นเวลาสิบปี ถ้าเป็นสังหาริมทรัพย์ได้ครอบครองติดต่อกันเป็นเวลาห้าปี ท่านว่าบุคคลนั้นได้ไปซึ่งกรรมสิทธิ์', 'ทรัพย์สิน'],
+  ['K01', '1599', 'การตกทอดแห่งมรดก', 'เมื่อบุคคลใดตาย มรดกของบุคคลนั้นตกทอดแก่ทายาท\nทายาทอาจเสียไปซึ่งสิทธิในมรดกได้แต่โดยบทบัญญัติแห่งประมวลกฎหมายนี้หรือกฎหมายอื่น', 'มรดก'],
+  ['K01', '1600', 'กองมรดก', 'ภายใต้บังคับบทบัญญัติแห่งบรรพนี้ กองมรดกของผู้ตายได้แก่ ทรัพย์สินทุกชนิดของผู้ตาย ตลอดทั้งสิทธิหน้าที่และความรับผิดต่าง ๆ เว้นแต่ตามกฎหมายหรือว่าโดยสภาพแล้ว เป็นการเฉพาะตัวของผู้ตายโดยแท้', 'มรดก'],
+
+  // ---- ป.อ. ----
+  ['K02', '2', 'หลักไม่มีความผิดไม่มีโทษโดยไม่มีกฎหมาย', 'บุคคลจักต้องรับโทษในทางอาญาต่อเมื่อได้กระทำการอันกฎหมายที่ใช้ในขณะกระทำนั้นบัญญัติเป็นความผิดและกำหนดโทษไว้ และโทษที่จะลงแก่ผู้กระทำความผิดนั้น ต้องเป็นโทษที่บัญญัติไว้ในกฎหมาย\n(เนื้อความวรรคหนึ่ง)', 'บทบัญญัติทั่วไป'],
+  ['K02', '59', 'เจตนาและประมาท', 'บุคคลจะต้องรับผิดในทางอาญาก็ต่อเมื่อได้กระทำโดยเจตนา เว้นแต่จะได้กระทำโดยประมาทในกรณีที่กฎหมายบัญญัติให้ต้องรับผิดเมื่อได้กระทำโดยประมาท หรือเว้นแต่ในกรณีที่กฎหมายบัญญัติไว้โดยแจ้งชัดให้ต้องรับผิดแม้ได้กระทำโดยไม่มีเจตนา\nกระทำโดยเจตนา ได้แก่กระทำโดยรู้สำนึกในการที่กระทำและในขณะเดียวกันผู้กระทำประสงค์ต่อผล หรือย่อมเล็งเห็นผลของการกระทำนั้น\nถ้าผู้กระทำมิได้รู้ข้อเท็จจริงอันเป็นองค์ประกอบของความผิด จะถือว่าผู้กระทำประสงค์ต่อผล หรือย่อมเล็งเห็นผลของการกระทำนั้นมิได้\nกระทำโดยประมาท ได้แก่กระทำความผิดมิใช่โดยเจตนา แต่กระทำโดยปราศจากความระมัดระวังซึ่งบุคคลในภาวะเช่นนั้นจักต้องมีตามวิสัยและพฤติการณ์ และผู้กระทำอาจใช้ความระมัดระวังเช่นว่านั้นได้ แต่หาได้ใช้ให้เพียงพอไม่\nการกระทำ ให้หมายความรวมถึงการให้เกิดผลอันหนึ่งอันใดขึ้นโดยงดเว้นการที่จักต้องกระทำเพื่อป้องกันผลนั้นด้วย', 'ความรับผิดทางอาญา'],
+  ['K02', '60', 'เจตนาโดยพลาด', 'ผู้ใดตั้งใจกระทำต่อบุคคลหนึ่ง แต่ผลของการกระทำเกิดแก่อีกบุคคลหนึ่งโดยพลาดไป ให้ถือว่าผู้นั้นกระทำโดยเจตนาแก่บุคคลซึ่งได้รับผลร้ายจากการกระทำนั้น แต่ในกรณีที่กฎหมายบัญญัติให้ลงโทษหนักขึ้นเพราะฐานะของบุคคล หรือเพราะความสัมพันธ์ระหว่างผู้กระทำกับผู้ได้รับผลร้าย มิให้นำกฎหมายนั้นมาใช้บังคับเพื่อลงโทษผู้กระทำให้หนักขึ้น', 'ความรับผิดทางอาญา'],
+  ['K02', '64', 'ความไม่รู้กฎหมาย', 'บุคคลจะแก้ตัวว่าไม่รู้กฎหมายเพื่อให้พ้นจากความรับผิดในทางอาญาไม่ได้ แต่ถ้าศาลเห็นว่าตามสภาพและพฤติการณ์ ผู้กระทำความผิดอาจจะไม่รู้ว่ากฎหมายบัญญัติว่าการกระทำนั้นเป็นความผิด ศาลอาจอนุญาตให้แสดงพยานหลักฐานต่อศาล และถ้าศาลเชื่อว่าผู้กระทำไม่รู้ว่ากฎหมายบัญญัติไว้เช่นนั้น ศาลจะลงโทษน้อยกว่าที่กฎหมายกำหนดไว้สำหรับความผิดนั้นเพียงใดก็ได้', 'ความรับผิดทางอาญา'],
+  ['K02', '67', 'การกระทำด้วยความจำเป็น', 'ผู้ใดกระทำความผิดด้วยความจำเป็น\n(1) เพราะอยู่ในที่บังคับ หรือภายใต้อำนาจซึ่งไม่สามารถหลีกเลี่ยง หรือขัดขืนได้ หรือ\n(2) เพราะเพื่อให้ตนเองหรือผู้อื่นพ้นจากภยันตรายที่ใกล้จะถึง และไม่สามารถหลีกเลี่ยงให้พ้นโดยวิธีอื่นใดได้ เมื่อภยันตรายนั้นตนมิได้ก่อให้เกิดขึ้นเพราะความผิดของตน\nถ้าการกระทำนั้นไม่เป็นการเกินสมควรแก่เหตุแล้ว ผู้นั้นไม่ต้องรับโทษ', 'ความรับผิดทางอาญา'],
+  ['K02', '68', 'ป้องกันโดยชอบด้วยกฎหมาย', 'ผู้ใดจำต้องกระทำการใดเพื่อป้องกันสิทธิของตนหรือของผู้อื่นให้พ้นภยันตรายซึ่งเกิดจากการประทุษร้ายอันละเมิดต่อกฎหมาย และเป็นภยันตรายที่ใกล้จะถึง ถ้าได้กระทำพอสมควรแก่เหตุ การกระทำนั้นเป็นการป้องกันโดยชอบด้วยกฎหมาย ผู้นั้นไม่มีความผิด', 'ความรับผิดทางอาญา'],
+  ['K02', '80', 'พยายามกระทำความผิด', 'ผู้ใดลงมือกระทำความผิด แต่กระทำไปไม่ตลอด หรือกระทำไปตลอดแล้วแต่การกระทำนั้นไม่บรรลุผล ผู้นั้นพยายามกระทำความผิด\nผู้ใดพยายามกระทำความผิด ผู้นั้นต้องระวางโทษสองในสามส่วนของโทษที่กฎหมายกำหนดไว้สำหรับความผิดนั้น', 'พยายามกระทำความผิด'],
+  ['K02', '83', 'ตัวการร่วม', 'ในกรณีความผิดใดเกิดขึ้นโดยการกระทำของบุคคลตั้งแต่สองคนขึ้นไป ผู้ที่ได้ร่วมกระทำความผิดด้วยกันนั้น เป็นตัวการ ต้องระวางโทษตามที่กฎหมายกำหนดไว้สำหรับความผิดนั้น', 'ตัวการและผู้สนับสนุน'],
+  ['K02', '86', 'ผู้สนับสนุน', 'ผู้ใดกระทำด้วยประการใด ๆ อันเป็นการช่วยเหลือหรือให้ความสะดวกในการที่ผู้อื่นกระทำความผิด ก่อนหรือขณะกระทำความผิด แม้ผู้กระทำความผิดมิได้รู้ถึงการช่วยเหลือหรือให้ความสะดวกนั้นก็ตาม ผู้นั้นเป็นผู้สนับสนุนการกระทำความผิด ต้องระวางโทษสองในสามส่วนของโทษที่กำหนดไว้สำหรับความผิดที่สนับสนุนนั้น', 'ตัวการและผู้สนับสนุน'],
+  ['K02', '288', 'ฆ่าผู้อื่น', 'ผู้ใดฆ่าผู้อื่น ต้องระวางโทษประหารชีวิต จำคุกตลอดชีวิต หรือจำคุกตั้งแต่สิบห้าปีถึงยี่สิบปี', 'ความผิดต่อชีวิต'],
+  ['K02', '290', 'ทำร้ายร่างกายเป็นเหตุให้ถึงแก่ความตาย', 'ผู้ใดมิได้มีเจตนาฆ่า แต่ทำร้ายผู้อื่นจนเป็นเหตุให้ผู้นั้นถึงแก่ความตาย ต้องระวางโทษจำคุกตั้งแต่สามปีถึงสิบห้าปี\n(เนื้อความวรรคหนึ่ง)', 'ความผิดต่อชีวิต'],
+  ['K02', '291', 'ประมาทเป็นเหตุให้ผู้อื่นถึงแก่ความตาย', 'ผู้ใดกระทำโดยประมาท และการกระทำนั้นเป็นเหตุให้ผู้อื่นถึงแก่ความตาย ต้องระวางโทษจำคุกไม่เกินสิบปี และปรับไม่เกินสองแสนบาท', 'ความผิดต่อชีวิต'],
+  ['K02', '326', 'หมิ่นประมาท', 'ผู้ใดใส่ความผู้อื่นต่อบุคคลที่สาม โดยประการที่น่าจะทำให้ผู้อื่นนั้นเสียชื่อเสียง ถูกดูหมิ่น หรือถูกเกลียดชัง ผู้นั้นกระทำความผิดฐานหมิ่นประมาท ต้องระวางโทษจำคุกไม่เกินหนึ่งปี หรือปรับไม่เกินสองหมื่นบาท หรือทั้งจำทั้งปรับ', 'ความผิดฐานหมิ่นประมาท'],
+  ['K02', '334', 'ลักทรัพย์', 'ผู้ใดเอาทรัพย์ของผู้อื่น หรือที่ผู้อื่นเป็นเจ้าของรวมอยู่ด้วยไปโดยทุจริต ผู้นั้นกระทำความผิดฐานลักทรัพย์ ต้องระวางโทษจำคุกไม่เกินสามปี และปรับไม่เกินหกหมื่นบาท', 'ความผิดเกี่ยวกับทรัพย์'],
+  ['K02', '341', 'ฉ้อโกง', 'ผู้ใดโดยทุจริต หลอกลวงผู้อื่นด้วยการแสดงข้อความอันเป็นเท็จ หรือปกปิดข้อความจริงซึ่งควรบอกให้แจ้ง และโดยการหลอกลวงดังว่านั้นได้ไปซึ่งทรัพย์สินจากผู้ถูกหลอกลวงหรือบุคคลที่สาม หรือทำให้ผู้ถูกหลอกลวงหรือบุคคลที่สามทำ ถอน หรือทำลายเอกสารสิทธิ ผู้นั้นกระทำความผิดฐานฉ้อโกง ต้องระวางโทษจำคุกไม่เกินสามปี หรือปรับไม่เกินหกหมื่นบาท หรือทั้งจำทั้งปรับ', 'ความผิดเกี่ยวกับทรัพย์'],
+  ['K02', '352', 'ยักยอก', 'ผู้ใดครอบครองทรัพย์ซึ่งเป็นของผู้อื่น หรือซึ่งผู้อื่นเป็นเจ้าของรวมอยู่ด้วย เบียดบังเอาทรัพย์นั้นเป็นของตนหรือบุคคลที่สามเสียโดยทุจริต ผู้นั้นกระทำความผิดฐานยักยอก ต้องระวางโทษจำคุกไม่เกินสามปี หรือปรับไม่เกินหกหมื่นบาท หรือทั้งจำทั้งปรับ\n(เนื้อความวรรคหนึ่ง)', 'ความผิดเกี่ยวกับทรัพย์'],
+  ['K02', '358', 'ทำให้เสียทรัพย์', 'ผู้ใดทำให้เสียหาย ทำลาย ทำให้เสื่อมค่าหรือทำให้ไร้ประโยชน์ซึ่งทรัพย์ของผู้อื่น หรือผู้อื่นเป็นเจ้าของรวมอยู่ด้วย ผู้นั้นกระทำความผิดฐานทำให้เสียทรัพย์ ต้องระวางโทษจำคุกไม่เกินสามปี หรือปรับไม่เกินหกหมื่นบาท หรือทั้งจำทั้งปรับ', 'ความผิดเกี่ยวกับทรัพย์'],
+  ['K02', '362', 'บุกรุก', 'ผู้ใดเข้าไปในอสังหาริมทรัพย์ของผู้อื่น เพื่อถือการครอบครองอสังหาริมทรัพย์นั้นทั้งหมดหรือแต่บางส่วน หรือเข้าไปกระทำการใด ๆ อันเป็นการรบกวนการครอบครองอสังหาริมทรัพย์ของเขาโดยปกติสุข ต้องระวางโทษจำคุกไม่เกินหนึ่งปี หรือปรับไม่เกินสองหมื่นบาท หรือทั้งจำทั้งปรับ', 'ความผิดเกี่ยวกับทรัพย์'],
+
+  // ---- ป.วิ.พ. ----
+  ['K03', '55', 'อำนาจฟ้องคดีแพ่ง', 'เมื่อมีข้อโต้แย้งเกิดขึ้นเกี่ยวกับสิทธิหรือหน้าที่ของบุคคลใดตามกฎหมายแพ่ง หรือบุคคลใดจะต้องใช้สิทธิทางศาล บุคคลนั้นชอบที่จะเสนอคดีของตนต่อศาลแพ่งที่มีเขตอำนาจได้ตามบทบัญญัติแห่งกฎหมายแพ่งและประมวลกฎหมายนี้', 'การฟ้องคดี'],
+  ['K03', '84/1', 'ภาระการพิสูจน์', 'คู่ความฝ่ายใดกล่าวอ้างข้อเท็จจริงเพื่อสนับสนุนคำคู่ความของตน ให้คู่ความฝ่ายนั้นมีภาระการพิสูจน์ข้อเท็จจริงนั้น แต่ถ้ามีข้อสันนิษฐานไว้ในกฎหมายหรือมีข้อสันนิษฐานที่ควรจะเป็นซึ่งปรากฏจากสภาพแห่งความเป็นไปตามปกติธรรมดาของเหตุการณ์เป็นคุณแก่คู่ความฝ่ายใด คู่ความฝ่ายนั้นต้องพิสูจน์เพียงว่าตนได้ปฏิบัติตามเงื่อนไขแห่งการที่ตนจะได้รับประโยชน์จากข้อสันนิษฐานนั้นครบถ้วนแล้ว', 'พยานหลักฐาน'],
+
+  // ---- ป.วิ.อ. ----
+  ['K04', '226', 'หลักการรับฟังพยานหลักฐาน', 'พยานวัตถุ พยานเอกสาร หรือพยานบุคคล ซึ่งน่าจะพิสูจน์ได้ว่าจำเลยมีผิดหรือบริสุทธิ์ ให้อ้างเป็นพยานหลักฐานได้ แต่ต้องเป็นพยานชนิดที่มิได้เกิดขึ้นจากการจูงใจ มีคำมั่นสัญญา ขู่เข็ญ หลอกลวง หรือโดยมิชอบประการอื่น และให้สืบตามบทบัญญัติแห่งประมวลกฎหมายนี้หรือกฎหมายอื่นอันว่าด้วยการสืบพยาน', 'พยานหลักฐาน'],
+  ['K04', '227', 'การชั่งน้ำหนักพยานและหลักยกประโยชน์แห่งความสงสัย', 'ให้ศาลใช้ดุลพินิจวินิจฉัยชั่งน้ำหนักพยานหลักฐานทั้งปวง อย่าพิพากษาลงโทษจนกว่าจะแน่ใจว่ามีการกระทำผิดจริงและจำเลยเป็นผู้กระทำความผิดนั้น\nเมื่อมีความสงสัยตามสมควรว่าจำเลยได้กระทำผิดหรือไม่ ให้ยกประโยชน์แห่งความสงสัยนั้นให้จำเลย', 'พยานหลักฐาน'],
+
+  // ---- พระราชบัญญัติ ----
+  ['A01', '5', 'เข้าถึงระบบคอมพิวเตอร์โดยมิชอบ', 'ผู้ใดเข้าถึงโดยมิชอบซึ่งระบบคอมพิวเตอร์ที่มีมาตรการป้องกันการเข้าถึงโดยเฉพาะและมาตรการนั้นมิได้มีไว้สำหรับตน ต้องระวางโทษจำคุกไม่เกินหกเดือน หรือปรับไม่เกินหนึ่งหมื่นบาท หรือทั้งจำทั้งปรับ', 'ความผิดเกี่ยวกับคอมพิวเตอร์'],
+  ['A02', '19', 'หลักความยินยอมในการเก็บรวบรวมข้อมูลส่วนบุคคล', 'ผู้ควบคุมข้อมูลส่วนบุคคลจะกระทำการเก็บรวบรวม ใช้ หรือเปิดเผยข้อมูลส่วนบุคคลไม่ได้ หากเจ้าของข้อมูลส่วนบุคคลไม่ได้ให้ความยินยอมไว้ก่อนหรือในขณะนั้น เว้นแต่บทบัญญัติแห่งพระราชบัญญัตินี้หรือกฎหมายอื่นบัญญัติให้กระทำได้\n(เนื้อความวรรคหนึ่ง)', 'ข้อมูลส่วนบุคคล'],
+  ['A03', '5', 'หน่วยงานของรัฐรับผิดแทนเจ้าหน้าที่', 'หน่วยงานของรัฐต้องรับผิดต่อผู้เสียหายในผลแห่งละเมิดที่เจ้าหน้าที่ของตนได้กระทำในการปฏิบัติหน้าที่ ในกรณีนี้ผู้เสียหายอาจฟ้องหน่วยงานของรัฐดังกล่าวได้โดยตรง แต่จะฟ้องเจ้าหน้าที่ไม่ได้\n(เนื้อความวรรคหนึ่ง)', 'ละเมิดของเจ้าหน้าที่']
+];
+
+/* =========================================================================
+ *  อนุสัญญา / สนธิสัญญา — ข้อมูลตั้งต้นจาก treaties.mfa.go.th (ครบทุกรายการในหมวดสนธิสัญญาที่น่าสนใจ
+ *  และตัวอย่างสนธิสัญญาของไทยในอดีต ณ วันจัดทำ) พร้อมคำอธิบายภาษาไทย ระบบ dailySync จะตรวจรายการใหม่ทุกวัน
+ * ========================================================================= */
+
+var TREATY_SEED = [
+ {
+  "id": "Tcf08ea63",
+  "group": "ฉบับมีคำแปลภาษาไทย",
+  "title": "Vienna Convention on Diplomatic Relations (VCDR)",
+  "th": "อนุสัญญากรุงเวียนนาว่าด้วยความสัมพันธ์ทางการทูต ค.ศ. 1961",
+  "date": "2022-11-24",
+  "url": "https://treaties.mfa.go.th/th/content/vienna-convention-on-diplomatic-relations-vcdr?page=637f29ed694b996e86526c73&menu=637f32926782f670c2691573",
+  "summary": "อนุสัญญาฉบับนี้เป็นกฎหมายระหว่างประเทศหลักที่วางกติกาการแลกเปลี่ยนผู้แทนทางการทูตระหว่างรัฐ จัดทำขึ้นที่กรุงเวียนนาเมื่อ ค.ศ. 1961 และประเทศไทยเป็นภาคี สาระสำคัญเริ่มจากหลักว่าการสถาปนาความสัมพันธ์ทางการทูตและการตั้งคณะผู้แทนถาวรต้องอาศัยความยินยอมร่วมกันของรัฐทั้งสองฝ่าย จากนั้นกำหนดหน้าที่ของคณะผู้แทน เช่น การเป็นตัวแทนของรัฐผู้ส่ง การคุ้มครองผลประโยชน์ของรัฐผู้ส่งและคนชาติ การเจรจากับรัฐผู้รับ และการรายงานสถานการณ์โดยวิธีที่ชอบด้วยกฎหมาย\nหัวใจของอนุสัญญาคือเอกสิทธิ์และความคุ้มกันทางการทูต สถานที่ของคณะผู้แทนถือเป็นสถานที่ที่ละเมิดมิได้ เจ้าหน้าที่ของรัฐผู้รับจะเข้าไปไม่ได้หากหัวหน้าคณะผู้แทนไม่ยินยอม ถุงเอกสารทางการทูตจะเปิดหรือกักไว้ไม่ได้ ตัวแทนทางการทูตได้รับความคุ้มกันจากเขตอำนาจศาลอาญาของรัฐผู้รับโดยสมบูรณ์ และได้รับความคุ้มกันทางแพ่งและทางปกครองเกือบทั้งหมด เว้นแต่กรณีที่อนุสัญญากำหนดไว้ เช่น คดีเกี่ยวกับอสังหาริมทรัพย์ส่วนตัวในรัฐผู้รับ\nในทางกลับกัน ผู้ได้รับเอกสิทธิ์มีหน้าที่เคารพกฎหมายของรัฐผู้รับและไม่แทรกแซงกิจการภายใน รัฐผู้รับอาจประกาศให้บุคคลใดเป็นบุคคลที่ไม่พึงปรารถนา (persona non grata) ได้ทุกเวลาโดยไม่ต้องแสดงเหตุผล และรัฐผู้ส่งอาจสละความคุ้มกันได้โดยต้องสละอย่างชัดแจ้ง อนุสัญญานี้จึงเป็นฐานของการทำงานของสถานเอกอัครราชทูตทุกแห่งในปัจจุบัน"
+ },
+ {
+  "id": "T7090528d",
+  "group": "ฉบับมีคำแปลภาษาไทย",
+  "title": "Vienna Convention on Consular Relations (VCCR)",
+  "th": "อนุสัญญากรุงเวียนนาว่าด้วยความสัมพันธ์ทางกงสุล ค.ศ. 1963",
+  "date": "2022-11-24",
+  "url": "https://treaties.mfa.go.th/th/content/vienna-convention-on-consular-relations-vccr?page=637f29ed694b996e86526c73&menu=637f32926782f670c2691573",
+  "summary": "อนุสัญญาฉบับนี้วางหลักเกณฑ์ของงานกงสุล ซึ่งต่างจากงานทูตตรงที่มุ่งให้บริการและคุ้มครองคนชาติของรัฐผู้ส่งที่อยู่ในรัฐผู้รับเป็นหลัก หน้าที่กงสุลที่อนุสัญญารับรองได้แก่ การออกหนังสือเดินทางและเอกสารการเดินทาง การตรวจลงตรา การทำนิติกรรมและรับรองเอกสาร การช่วยเหลือคนชาติที่ประสบเหตุ การดูแลผลประโยชน์ของผู้เยาว์และผู้ไร้ความสามารถ และการส่งเสริมความสัมพันธ์ทางการค้า เศรษฐกิจ และวัฒนธรรม\nบทบัญญัติที่ถูกอ้างถึงบ่อยที่สุดคือข้อ 36 ว่าด้วยการติดต่อสื่อสารกับคนชาติ เมื่อคนชาติของรัฐผู้ส่งถูกจับกุม คุมขัง หรือควบคุมตัว เจ้าหน้าที่ของรัฐผู้รับต้องแจ้งให้บุคคลนั้นทราบโดยไม่ชักช้าถึงสิทธิที่จะติดต่อกับกงสุลของตน และต้องแจ้งกงสุลหากบุคคลนั้นร้องขอ ประเด็นนี้เคยเป็นข้อพิพาทสำคัญในศาลยุติธรรมระหว่างประเทศหลายคดี\nเอกสิทธิ์และความคุ้มกันของพนักงานฝ่ายกงสุลแคบกว่าของตัวแทนทางการทูต โดยหลักได้รับความคุ้มกันเฉพาะการกระทำในการปฏิบัติหน้าที่กงสุล สถานที่ทำการกงสุลได้รับความคุ้มครองเฉพาะส่วนที่ใช้ปฏิบัติงานกงสุล ผู้ศึกษาจึงควรอ่านคู่กับอนุสัญญาว่าด้วยความสัมพันธ์ทางการทูตเพื่อเห็นความแตกต่าง"
+ },
+ {
+  "id": "Tc8eb057b",
+  "group": "ฉบับมีคำแปลภาษาไทย",
+  "title": "United Nations Convention on the Law of the Sea (UNCLOS)",
+  "th": "อนุสัญญาสหประชาชาติว่าด้วยกฎหมายทะเล ค.ศ. 1982 (UNCLOS)",
+  "date": "2022-11-24",
+  "url": "https://treaties.mfa.go.th/th/content/united-nations-convention-on-the-law-of-the-sea-un?page=637f29ed694b996e86526c73&menu=637f32926782f670c2691573",
+  "summary": "อนุสัญญาสหประชาชาติว่าด้วยกฎหมายทะเลมักถูกเรียกว่า \"ธรรมนูญแห่งมหาสมุทร\" เพราะรวบรวมกฎเกณฑ์เกือบทุกเรื่องเกี่ยวกับการใช้ทะเลไว้ในฉบับเดียว ประเทศไทยเป็นภาคีตั้งแต่ ค.ศ. 2011 สาระหลักคือการแบ่งเขตทางทะเล ได้แก่ ทะเลอาณาเขตไม่เกิน 12 ไมล์ทะเลซึ่งรัฐชายฝั่งมีอธิปไตย เขตต่อเนื่องไม่เกิน 24 ไมล์ทะเล เขตเศรษฐกิจจำเพาะไม่เกิน 200 ไมล์ทะเลซึ่งรัฐชายฝั่งมีสิทธิอธิปไตยในการสำรวจและแสวงประโยชน์จากทรัพยากร และไหล่ทวีปซึ่งอาจขยายเกินกว่านั้นได้ตามเงื่อนไขทางธรณีวิทยา\nอนุสัญญารับรองสิทธิของเรือทุกรัฐในการผ่านโดยสุจริตในทะเลอาณาเขต สิทธิผ่านช่องแคบที่ใช้เดินเรือระหว่างประเทศ และเสรีภาพแห่งทะเลหลวง ซึ่งรวมถึงเสรีภาพในการเดินเรือ การบินผ่าน และการวางสายเคเบิลใต้น้ำ นอกจากนี้ยังกำหนดให้พื้นดินท้องทะเลนอกเขตอำนาจรัฐเป็น \"มรดกร่วมของมนุษยชาติ\" ภายใต้การดูแลขององค์การพื้นดินท้องทะเลระหว่างประเทศ\nอนุสัญญายังมีบทบัญญัติว่าด้วยการคุ้มครองสิ่งแวดล้อมทางทะเล การวิจัยทางวิทยาศาสตร์ทางทะเล และระบบระงับข้อพิพาทแบบบังคับ เช่น ศาลกฎหมายทะเลระหว่างประเทศ ณ เมืองฮัมบูร์ก สำหรับประเทศไทยซึ่งมีชายฝั่งทั้งอ่าวไทยและทะเลอันดามัน อนุสัญญานี้มีความสำคัญโดยตรงต่อการประมง พลังงาน และการกำหนดเขตแดนทางทะเลกับประเทศเพื่อนบ้าน"
+ },
+ {
+  "id": "T223267ef",
+  "group": "ฉบับมีคำแปลภาษาไทย",
+  "title": "UN Charter",
+  "th": "กฎบัตรสหประชาชาติ ค.ศ. 1945",
+  "date": "2022-11-24",
+  "url": "https://treaties.mfa.go.th/th/content/un-charter?page=637f29ed694b996e86526c73&menu=637f32926782f670c2691573",
+  "summary": "กฎบัตรสหประชาชาติเป็นสนธิสัญญาก่อตั้งองค์การสหประชาชาติ ลงนามที่นครซานฟรานซิสโกเมื่อ ค.ศ. 1945 หลังสงครามโลกครั้งที่สอง ประเทศไทยเข้าเป็นสมาชิกลำดับที่ 55 เมื่อ ค.ศ. 1946 กฎบัตรกำหนดวัตถุประสงค์ขององค์การไว้ ได้แก่ การธำรงไว้ซึ่งสันติภาพและความมั่นคงระหว่างประเทศ การพัฒนาความสัมพันธ์ฉันมิตรบนหลักความเสมอภาคและการกำหนดใจตนเองของประชาชาติ และความร่วมมือระหว่างประเทศในการแก้ปัญหาทางเศรษฐกิจ สังคม วัฒนธรรม และสิทธิมนุษยชน\nหลักการที่สำคัญที่สุดอยู่ในข้อ 2 ได้แก่ ความเสมอภาคในอำนาจอธิปไตยของรัฐสมาชิก การระงับข้อพิพาทโดยสันติวิธี และข้อ 2 (4) ที่ห้ามการคุกคามหรือการใช้กำลังต่อบูรณภาพแห่งดินแดนหรือเอกราชทางการเมืองของรัฐใด ข้อยกเว้นของการห้ามใช้กำลังมีเพียงการใช้สิทธิป้องกันตนเองตามข้อ 51 และการดำเนินการตามมติคณะมนตรีความมั่นคงภายใต้หมวด 7\nกฎบัตรจัดตั้งองค์กรหลัก 6 องค์กร คือ สมัชชาใหญ่ คณะมนตรีความมั่นคง คณะมนตรีเศรษฐกิจและสังคม คณะมนตรีภาวะทรัสตี ศาลยุติธรรมระหว่างประเทศ และสำนักเลขาธิการ โดยคณะมนตรีความมั่นคงมีสมาชิกถาวร 5 ประเทศที่มีสิทธิยับยั้ง ข้อ 103 ยังกำหนดว่าหากพันธกรณีตามกฎบัตรขัดกับพันธกรณีตามความตกลงอื่น ให้พันธกรณีตามกฎบัตรมีผลเหนือกว่า"
+ },
+ {
+  "id": "T31dcb7a0",
+  "group": "ฉบับมีคำแปลภาษาไทย",
+  "title": "Convention on the Privileges and Immunities of the United Nations",
+  "th": "อนุสัญญาว่าด้วยเอกสิทธิ์และความคุ้มกันของสหประชาชาติ ค.ศ. 1946",
+  "date": "2022-11-24",
+  "url": "https://treaties.mfa.go.th/th/content/convention-on-the-privileges?page=637f29ed694b996e86526c73&menu=637f32926782f670c2691573",
+  "summary": "อนุสัญญาฉบับนี้ขยายความข้อ 105 ของกฎบัตรสหประชาชาติ ซึ่งกำหนดว่าองค์การจะได้รับเอกสิทธิ์และความคุ้มกันเท่าที่จำเป็นต่อการบรรลุวัตถุประสงค์ สาระแรกคือการรับรองสภาพบุคคลตามกฎหมายของสหประชาชาติ ทำให้องค์การทำสัญญา ได้มาและจำหน่ายทรัพย์สิน และดำเนินคดีได้\nทรัพย์สินและสินทรัพย์ขององค์การได้รับความคุ้มกันจากกระบวนการทางศาลทุกรูปแบบ เว้นแต่องค์การจะสละโดยชัดแจ้ง สถานที่และบรรณสารขององค์การละเมิดมิได้ องค์การได้รับยกเว้นภาษีทางตรงและอากรศุลกากรสำหรับสิ่งของที่ใช้ในทางราชการ ผู้แทนของรัฐสมาชิกที่ไปประชุมได้รับความคุ้มกันจากการจับกุมและจากกระบวนการทางกฎหมายสำหรับถ้อยคำและการกระทำในฐานะผู้แทน\nเจ้าหน้าที่ของสหประชาชาติได้รับความคุ้มกันสำหรับการกระทำในหน้าที่ราชการ ส่วนเลขาธิการและผู้ช่วยเลขาธิการได้รับเอกสิทธิ์เทียบเท่าผู้แทนทางการทูต ผู้เชี่ยวชาญที่ปฏิบัติภารกิจให้องค์การก็ได้รับความคุ้มกันเท่าที่จำเป็น และอนุสัญญายังกำหนดหนังสือเดินทางของสหประชาชาติ (laissez-passer) ที่รัฐภาคีต้องยอมรับ"
+ },
+ {
+  "id": "T0bd04d06",
+  "group": "ฉบับมีคำแปลภาษาไทย",
+  "title": "Convention on the Privileges and Immunities of the Specialized Agencies",
+  "th": "อนุสัญญาว่าด้วยเอกสิทธิ์และความคุ้มกันของทบวงการชำนัญพิเศษ ค.ศ. 1947",
+  "date": "2022-11-24",
+  "url": "https://treaties.mfa.go.th/th/content/convention-on-the-privileges-and-immunities?page=637f29ed694b996e86526c73&menu=637f32926782f670c2691573",
+  "summary": "อนุสัญญาฉบับนี้มีโครงสร้างคล้ายกับอนุสัญญาว่าด้วยเอกสิทธิ์และความคุ้มกันของสหประชาชาติ แต่ใช้กับทบวงการชำนัญพิเศษ ซึ่งเป็นองค์การระหว่างประเทศเฉพาะด้านที่มีความสัมพันธ์กับสหประชาชาติ เช่น องค์การแรงงานระหว่างประเทศ องค์การอาหารและเกษตรแห่งสหประชาชาติ องค์การการศึกษา วิทยาศาสตร์ และวัฒนธรรมแห่งสหประชาชาติ และองค์การอนามัยโลก\nอนุสัญญากำหนดมาตรฐานกลาง เช่น สภาพบุคคลตามกฎหมายของทบวงการ ความคุ้มกันของทรัพย์สินจากกระบวนการทางศาล ความละเมิดมิได้ของสถานที่และบรรณสาร การยกเว้นภาษีและอากร และความคุ้มกันของผู้แทนรัฐสมาชิกและเจ้าหน้าที่ในการปฏิบัติหน้าที่ ส่วนรายละเอียดเฉพาะของแต่ละทบวงการกำหนดไว้ในภาคผนวก ซึ่งปรับให้เหมาะกับภารกิจของแต่ละองค์การ\nสาระที่ควรจดจำคือ ความคุ้มกันเหล่านี้มีขึ้นเพื่อประโยชน์ในการปฏิบัติภารกิจขององค์การ ไม่ใช่ประโยชน์ส่วนตัวของบุคคล อนุสัญญาจึงกำหนดให้องค์การมีหน้าที่สละความคุ้มกันในกรณีที่ความคุ้มกันจะขัดขวางกระบวนการยุติธรรม และต้องร่วมมือกับรัฐภาคีเพื่อป้องกันการใช้เอกสิทธิ์ในทางที่ผิด"
+ },
+ {
+  "id": "T1183c931",
+  "group": "ฉบับมีคำแปลภาษาไทย",
+  "title": "ASEAN Charter",
+  "th": "กฎบัตรอาเซียน ค.ศ. 2007",
+  "date": "2022-11-24",
+  "url": "https://treaties.mfa.go.th/th/content/asean-charter?page=637f29ed694b996e86526c73&menu=637f32926782f670c2691573",
+  "summary": "กฎบัตรอาเซียนเป็นธรรมนูญของสมาคมประชาชาติแห่งเอเชียตะวันออกเฉียงใต้ ลงนามที่สิงคโปร์เมื่อ ค.ศ. 2007 และมีผลใช้บังคับเมื่อ ค.ศ. 2008 กฎบัตรทำให้อาเซียนซึ่งเดิมตั้งขึ้นโดยปฏิญญากรุงเทพฯ ค.ศ. 1967 มีสถานะเป็นองค์การระหว่างรัฐบาลที่มีสภาพบุคคลตามกฎหมาย และวางกรอบการสร้างประชาคมอาเซียน 3 เสาหลัก คือ ประชาคมการเมืองและความมั่นคง ประชาคมเศรษฐกิจ และประชาคมสังคมและวัฒนธรรม\nกฎบัตรยืนยันหลักการที่อาเซียนยึดถือมาโดยตลอด ได้แก่ การเคารพเอกราช อำนาจอธิปไตย ความเสมอภาค และบูรณภาพแห่งดินแดน การไม่แทรกแซงกิจการภายใน การระงับข้อพิพาทโดยสันติ และการตัดสินใจโดยการปรึกษาหารือและฉันทามติ ขณะเดียวกันก็บรรจุหลักนิติธรรม ธรรมาภิบาล ประชาธิปไตย และการคุ้มครองสิทธิมนุษยชนไว้ด้วย\nในด้านโครงสร้าง กฎบัตรกำหนดให้มีที่ประชุมสุดยอดอาเซียนเป็นองค์กรสูงสุด คณะมนตรีประสานงานอาเซียน คณะมนตรีประชาคมทั้งสาม เลขาธิการอาเซียนและสำนักเลขาธิการ คณะกรรมการผู้แทนถาวร และองค์กรสิทธิมนุษยชนอาเซียน รวมทั้งกลไกระงับข้อพิพาทตามประเภทของความตกลง"
+ },
+ {
+  "id": "T534d72a8",
+  "group": "ฉบับไม่มีคำแปลภาษาไทย",
+  "title": "Agreement under The United Nations Convention on The Law of The Sea on The Conservation and Sustainable Use of Marine Biological Diversity of Areas Beyond National Jurisdiction",
+  "th": "ความตกลงภายใต้อนุสัญญาสหประชาชาติว่าด้วยกฎหมายทะเลเกี่ยวกับการอนุรักษ์และการใช้ประโยชน์อย่างยั่งยืนซึ่งความหลากหลายทางชีวภาพทางทะเลในพื้นที่นอกเขตอำนาจรัฐ (BBNJ)",
+  "date": "2024-03-08",
+  "url": "https://treaties.mfa.go.th/th/content/agreement-under-the-united-nations-convention-on-t?page=637f334b86dac10a8f60e7f4&menu=637f333186dac10a8f60e7f3",
+  "summary": "ความตกลง BBNJ หรือที่เรียกกันว่า \"สนธิสัญญาทะเลหลวง\" รับรองเมื่อ ค.ศ. 2023 เพื่อเติมช่องว่างของอนุสัญญาสหประชาชาติว่าด้วยกฎหมายทะเล ในการคุ้มครองความหลากหลายทางชีวภาพในทะเลหลวงและพื้นที่พื้นดินท้องทะเลระหว่างประเทศ ซึ่งคิดเป็นพื้นที่เกือบสองในสามของมหาสมุทรโลก และก่อนหน้านี้ไม่มีกรอบกฎหมายรวมสำหรับการอนุรักษ์\nความตกลงครอบคลุมสี่เรื่องหลัก ได้แก่ ทรัพยากรพันธุกรรมทางทะเลและการแบ่งปันผลประโยชน์อย่างเป็นธรรม เครื่องมือการบริหารจัดการเชิงพื้นที่รวมถึงการจัดตั้งเขตคุ้มครองทางทะเล การประเมินผลกระทบสิ่งแวดล้อมสำหรับกิจกรรมที่อาจก่อความเสียหายร้ายแรง และการเสริมสร้างขีดความสามารถและการถ่ายทอดเทคโนโลยีทางทะเลให้แก่ประเทศกำลังพัฒนา\nความตกลงยังจัดตั้งที่ประชุมรัฐภาคี องค์กรทางวิทยาศาสตร์และวิชาการ และกลไกการเงิน หลักการสำคัญที่ยึดถือ ได้แก่ หลักผู้ก่อมลพิษเป็นผู้จ่าย หลักมรดกร่วมของมนุษยชาติ และแนวทางระวังไว้ก่อน ผู้ศึกษาควรอ่านคู่กับ UNCLOS และอนุสัญญาว่าด้วยความหลากหลายทางชีวภาพ"
+ },
+ {
+  "id": "T290d01f3",
+  "group": "ฉบับไม่มีคำแปลภาษาไทย",
+  "title": "Vienna Convention on the Law of Treaties 1969",
+  "th": "อนุสัญญากรุงเวียนนาว่าด้วยกฎหมายสนธิสัญญา ค.ศ. 1969",
+  "date": "2022-11-24",
+  "url": "https://treaties.mfa.go.th/th/content/vienna-convention-on-the-law-of-treaties-1969?page=637f334b86dac10a8f60e7f4&menu=637f333186dac10a8f60e7f3",
+  "summary": "อนุสัญญาฉบับนี้มักถูกเรียกว่า \"สนธิสัญญาว่าด้วยสนธิสัญญา\" เพราะวางกติกาทั่วไปว่าความตกลงระหว่างรัฐเป็นลายลักษณ์อักษรเกิดขึ้น มีผล ตีความ แก้ไข และสิ้นสุดลงอย่างไร บทบัญญัติจำนวนมากถือเป็นกฎหมายจารีตประเพณีระหว่างประเทศที่ใช้กับทุกรัฐ แม้รัฐที่ยังไม่เป็นภาคีก็ตาม\nหลักที่สำคัญที่สุดคือข้อ 26 หลักสัญญาต้องเป็นสัญญา (pacta sunt servanda) ที่ว่าสนธิสัญญาที่ใช้บังคับผูกพันภาคีและต้องปฏิบัติโดยสุจริต และข้อ 27 ที่ว่ารัฐจะอ้างกฎหมายภายในเป็นเหตุไม่ปฏิบัติตามสนธิสัญญาไม่ได้ ส่วนการตีความใช้หลักตามข้อ 31 และ 32 คือตีความโดยสุจริตตามความหมายธรรมดาของถ้อยคำในบริบทและตามวัตถุประสงค์ แล้วจึงใช้งานเตรียมร่างเป็นวิธีเสริม\nอนุสัญญายังกำหนดเรื่องข้อสงวน เหตุแห่งความไม่สมบูรณ์ของสนธิสัญญา เช่น สำคัญผิด กลฉ้อฉล การบังคับขู่เข็ญ และการขัดกับหลักกฎหมายเด็ดขาด (jus cogens) ตามข้อ 53 รวมถึงเหตุสิ้นสุดหรือระงับ เช่น การละเมิดอย่างร้ายแรง ความเป็นไปไม่ได้ที่จะปฏิบัติ และการเปลี่ยนแปลงสาระสำคัญของสถานการณ์"
+ },
+ {
+  "id": "T476a06ae",
+  "group": "ฉบับไม่มีคำแปลภาษาไทย",
+  "title": "Vienna Convention on Succession of States in Respect of Treaties 1978",
+  "th": "อนุสัญญากรุงเวียนนาว่าด้วยการสืบสิทธิของรัฐเกี่ยวกับสนธิสัญญา ค.ศ. 1978",
+  "date": "2022-11-24",
+  "url": "https://treaties.mfa.go.th/th/content/vienna-convention-on-succession-of-states-in-respe?page=637f334b86dac10a8f60e7f4&menu=637f333186dac10a8f60e7f3",
+  "summary": "อนุสัญญาฉบับนี้ตอบคำถามว่า เมื่อมีการเปลี่ยนแปลงอำนาจอธิปไตยเหนือดินแดน เช่น การได้รับเอกราช การรวมรัฐ หรือการแยกตัวของรัฐ สนธิสัญญาที่รัฐเดิมทำไว้จะยังผูกพันรัฐใหม่หรือไม่ ซึ่งเป็นประเด็นที่เกิดขึ้นจริงในยุคปลดปล่อยอาณานิคมและหลังการล่มสลายของบางรัฐในยุโรป\nหลักทั่วไปแยกตามประเภทการสืบสิทธิ สำหรับรัฐเอกราชใหม่ที่เคยเป็นดินแดนในอาณัติ อนุสัญญาใช้หลัก \"กระดานชนวนสะอาด\" คือรัฐใหม่ไม่ผูกพันสนธิสัญญาของรัฐเดิมโดยอัตโนมัติ แต่อาจแสดงเจตนาสืบสิทธิได้ ส่วนกรณีการรวมรัฐหรือการแยกส่วนของรัฐ โดยหลักสนธิสัญญายังคงมีผลต่อดินแดนที่เกี่ยวข้อง\nข้อยกเว้นที่สำคัญคือ การสืบสิทธิของรัฐไม่กระทบต่อเขตแดนที่สถาปนาโดยสนธิสัญญา และระบอบอื่นที่ผูกติดกับดินแดน เช่น สิทธิการใช้แม่น้ำหรือการปลอดทหาร ทั้งนี้เพื่อรักษาเสถียรภาพของเขตแดนระหว่างประเทศ ซึ่งเป็นหลักที่ศาลระหว่างประเทศยอมรับอย่างกว้างขวาง"
+ },
+ {
+  "id": "T0a055b98",
+  "group": "ฉบับไม่มีคำแปลภาษาไทย",
+  "title": "UN Convention on Jurisdictional Immunities 2004",
+  "th": "อนุสัญญาสหประชาชาติว่าด้วยความคุ้มกันจากเขตอำนาจศาลของรัฐและทรัพย์สินของรัฐ ค.ศ. 2004",
+  "date": "2022-11-24",
+  "url": "https://treaties.mfa.go.th/th/content/un-convention-on-jurisdictional-immunities-2004?page=637f334b86dac10a8f60e7f4&menu=637f333186dac10a8f60e7f3",
+  "summary": "อนุสัญญาฉบับนี้ประมวลหลักความคุ้มกันของรัฐ ซึ่งหมายถึงการที่รัฐหนึ่งไม่อาจถูกฟ้องในศาลของอีกรัฐหนึ่งโดยไม่ยินยอม หลักนี้สืบเนื่องจากความเสมอภาคในอำนาจอธิปไตย อนุสัญญายืนยันหลักทั่วไปว่ารัฐและทรัพย์สินของรัฐได้รับความคุ้มกัน แต่รับแนวคิดความคุ้มกันแบบจำกัด คือแยกการกระทำในฐานะผู้ใช้อำนาจรัฐออกจากการกระทำในเชิงพาณิชย์\nข้อยกเว้นของความคุ้มกันที่สำคัญ ได้แก่ การที่รัฐยินยอมโดยชัดแจ้ง ธุรกรรมทางพาณิชย์ สัญญาจ้างแรงงานบางประเภท การกระทำที่ก่อให้เกิดความตายหรือความเสียหายต่อบุคคลหรือทรัพย์สินในรัฐผู้มีเขตอำนาจ ข้อพิพาทเกี่ยวกับกรรมสิทธิ์ในทรัพย์สิน ทรัพย์สินทางปัญญา และสัญญาอนุญาโตตุลาการ\nอนุสัญญายังแยกเรื่องความคุ้มกันจากการบังคับคดีออกต่างหาก ทรัพย์สินของรัฐที่ใช้เพื่อวัตถุประสงค์ทางราชการ เช่น บัญชีของสถานทูต ทรัพย์สินทางทหาร หรือทรัพย์สินของธนาคารกลาง ได้รับความคุ้มครองเป็นพิเศษ แม้รัฐจะถูกพิพากษาแล้วก็ตาม"
+ },
+ {
+  "id": "Ta29fe9bf",
+  "group": "ฉบับไม่มีคำแปลภาษาไทย",
+  "title": "Treaty on Principles Governing the Activities of States in the Exploration and Use of Outer Space 1967",
+  "th": "ความตกลงว่าด้วยหลักการควบคุมกิจกรรมของรัฐในการสำรวจและการใช้อวกาศภายนอก ค.ศ. 1967 (สนธิสัญญาอวกาศภายนอก)",
+  "date": "2022-11-24",
+  "url": "https://treaties.mfa.go.th/th/content/treaty-on-principles-governing-the-activities-of-s?page=637f334b86dac10a8f60e7f4&menu=637f333186dac10a8f60e7f3",
+  "summary": "สนธิสัญญาอวกาศภายนอกเป็นรากฐานของกฎหมายอวกาศระหว่างประเทศ หลักแรกคือการสำรวจและใช้อวกาศภายนอก รวมถึงดวงจันทร์และเทหวัตถุอื่น ต้องดำเนินการเพื่อประโยชน์ของทุกประเทศ และอวกาศเป็นอาณาเขตของมวลมนุษยชาติ ไม่มีรัฐใดอ้างอำนาจอธิปไตยเหนืออวกาศหรือเทหวัตถุได้ไม่ว่าโดยการประกาศ การใช้ การยึดครอง หรือวิธีอื่น\nสนธิสัญญาห้ามนำอาวุธนิวเคลียร์หรืออาวุธทำลายล้างสูงอื่นขึ้นสู่วงโคจร ติดตั้งบนเทหวัตถุ หรือวางไว้ในอวกาศ ดวงจันทร์และเทหวัตถุอื่นต้องใช้เพื่อสันติเท่านั้น นักบินอวกาศได้รับสถานะเป็นทูตของมวลมนุษยชาติ ที่รัฐภาคีต้องให้ความช่วยเหลือเมื่อประสบอุบัติเหตุ\nเรื่องความรับผิด รัฐต้องรับผิดชอบระหว่างประเทศต่อกิจกรรมอวกาศของตน ไม่ว่าจะดำเนินการโดยหน่วยงานรัฐหรือเอกชน และต้องรับผิดต่อความเสียหายที่วัตถุอวกาศที่ตนส่งขึ้นไปก่อให้เกิดแก่รัฐอื่น หลักนี้ได้รับการขยายความต่อในอนุสัญญาว่าด้วยความรับผิด ค.ศ. 1972 และอนุสัญญาว่าด้วยการจดทะเบียน ค.ศ. 1975"
+ },
+ {
+  "id": "T9089f644",
+  "group": "ฉบับไม่มีคำแปลภาษาไทย",
+  "title": "Statute of the International Court of Justice 1945",
+  "th": "ธรรมนูญศาลยุติธรรมระหว่างประเทศ ค.ศ. 1945",
+  "date": "2022-11-24",
+  "url": "https://treaties.mfa.go.th/th/content/statute-of-the-international-court-of-justice-1945?page=637f334b86dac10a8f60e7f4&menu=637f333186dac10a8f60e7f3",
+  "summary": "ธรรมนูญศาลยุติธรรมระหว่างประเทศเป็นส่วนหนึ่งที่แยกไม่ออกจากกฎบัตรสหประชาชาติ ศาลนี้เป็นองค์กรตุลาการหลักของสหประชาชาติ ตั้งอยู่ ณ กรุงเฮก ประกอบด้วยผู้พิพากษา 15 คนจากหลากหลายระบบกฎหมาย ได้รับเลือกโดยสมัชชาใหญ่และคณะมนตรีความมั่นคง ดำรงตำแหน่งวาระละ 9 ปี\nศาลมีอำนาจ 2 ลักษณะ คือ อำนาจพิจารณาคดีพิพาทระหว่างรัฐ ซึ่งต้องอาศัยความยินยอมของรัฐคู่พิพาท ไม่ว่าโดยความตกลงพิเศษ ข้อบทในสนธิสัญญา หรือการประกาศยอมรับเขตอำนาจบังคับตามข้อ 36 วรรคสอง และอำนาจให้คำปรึกษาแก่องค์กรของสหประชาชาติ คำพิพากษาผูกพันเฉพาะคู่ความและเฉพาะคดีนั้น และเป็นที่สุดไม่อาจอุทธรณ์ได้\nข้อ 38 ของธรรมนูญเป็นบทบัญญัติที่นักศึกษากฎหมายระหว่างประเทศต้องจำ เพราะระบุบ่อเกิดของกฎหมายระหว่างประเทศ ได้แก่ อนุสัญญาระหว่างประเทศ จารีตประเพณีระหว่างประเทศ หลักกฎหมายทั่วไปที่นานาอารยประเทศรับรอง และคำพิพากษากับคำสอนของผู้ทรงคุณวุฒิเป็นวิธีเสริม ประเทศไทยเคยเป็นคู่ความในคดีปราสาทพระวิหาร"
+ },
+ {
+  "id": "Td6a09f5b",
+  "group": "ฉบับไม่มีคำแปลภาษาไทย",
+  "title": "State Immunity Act 1978",
+  "th": "พระราชบัญญัติความคุ้มกันของรัฐ ค.ศ. 1978 (State Immunity Act ของสหราชอาณาจักร)",
+  "date": "2022-11-24",
+  "url": "https://treaties.mfa.go.th/th/content/state-immunity-act-1978?page=637f334b86dac10a8f60e7f4&menu=637f333186dac10a8f60e7f3",
+  "summary": "เอกสารนี้เป็นกฎหมายภายในของสหราชอาณาจักร ที่กรมสนธิสัญญาและกฎหมายนำมาเผยแพร่เพื่อการศึกษาเปรียบเทียบ เพราะเป็นตัวอย่างสำคัญของการนำหลักความคุ้มกันของรัฐแบบจำกัดมาบัญญัติเป็นกฎหมายลายลักษณ์อักษร หลักทั่วไปของกฎหมายคือรัฐต่างประเทศได้รับความคุ้มกันจากเขตอำนาจศาลของสหราชอาณาจักร เว้นแต่จะเข้าข้อยกเว้นที่กฎหมายกำหนด\nข้อยกเว้นสำคัญ ได้แก่ การยอมรับเขตอำนาจศาล ธุรกรรมทางพาณิชย์และสัญญาที่ต้องปฏิบัติในสหราชอาณาจักร สัญญาจ้างแรงงานบางประเภท การทำให้เกิดความตายหรือการบาดเจ็บหรือความเสียหายต่อทรัพย์สินในสหราชอาณาจักร ข้อพิพาทเกี่ยวกับทรัพย์สิน สิทธิในทรัพย์สินทางปัญญา และอนุญาโตตุลาการ\nกฎหมายยังวางหลักการบังคับคดีกับทรัพย์สินของรัฐต่างประเทศ ซึ่งจำกัดเฉพาะทรัพย์สินที่ใช้หรือมุ่งใช้ในเชิงพาณิชย์ และให้ความคุ้มครองพิเศษแก่ทรัพย์สินของธนาคารกลาง ผู้ศึกษาควรเปรียบเทียบกับอนุสัญญาสหประชาชาติว่าด้วยความคุ้มกันจากเขตอำนาจศาลของรัฐ ค.ศ. 2004"
+ },
+ {
+  "id": "T37cf43e4",
+  "group": "ฉบับไม่มีคำแปลภาษาไทย",
+  "title": "International Convention on the Elimination of all Forms of Racial Discrimination 1965",
+  "th": "อนุสัญญาระหว่างประเทศว่าด้วยการขจัดการเลือกปฏิบัติทางเชื้อชาติในทุกรูปแบบ ค.ศ. 1965 (CERD)",
+  "date": "2022-11-24",
+  "url": "https://treaties.mfa.go.th/th/content/nternational-convention-on-the-elimination-of-all?page=637f334b86dac10a8f60e7f4&menu=637f333186dac10a8f60e7f3",
+  "summary": "อนุสัญญานี้เป็นหนึ่งในสนธิสัญญาหลักด้านสิทธิมนุษยชนของสหประชาชาติ และเป็นฉบับแรกที่มีคณะกรรมการตรวจสอบการปฏิบัติตาม ประเทศไทยเป็นภาคีตั้งแต่ ค.ศ. 2003 อนุสัญญานิยาม \"การเลือกปฏิบัติทางเชื้อชาติ\" ว่าหมายถึงการแบ่งแยก กีดกัน จำกัด หรือให้สิทธิพิเศษบนพื้นฐานของเชื้อชาติ สีผิว เชื้อสาย หรือชาติกำเนิดหรือเผ่าพันธุ์ ซึ่งมีความมุ่งประสงค์หรือผลเป็นการทำลายหรือลดทอนการยอมรับและการใช้สิทธิมนุษยชนอย่างเสมอภาค\nรัฐภาคีมีพันธกรณีต้องประณามการเลือกปฏิบัติทางเชื้อชาติ ใช้นโยบายขจัดการเลือกปฏิบัติโดยไม่ชักช้า ทบทวนและแก้ไขกฎหมายที่ก่อให้เกิดการเลือกปฏิบัติ และต้องกำหนดให้การเผยแพร่แนวคิดความเหนือกว่าทางเชื้อชาติ การยุยงให้เกิดความเกลียดชัง และการสนับสนุนกิจกรรมเหยียดเชื้อชาติเป็นความผิดที่มีโทษตามกฎหมาย\nอนุสัญญาประกันความเสมอภาคในการใช้สิทธิต่าง ๆ เช่น สิทธิในการได้รับการปฏิบัติอย่างเท่าเทียมในกระบวนการยุติธรรม สิทธิทางการเมือง สิทธิในการทำงาน ที่อยู่อาศัย การศึกษา และการเข้าถึงสถานที่สาธารณะ รัฐภาคีต้องเสนอรายงานต่อคณะกรรมการว่าด้วยการขจัดการเลือกปฏิบัติทางเชื้อชาติเป็นระยะ"
+ },
+ {
+  "id": "Te19e2af6",
+  "group": "ฉบับไม่มีคำแปลภาษาไทย",
+  "title": "International Convention on Economic Social and Cultural rights 1966",
+  "th": "กติการะหว่างประเทศว่าด้วยสิทธิทางเศรษฐกิจ สังคม และวัฒนธรรม ค.ศ. 1966 (ICESCR)",
+  "date": "2022-11-24",
+  "url": "https://treaties.mfa.go.th/th/content/international-convention-on-economic-social-and-c?page=637f334b86dac10a8f60e7f4&menu=637f333186dac10a8f60e7f3",
+  "summary": "กติกาฉบับนี้เป็นหนึ่งในสองกติกาหลักที่ร่วมกับปฏิญญาสากลว่าด้วยสิทธิมนุษยชนประกอบเป็น \"บทบัญญัติสิทธิมนุษยชนระหว่างประเทศ\" ประเทศไทยเป็นภาคีตั้งแต่ ค.ศ. 1999 กติกาคุ้มครองสิทธิที่เกี่ยวกับความเป็นอยู่ของมนุษย์ ได้แก่ สิทธิในการทำงานและได้รับเงื่อนไขการทำงานที่ยุติธรรม สิทธิในการก่อตั้งและเข้าร่วมสหภาพแรงงาน สิทธิในหลักประกันทางสังคม การคุ้มครองครอบครัว มารดา และเด็ก\nนอกจากนี้ยังรับรองสิทธิในมาตรฐานการครองชีพที่เพียงพอ ซึ่งรวมถึงอาหาร เครื่องนุ่งห่ม และที่อยู่อาศัย สิทธิในการมีสุขภาพกายและใจตามมาตรฐานสูงสุดที่เป็นไปได้ สิทธิในการศึกษาโดยการประถมศึกษาต้องเป็นภาคบังคับและไม่เก็บค่าใช้จ่าย และสิทธิในการมีส่วนร่วมในชีวิตทางวัฒนธรรมและได้รับประโยชน์จากความก้าวหน้าทางวิทยาศาสตร์\nลักษณะเฉพาะของกติกาอยู่ที่ข้อ 2 ซึ่งกำหนดให้รัฐดำเนินการให้สิทธิเกิดผลอย่างก้าวหน้าตามทรัพยากรที่มีอยู่อย่างเต็มที่ แต่ต้องประกันการใช้สิทธิโดยปราศจากการเลือกปฏิบัติทันที การติดตามตรวจสอบดำเนินการโดยคณะกรรมการว่าด้วยสิทธิทางเศรษฐกิจ สังคม และวัฒนธรรม"
+ },
+ {
+  "id": "Td016c829",
+  "group": "ฉบับไม่มีคำแปลภาษาไทย",
+  "title": "International Convention for the Suppression of the Financing of Terrorism 1999",
+  "th": "อนุสัญญาระหว่างประเทศว่าด้วยการปราบปรามการสนับสนุนทางการเงินแก่การก่อการร้าย ค.ศ. 1999",
+  "date": "2022-11-24",
+  "url": "https://treaties.mfa.go.th/th/content/international-convention-for-the-suppression-of-th?page=637f334b86dac10a8f60e7f4&menu=637f333186dac10a8f60e7f3",
+  "summary": "อนุสัญญาฉบับนี้มุ่งตัดแหล่งเงินทุนของการก่อการร้าย โดยกำหนดให้เป็นความผิดเมื่อบุคคลใดจัดหาหรือรวบรวมเงินทุนไม่ว่าโดยวิธีใด โดยตรงหรือโดยอ้อม โดยมีเจตนาหรือรู้ว่าเงินนั้นจะถูกนำไปใช้ก่อการร้ายตามที่นิยามในอนุสัญญาต่อต้านการก่อการร้ายฉบับอื่น หรือกระทำที่มุ่งก่อให้เกิดความตายหรือการบาดเจ็บสาหัสแก่พลเรือนเพื่อข่มขู่ประชาชนหรือบังคับรัฐบาล\nจุดสำคัญคือความผิดเกิดขึ้นแม้เงินนั้นจะยังไม่ได้ถูกใช้ก่อการร้ายจริง รัฐภาคีต้องกำหนดความผิดนี้ในกฎหมายภายใน ต้องมีมาตรการระบุ ตรวจจับ อายัด และริบเงินทุน และต้องกำหนดหน้าที่ของสถาบันการเงินในการรู้จักลูกค้าและรายงานธุรกรรมที่น่าสงสัย นิติบุคคลก็ต้องรับผิดได้\nอนุสัญญาใช้หลักส่งผู้ร้ายข้ามแดนหรือดำเนินคดีเอง และไม่ยอมให้อ้างว่าเป็นความผิดทางการเมืองหรือความลับทางธนาคารเพื่อปฏิเสธความร่วมมือ สำหรับประเทศไทย สาระของอนุสัญญาสะท้อนอยู่ในกฎหมายว่าด้วยการป้องกันและปราบปรามการสนับสนุนทางการเงินแก่การก่อการร้าย"
+ },
+ {
+  "id": "T1268f8ae",
+  "group": "ฉบับไม่มีคำแปลภาษาไทย",
+  "title": "Convention Suppression Unlawful Acts Against Safety Civil Aviation 1971",
+  "th": "อนุสัญญาว่าด้วยการปราบปรามการกระทำอันมิชอบด้วยกฎหมายต่อความปลอดภัยของการบินพลเรือน ค.ศ. 1971 (อนุสัญญามอนทรีออล)",
+  "date": "2022-11-24",
+  "url": "https://treaties.mfa.go.th/th/content/convention-suppression-unlawful-acts-against-safet?page=637f334b86dac10a8f60e7f4&menu=637f333186dac10a8f60e7f3",
+  "summary": "อนุสัญญามอนทรีออลเป็นส่วนหนึ่งของระบบสนธิสัญญาด้านความปลอดภัยการบิน ต่อจากอนุสัญญาโตเกียว ค.ศ. 1963 และอนุสัญญากรุงเฮก ค.ศ. 1970 ที่ว่าด้วยการยึดอากาศยาน อนุสัญญานี้ขยายความผิดไปยังการกระทำที่เป็นภัยต่ออากาศยานในบริการ เช่น การใช้ความรุนแรงต่อบุคคลบนอากาศยานซึ่งน่าจะเป็นอันตรายต่อความปลอดภัย การทำลายหรือทำให้อากาศยานเสียหาย การวางวัตถุระเบิด การทำลายสิ่งอำนวยความสะดวกในการเดินอากาศ และการแจ้งข้อมูลเท็จที่เป็นอันตรายต่อความปลอดภัย\nรัฐภาคีต้องกำหนดโทษที่รุนแรงสำหรับความผิดเหล่านี้ และต้องสถาปนาเขตอำนาจในหลายกรณี เช่น ความผิดเกิดในดินแดนของตน กระทำต่ออากาศยานที่จดทะเบียนในรัฐนั้น หรืออากาศยานลงจอดในดินแดนของตนโดยผู้กระทำยังอยู่บนเครื่อง\nหลักสำคัญคือหลักส่งผู้ร้ายข้ามแดนหรือดำเนินคดีเอง (aut dedere aut judicare) รัฐที่พบตัวผู้กระทำความผิดในดินแดนต้องส่งตัวไปยังรัฐที่มีเขตอำนาจ หรือหากไม่ส่งก็ต้องเสนอคดีต่อเจ้าหน้าที่ของตนเพื่อดำเนินคดี เพื่อไม่ให้ผู้กระทำความผิดมีที่หลบซ่อน"
+ },
+ {
+  "id": "Tc6d6fe07",
+  "group": "ฉบับไม่มีคำแปลภาษาไทย",
+  "title": "Convention on the Prevention and Punishment of Crimes Against Internationally Protected Persons 1973",
+  "th": "อนุสัญญาว่าด้วยการป้องกันและลงโทษอาชญากรรมต่อบุคคลที่ได้รับความคุ้มครองระหว่างประเทศ รวมทั้งตัวแทนทางการทูต ค.ศ. 1973",
+  "date": "2022-11-24",
+  "url": "https://treaties.mfa.go.th/th/content/convention-on-the-prevention-and-punishment-of-cr?page=637f334b86dac10a8f60e7f4&menu=637f333186dac10a8f60e7f3",
+  "summary": "อนุสัญญาฉบับนี้จัดทำขึ้นหลังเหตุการณ์ลักพาตัวและสังหารนักการทูตหลายครั้งในทศวรรษ 1960 และ 1970 เพื่อคุ้มครองบุคคลที่กฎหมายระหว่างประเทศให้ความคุ้มครองเป็นพิเศษ ได้แก่ ประมุขแห่งรัฐ หัวหน้ารัฐบาล รัฐมนตรีว่าการกระทรวงการต่างประเทศขณะอยู่ต่างประเทศ ตลอดจนผู้แทนและเจ้าหน้าที่ของรัฐหรือองค์การระหว่างประเทศ รวมทั้งสมาชิกครอบครัว\nความผิดที่อนุสัญญากำหนด ได้แก่ การฆ่า การลักพาตัว หรือการโจมตีอื่นต่อตัวบุคคลหรือเสรีภาพของบุคคลดังกล่าว การโจมตีโดยใช้ความรุนแรงต่อสถานที่ทำการ ที่พัก หรือยานพาหนะ ซึ่งน่าจะเป็นอันตรายต่อบุคคลนั้น รวมถึงการขู่ การพยายาม และการมีส่วนร่วมในการกระทำดังกล่าว\nรัฐภาคีต้องกำหนดโทษที่เหมาะสมกับความร้ายแรงของความผิด สถาปนาเขตอำนาจเหนือความผิด และใช้หลักส่งผู้ร้ายข้ามแดนหรือดำเนินคดีเอง ทั้งยังต้องร่วมมือป้องกันการเตรียมการกระทำความผิดและแลกเปลี่ยนข้อมูล อนุสัญญาจึงเสริมหน้าที่ของรัฐผู้รับตามอนุสัญญากรุงเวียนนาในการคุ้มครองตัวแทนทางการทูต"
+ },
+ {
+  "id": "T85b07eb1",
+  "group": "ฉบับไม่มีคำแปลภาษาไทย",
+  "title": "Convention on the Law of the Non-Navigational Uses of International Watercourses 1997",
+  "th": "อนุสัญญาว่าด้วยกฎหมายเกี่ยวกับการใช้ประโยชน์ทางน้ำระหว่างประเทศนอกเหนือจากการเดินเรือ ค.ศ. 1997",
+  "date": "2022-11-24",
+  "url": "https://treaties.mfa.go.th/th/content/convention-on-the-law-of-the-non-navigational-uses?page=637f334b86dac10a8f60e7f4&menu=637f333186dac10a8f60e7f3",
+  "summary": "อนุสัญญาฉบับนี้วางกรอบทั่วไปในการใช้และการคุ้มครองแม่น้ำ ทะเลสาบ และระบบน้ำที่ไหลผ่านหรือคั่นเขตแดนของหลายรัฐ สำหรับวัตถุประสงค์นอกจากการเดินเรือ เช่น การชลประทาน การผลิตไฟฟ้าพลังน้ำ การประปา และการอุตสาหกรรม ซึ่งเป็นเรื่องใกล้ตัวของภูมิภาคที่มีแม่น้ำนานาชาติอย่างแม่น้ำโขง\nหลักสำคัญมีสองประการ ประการแรกคือหลักการใช้อย่างเท่าเทียมและสมเหตุสมผล ซึ่งพิจารณาจากปัจจัยหลายด้าน เช่น สภาพภูมิศาสตร์ อุทกวิทยา ความต้องการทางเศรษฐกิจและสังคม ประชากรที่พึ่งพาแหล่งน้ำ และทางเลือกอื่นที่มีอยู่ ประการที่สองคือพันธกรณีที่จะไม่ก่อให้เกิดความเสียหายอย่างมีนัยสำคัญแก่รัฐอื่นที่ใช้แหล่งน้ำร่วมกัน\nอนุสัญญายังกำหนดหน้าที่ร่วมมือ การแลกเปลี่ยนข้อมูลอย่างสม่ำเสมอ การแจ้งล่วงหน้าเมื่อจะดำเนินโครงการที่อาจมีผลกระทบเชิงลบ การคุ้มครองระบบนิเวศ การป้องกันมลพิษ และกลไกระงับข้อพิพาท ซึ่งรวมถึงการตั้งคณะกรรมการค้นหาข้อเท็จจริง"
+ },
+ {
+  "id": "T6b2af5b8",
+  "group": "ฉบับไม่มีคำแปลภาษาไทย",
+  "title": "Agreement For the Implementation of Provisions of the UN Convention on the Law of the Sea (Fish Stocks) 1995",
+  "th": "ความตกลงเพื่อการอนุวัติการบทบัญญัติของอนุสัญญาสหประชาชาติว่าด้วยกฎหมายทะเลเกี่ยวกับการอนุรักษ์และการจัดการประชากรปลาที่อพยพย้ายถิ่นข้ามเขตและปลาที่อพยพย้ายถิ่นไกล ค.ศ. 1995",
+  "date": "2022-11-24",
+  "url": "https://treaties.mfa.go.th/th/content/agreement-for-the-implementation-of-provisions-of?page=637f334b86dac10a8f60e7f4&menu=637f333186dac10a8f60e7f3",
+  "summary": "ความตกลงฉบับนี้ขยายรายละเอียดของอนุสัญญาสหประชาชาติว่าด้วยกฎหมายทะเล เพื่อจัดการปลาที่ว่ายข้ามระหว่างเขตเศรษฐกิจจำเพาะกับทะเลหลวง เช่น ปลาค็อดบางชนิด และปลาที่อพยพย้ายถิ่นไกล เช่น ปลาทูน่า ซึ่งไม่อาจอนุรักษ์ได้หากแต่ละรัฐจัดการเพียงลำพัง\nหลักการสำคัญได้แก่ การใช้ประโยชน์อย่างยั่งยืนในระยะยาว การใช้ข้อมูลทางวิทยาศาสตร์ที่ดีที่สุด แนวทางระวังไว้ก่อน ซึ่งหมายความว่าการขาดความแน่นอนทางวิทยาศาสตร์ไม่ใช่เหตุให้เลื่อนมาตรการอนุรักษ์ และหลักความสอดคล้องกันระหว่างมาตรการในเขตอำนาจรัฐกับในทะเลหลวง\nความตกลงให้บทบาทสำคัญแก่องค์การบริหารจัดการประมงระดับภูมิภาค รัฐที่ต้องการทำประมงต้องเข้าร่วมหรือปฏิบัติตามมาตรการขององค์การเหล่านี้ รัฐเจ้าของธงมีหน้าที่ควบคุมเรือของตน และรัฐภาคีอาจขึ้นตรวจเรือประมงของรัฐภาคีอื่นในทะเลหลวงได้ภายใต้เงื่อนไขที่กำหนด เพื่อต่อต้านการทำประมงผิดกฎหมาย ขาดการรายงาน และไร้การควบคุม"
+ },
+ {
+  "id": "Tab081f34",
+  "group": "ฉบับไม่มีคำแปลภาษาไทย",
+  "title": "Agreement Establishing the World Trade Organization 1994",
+  "th": "ความตกลงมาร์ราเกชจัดตั้งองค์การการค้าโลก ค.ศ. 1994",
+  "date": "2022-11-24",
+  "url": "https://treaties.mfa.go.th/th/content/agreement-establishing-the-world-trade-organizatio?page=637f334b86dac10a8f60e7f4&menu=637f333186dac10a8f60e7f3",
+  "summary": "ความตกลงมาร์ราเกชเป็นผลของการเจรจาการค้าพหุภาคีรอบอุรุกวัย และจัดตั้งองค์การการค้าโลกขึ้นเมื่อ ค.ศ. 1995 แทนที่ระบบความตกลงทั่วไปว่าด้วยภาษีศุลกากรและการค้า (GATT) เดิม ประเทศไทยเป็นสมาชิกผู้ก่อตั้ง ตัวความตกลงจัดตั้งวางโครงสร้างองค์การ ได้แก่ ที่ประชุมระดับรัฐมนตรี คณะมนตรีใหญ่ ซึ่งทำหน้าที่เป็นองค์กรระงับข้อพิพาทและองค์กรทบทวนนโยบายการค้าด้วย\nภาคผนวกของความตกลงประกอบด้วยความตกลงสำคัญที่ผูกพันสมาชิกทุกประเทศในลักษณะ \"ข้อผูกพันเดียว\" ได้แก่ ความตกลงว่าด้วยการค้าสินค้า (รวม GATT 1994) ความตกลงทั่วไปว่าด้วยการค้าบริการ (GATS) ความตกลงว่าด้วยสิทธิในทรัพย์สินทางปัญญาที่เกี่ยวกับการค้า (TRIPS) และความเข้าใจว่าด้วยกฎและกระบวนการระงับข้อพิพาท\nหลักการพื้นฐานที่ควรจดจำคือ หลักการปฏิบัติเยี่ยงชาติที่ได้รับความอนุเคราะห์ยิ่ง (MFN) หลักการปฏิบัติเยี่ยงคนชาติ (National Treatment) การผูกพันอัตราภาษี และความโปร่งใส ซึ่งมีข้อยกเว้นทั่วไป เช่น เพื่อคุ้มครองศีลธรรมอันดีและชีวิตหรือสุขภาพของมนุษย์ สัตว์ หรือพืช"
+ },
+ {
+  "id": "Ta4813a46",
+  "group": "สนธิสัญญาของไทยในอดีต",
+  "title": "หนังสือสัญญาทางพระราชไมตรี ประเทศสเปนเเละประเทศสยาม",
+  "th": "หนังสือสัญญาทางพระราชไมตรีระหว่างประเทศสเปนและประเทศสยาม",
+  "date": "2022-11-22",
+  "url": "https://treaties.mfa.go.th/th/content/หนังสือสัญญาทางพระราชไมตรี-ประเทศสเปนเเละประเทศสยา?page=637c5711eb993b2fb12f14e3&menu=637c56ac18d444706f395263",
+  "summary": "เอกสารนี้เป็นตัวอย่างสนธิสัญญาทางพระราชไมตรีและการพาณิชย์ที่สยามทำกับประเทศตะวันตกในช่วงคริสต์ศตวรรษที่ 19 ซึ่งกรมสนธิสัญญาและกฎหมายนำมาเผยแพร่เพื่อการศึกษาประวัติศาสตร์การทูตไทย สนธิสัญญาในยุคนี้ทำขึ้นภายหลังสนธิสัญญาเบาว์ริงกับอังกฤษ ค.ศ. 1855 และมักมีสาระคล้ายคลึงกัน ได้แก่ การรับรองไมตรีระหว่างกัน การให้คนในบังคับเข้ามาค้าขายและพำนัก การจำกัดอัตราภาษีขาเข้า และการตั้งกงสุล\nลักษณะที่สำคัญทางกฎหมายคือสิทธิสภาพนอกอาณาเขต คนในบังคับของประเทศคู่สัญญาที่อยู่ในสยามขึ้นศาลกงสุลของประเทศตนแทนศาลสยาม ซึ่งเป็นข้อจำกัดอำนาจอธิปไตยทางการศาลของไทยมาเป็นเวลานาน\nการศึกษาเอกสารเหล่านี้ช่วยให้เข้าใจเหตุผลของการปฏิรูประบบกฎหมายและการจัดทำประมวลกฎหมายในรัชสมัยพระบาทสมเด็จพระจุลจอมเกล้าเจ้าอยู่หัวและรัชกาลต่อมา ซึ่งเป็นเงื่อนไขสำคัญที่ทำให้สยามเจรจาแก้ไขสนธิสัญญาและได้รับเอกราชทางการศาลคืนโดยสมบูรณ์ ผู้ศึกษาสามารถเปิดอ่านต้นฉบับได้จากแหล่งข้อมูลต้นทาง"
+ },
+ {
+  "id": "T8f6067cf",
+  "group": "สนธิสัญญาของไทยในอดีต",
+  "title": "หนังสือสัญญาทางพระราชไมตรี ออสเตรีย ฮังการีเเละประเทศสยาม",
+  "th": "หนังสือสัญญาทางพระราชไมตรีระหว่างออสเตรีย-ฮังการีและประเทศสยาม",
+  "date": "2022-11-22",
+  "url": "https://treaties.mfa.go.th/th/content/หนังสือสัญญาทางพระราชไมตรี-เเละประเทศสยาม?page=637c5711eb993b2fb12f14e3&menu=637c56ac18d444706f395263",
+  "summary": "เอกสารนี้เป็นหนังสือสัญญาทางพระราชไมตรี การค้า และการเดินเรือระหว่างสยามกับจักรวรรดิออสเตรีย-ฮังการี เป็นหนึ่งในชุดสนธิสัญญาที่สยามทำกับมหาอำนาจยุโรปในคริสต์ศตวรรษที่ 19 ตามแบบอย่างสนธิสัญญาเบาว์ริง สะท้อนนโยบายการถ่วงดุลอำนาจด้วยการเปิดความสัมพันธ์กับหลายประเทศพร้อมกัน\nสาระโดยทั่วไปของสนธิสัญญากลุ่มนี้ได้แก่ การประกันสันติภาพและไมตรีถาวร เสรีภาพในการค้าและการเดินเรือ การกำหนดพิกัดอัตราภาษี สิทธิในการตั้งกงสุล และสิทธิสภาพนอกอาณาเขตสำหรับคนในบังคับของประเทศคู่สัญญา นอกจากนี้ยังมีข้อบทเรื่องการปฏิบัติเยี่ยงชาติที่ได้รับความอนุเคราะห์ยิ่ง ซึ่งทำให้สิทธิที่สยามให้แก่ประเทศหนึ่งขยายไปยังอีกประเทศหนึ่งโดยอัตโนมัติ\nความสัมพันธ์ตามสนธิสัญญานี้สิ้นสุดลงเมื่อสยามประกาศสงครามกับฝ่ายมหาอำนาจกลางในสงครามโลกครั้งที่หนึ่งเมื่อ ค.ศ. 1917 ซึ่งเป็นจุดที่สยามใช้โอกาสยกเลิกสิทธิสภาพนอกอาณาเขตของประเทศฝ่ายตรงข้ามได้ทันที"
+ },
+ {
+  "id": "T95ab8e02",
+  "group": "สนธิสัญญาของไทยในอดีต",
+  "title": "หนังสือสัญญาทางพระราชไมตรี ประเทศญี่ปุ่นเเละประเทศสยาม",
+  "th": "หนังสือสัญญาทางพระราชไมตรีระหว่างประเทศญี่ปุ่นและประเทศสยาม",
+  "date": "2022-11-22",
+  "url": "https://treaties.mfa.go.th/th/content/หนังสือสัญญาทางพระราชไมตรี-ประเทศญี่ปุ่นเเละประเทศ?page=637c5711eb993b2fb12f14e3&menu=637c56ac18d444706f395263",
+  "summary": "เอกสารนี้แสดงความสัมพันธ์ทางการทูตสมัยใหม่ระหว่างสยามกับญี่ปุ่น ซึ่งเริ่มต้นอย่างเป็นทางการด้วยปฏิญญาว่าด้วยทางพระราชไมตรีและการพาณิชย์ ค.ศ. 1887 และพัฒนาเป็นสนธิสัญญาทางพระราชไมตรี การค้า และการเดินเรือในเวลาต่อมา ความน่าสนใจคือญี่ปุ่นเองก็เคยถูกบังคับให้ยอมรับสิทธิสภาพนอกอาณาเขตจากชาติตะวันตกเช่นเดียวกับสยาม\nสนธิสัญญากับญี่ปุ่นในระยะแรกให้ญี่ปุ่นมีสิทธิสภาพนอกอาณาเขตในสยามจนกว่าสยามจะจัดทำประมวลกฎหมายเสร็จ ซึ่งเชื่อมโยงโดยตรงกับงานจัดทำประมวลกฎหมายของไทย ที่มีที่ปรึกษากฎหมายชาวญี่ปุ่นร่วมงานด้วย\nเอกสารนี้จึงมีคุณค่าทั้งในแง่ประวัติศาสตร์การทูตและประวัติศาสตร์กฎหมายไทย ผู้ศึกษาสามารถเปรียบเทียบเงื่อนไขในสนธิสัญญากับเส้นเวลาการประกาศใช้ประมวลกฎหมายลักษณะอาญา ร.ศ. 127 และประมวลกฎหมายแพ่งและพาณิชย์ เพื่อเห็นว่าการปฏิรูปกฎหมายภายในเป็นเครื่องมือทางการทูตอย่างไร"
+ },
+ {
+  "id": "T60cb3310",
+  "group": "สนธิสัญญาของไทยในอดีต",
+  "title": "หนังสือสัญญาทางพระราชไมตรี สหรัฐอเมริกาเเละประเทศสยาม",
+  "th": "หนังสือสัญญาทางพระราชไมตรีระหว่างสหรัฐอเมริกาและประเทศสยาม",
+  "date": "2022-11-22",
+  "url": "https://treaties.mfa.go.th/th/content/หนังสือสัญญาทางพระราชไมตรี-สหรัฐอเมริกาเเละประเทศส?page=637c5711eb993b2fb12f14e3&menu=637c56ac18d444706f395263",
+  "summary": "ความสัมพันธ์ทางสนธิสัญญาระหว่างสยามกับสหรัฐอเมริกาเริ่มต้นตั้งแต่สนธิสัญญาทางพระราชไมตรีและการพาณิชย์ ค.ศ. 1833 ในรัชสมัยพระบาทสมเด็จพระนั่งเกล้าเจ้าอยู่หัว ซึ่งนับเป็นสนธิสัญญาฉบับแรกที่สหรัฐอเมริกาทำกับประเทศในทวีปเอเชีย และต่อมามีการทำสนธิสัญญาฉบับใหม่ ค.ศ. 1856 ตามแบบสนธิสัญญาเบาว์ริง\nสาระของสนธิสัญญาฉบับหลังรวมถึงการค้าเสรี การกำหนดภาษี การตั้งกงสุล และสิทธิสภาพนอกอาณาเขตของคนอเมริกันในสยาม เช่นเดียวกับสนธิสัญญากับประเทศตะวันตกอื่น\nจุดเปลี่ยนสำคัญคือสนธิสัญญาฉบับใหม่ ค.ศ. 1920 ซึ่งสหรัฐอเมริกาเป็นประเทศแรกที่ยอมสละสิทธิสภาพนอกอาณาเขตและคืนอำนาจกำหนดอัตราภาษีให้แก่สยาม ความสำเร็จนี้กลายเป็นแบบอย่างให้สยามเจรจาแก้ไขสนธิสัญญากับประเทศอื่นจนได้รับเอกราชทางการศาลและการคลังคืนโดยสมบูรณ์ในช่วงทศวรรษ 1930"
+ },
+ {
+  "id": "Tda07df4a",
+  "group": "สนธิสัญญาของไทยในอดีต",
+  "title": "หนังสือสัญญาทางพระราชไมตรี ประเทศรัสเซียเเละประเทศสยาม",
+  "th": "หนังสือสัญญาทางพระราชไมตรีระหว่างประเทศรัสเซียและประเทศสยาม",
+  "date": "2022-11-22",
+  "url": "https://treaties.mfa.go.th/th/content/หนังสือสัญญาทางพระราชไมตรี-ประเทศรัสเซียเเละประเทศ?page=637c5711eb993b2fb12f14e3&menu=637c56ac18d444706f395263",
+  "summary": "ความสัมพันธ์ระหว่างสยามกับรัสเซียมีความใกล้ชิดเป็นพิเศษ เป็นผลจากสายสัมพันธ์ส่วนพระองค์ระหว่างพระบาทสมเด็จพระจุลจอมเกล้าเจ้าอยู่หัวกับซาร์นิโคลัสที่ 2 ซึ่งพระองค์เสด็จประพาสรัสเซียเมื่อ ค.ศ. 1897 การสถาปนาความสัมพันธ์ทางการทูตอย่างเป็นทางการเกิดขึ้นในปีเดียวกัน และมีการทำปฏิญญาว่าด้วยเขตอำนาจศาล การพาณิชย์ และการเดินเรือในเวลาต่อมา\nในทางการทูต ความสัมพันธ์กับรัสเซียช่วยให้สยามมีพันธมิตรในเวทียุโรป ในช่วงที่สยามเผชิญแรงกดดันจากการขยายอาณานิคมของฝรั่งเศสและอังกฤษ สอดคล้องกับนโยบายการถ่วงดุลอำนาจที่สยามใช้รักษาเอกราช\nเอกสารนี้เหมาะสำหรับศึกษาเปรียบเทียบกับสนธิสัญญาฉบับอื่นในยุคเดียวกัน เพื่อดูว่าข้อบทเรื่องเขตอำนาจศาลและการค้าแตกต่างกันอย่างไร ผู้ศึกษาสามารถเปิดดูภาพต้นฉบับและคำอธิบายเพิ่มเติมได้จากแหล่งข้อมูลต้นทางของกรมสนธิสัญญาและกฎหมาย"
+ },
+ {
+  "id": "T27c55e4a",
+  "group": "สนธิสัญญาของไทยในอดีต",
+  "title": "หนังสือสัญญาทางพระราชไมตรี ประเทศโปรตุเกสเเละประเทศสยาม",
+  "th": "หนังสือสัญญาทางพระราชไมตรีระหว่างประเทศโปรตุเกสและประเทศสยาม",
+  "date": "2022-11-22",
+  "url": "https://treaties.mfa.go.th/th/content/หนังสือสัญญาทางพระราชไมตรี-ประเทศโปรตุเกสเเละประเท?page=637c5711eb993b2fb12f14e3&menu=637c56ac18d444706f395263",
+  "summary": "โปรตุเกสเป็นชาติตะวันตกชาติแรกที่เข้ามาติดต่อกับกรุงศรีอยุธยาตั้งแต่ ค.ศ. 1511 และมีความสัมพันธ์กับไทยต่อเนื่องยาวนานที่สุดในบรรดาชาติยุโรป สนธิสัญญาทางพระราชไมตรีและการพาณิชย์ในยุครัตนโกสินทร์ระหว่างสยามกับโปรตุเกสทำขึ้นเมื่อ ค.ศ. 1858 ตามแบบอย่างสนธิสัญญาเบาว์ริง\nสาระสำคัญได้แก่ การรับรองไมตรี การค้าเสรี การกำหนดอัตราภาษี สิทธิในการตั้งกงสุล และสิทธิสภาพนอกอาณาเขต ชุมชนชาวโปรตุเกสในกรุงเทพฯ เช่น บริเวณสถานกงสุลริมแม่น้ำเจ้าพระยาซึ่งเป็นสถานทูตต่างประเทศแห่งแรกในกรุงเทพฯ เป็นหลักฐานของความสัมพันธ์นี้\nผู้ศึกษากฎหมายจะเห็นว่าสนธิสัญญาฉบับนี้มีโครงสร้างเดียวกับสนธิสัญญาฉบับอื่นในยุคเดียวกัน แต่การศึกษาเปรียบเทียบสาระทำให้เห็นพัฒนาการของนโยบายต่างประเทศของสยาม ตั้งแต่ยุคการค้าแบบผูกขาดของราชสำนักจนถึงการเปิดการค้าเสรีภายใต้กติการะหว่างประเทศสมัยใหม่"
+ },
+ {
+  "id": "T20845ee0",
+  "group": "สนธิสัญญาของไทยในอดีต",
+  "title": "หนังสือสัญญาทางพระราชไมตรี ประเทศเดนมาร์กเเละประเทศสยาม จุลศักราช ๑๒๒๐",
+  "th": "หนังสือสัญญาทางพระราชไมตรีระหว่างประเทศเดนมาร์กและประเทศสยาม จุลศักราช 1220",
+  "date": "2022-11-22",
+  "url": "https://treaties.mfa.go.th/th/content/หนังสือสัญญาทางพระราชไมตรี-ประเทศเดนมาร์กเเละประเท?page=637c5711eb993b2fb12f14e3&menu=637c56ac18d444706f395263",
+  "summary": "เอกสารนี้เป็นหนังสือสัญญาทางพระราชไมตรีและการพาณิชย์ระหว่างสยามกับเดนมาร์ก ลงวันที่ในจุลศักราช 1220 ซึ่งตรงกับ ค.ศ. 1858 ในรัชสมัยพระบาทสมเด็จพระจอมเกล้าเจ้าอยู่หัว นับเป็นหนึ่งในสนธิสัญญายุคแรกที่สยามทำกับประเทศยุโรปหลังสนธิสัญญาเบาว์ริง\nสาระโดยทั่วไปประกอบด้วยการรับรองไมตรีถาวร การอนุญาตให้คนในบังคับเดนมาร์กเข้ามาค้าขายและพำนักในสยาม การกำหนดอัตราภาษี การตั้งกงสุล และเขตอำนาจของกงสุลเหนือคนในบังคับของตน ความสัมพันธ์กับเดนมาร์กในเวลาต่อมามีความสำคัญมาก เพราะชาวเดนมาร์กจำนวนหนึ่งเข้ามารับราชการในสยาม ทั้งในราชนาวีและการพาณิชย์นาวี\nการระบุศักราชเป็นจุลศักราชในชื่อเอกสารเป็นตัวอย่างระบบการนับศักราชที่ใช้ในเอกสารราชการไทยสมัยนั้น ผู้ศึกษาที่ต้องการอ้างอิงควรเทียบศักราชให้ถูกต้อง โดยจุลศักราชบวก 638 จะได้คริสต์ศักราช และบวก 1181 จะได้พุทธศักราช"
+ }
+];
