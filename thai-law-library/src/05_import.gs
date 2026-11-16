@@ -334,6 +334,7 @@ function sectionsOfLaw_(lawId) {
 function apiGetSections_(p) {
   var law = String(p.law || '');
   if (!law) return fail_('INVALID', 'ไม่ได้ระบุกฎหมาย');
+  try { statInc_('lawOpens', 1); } catch (e) {}
   return { law: law, sections: sectionsOfLaw_(law) };
 }
 

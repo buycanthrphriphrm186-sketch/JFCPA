@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- *  THAI LAW LIBRARY (คลังกฎหมายไทย) — Google Apps Script Backend (Code.gs)
+ *  THAI LAW LIBRARY (คลังกฎหมาย) — Google Apps Script Backend (Code.gs)
  * ============================================================================
  *  ไฟล์นี้คือ "รหัส GS" ทั้งหมดของระบบ ให้วางในไฟล์ชื่อ Code.gs เท่านั้น
  *  ห้ามวางโค้ด HTML ลงในไฟล์นี้ (หากวางผิดไฟล์ จะเกิดข้อผิดพลาด
@@ -23,7 +23,7 @@
 var CONFIG = {
   SHEET_ID: '1Pddk_3GswY2_kuSzuNGIP6KVBeeBnGOHcGCqUvag-7E',
   APP_NAME_EN: 'THAI LAW LIBRARY',
-  APP_NAME_TH: 'คลังกฎหมายไทย',
+  APP_NAME_TH: 'คลังกฎหมาย',
   ADMIN_NAME: 'นายบุญจันทร์ พรีพรม',
   // รหัสผ่านชั้นที่ 1 (จากผู้ดูแลระบบ) — setup() จะเก็บเป็นค่า Hash ใน Script Properties
   // ค่านี้อยู่ฝั่งเซิร์ฟเวอร์เท่านั้น ไม่เคยถูกส่งไปยังหน้าเว็บ
@@ -41,7 +41,7 @@ function adminEmail_() {
 }
 
 var SHEETS = {
-  Members: ['memberId', 'username', 'usernameLower', 'title', 'firstName', 'lastName', 'displayName', 'birthDate', 'gender', 'memberType', 'educationJson', 'workJson', 'phone', 'address', 'bio', 'avatar', 'adminHash', 'personalHash', 'salt', 'recoveryQ', 'recoveryAHash', 'plan', 'planCycle', 'planExpires', 'trialStart', 'createdAt', 'lastLogin', 'accountStatus', 'failCount', 'lockUntil', 'lockCount', 'socialJson', 'privacyJson', 'role', 'extraJson'],
+  Members: ['memberId', 'username', 'usernameLower', 'title', 'firstName', 'lastName', 'displayName', 'birthDate', 'gender', 'memberType', 'educationJson', 'workJson', 'phone', 'address', 'bio', 'avatar', 'adminHash', 'personalHash', 'salt', 'recoveryQ', 'recoveryAHash', 'plan', 'planCycle', 'planExpires', 'trialStart', 'createdAt', 'lastLogin', 'accountStatus', 'failCount', 'lockUntil', 'lockCount', 'socialJson', 'privacyJson', 'role', 'extraJson', 'email', 'emailVerified', 'otpHash', 'otpExp', 'otpTries'],
   Sessions: ['tokenHash', 'memberId', 'createdAt', 'lastSeen', 'device', 'os', 'browser', 'ip', 'location', 'revoked'],
   UserData: ['memberId', 'rev', 'updatedAt', 'part', 'json'],
   Laws: ['lawId', 'category', 'title', 'shortName', 'year', 'sourceUrl', 'status', 'updatedAt', 'note'],
@@ -55,14 +55,17 @@ var SHEETS = {
   Announcements: ['id', 'time', 'type', 'title', 'body', 'active'],
   Reports: ['time', 'memberId', 'username', 'kind', 'subject', 'detail', 'status'],
   Payments: ['time', 'memberId', 'username', 'plan', 'cycle', 'amount', 'status', 'note'],
-  Sources: ['category', 'url', 'parser', 'enabled', 'lastRun', 'lastResult']
+  Sources: ['category', 'url', 'parser', 'enabled', 'lastRun', 'lastResult'],
+  Stats: ['date', 'visits', 'mobile', 'tablet', 'desktop', 'chrome', 'safari', 'edge', 'firefox', 'other', 'logins', 'lawOpens', 'updatedAt']
 };
 
 var DEFAULT_CONFIG = [
   ['MAINTENANCE', 'off', 'on = ปิดปรับปรุงระบบชั่วคราว (ข้อมูลผู้ใช้ยังเก็บอยู่ครบ)'],
   ['MAINTENANCE_MESSAGE', 'ขณะนี้ระบบอยู่ระหว่างการปรับปรุงเพื่อเพิ่มประสิทธิภาพ ข้อมูลของท่านยังคงได้รับการเก็บรักษาไว้ครบถ้วน กรุณากลับมาใช้งานอีกครั้งภายหลัง', 'ข้อความหน้าปิดปรับปรุง'],
   ['FLAG_AI', 'on', 'ผู้ช่วย AI (ต้องตั้ง GEMINI_API_KEY ใน Script Properties)'],
-  ['FLAG_GMAIL', 'on', 'AI สรุปอีเมล (เฉพาะผู้ดูแลระบบ)'],
+  ['FLAG_FOREIGN', 'on', 'กฎหมายต่างประเทศ (ญี่ปุ่น e-Gov API / เกาหลี Open API)'],
+  ['FLAG_STATS', 'on', 'สถิติผู้เข้าใช้งานเว็บไซต์ (นับแบบไม่ระบุตัวตน)'],
+  ['GA4_ID', '', 'Google Analytics 4 Measurement ID เช่น G-XXXXXXX (เว้นว่าง = ไม่ใช้)'],
   ['FLAG_MEDIA', 'on', 'ดึงภาพจาก Wikimedia / Unsplash / Pexels / Pixabay'],
   ['FLAG_SOCIAL_LOGIN', 'on', 'เข้าสู่ระบบด้วย Google / Apple / Facebook / LINE'],
   ['FLAG_PDF', 'on', 'สร้างไฟล์ PDF'],
@@ -71,7 +74,7 @@ var DEFAULT_CONFIG = [
   ['FORCE_SAFE_MODE', 'off', 'on = ปิดฟีเจอร์เสริมทั้งหมดทันที (ย้อนกลับฉุกเฉิน)'],
   ['CANARY_PERCENT', '0', 'เปอร์เซ็นต์สมาชิกที่ได้ทดลองฟีเจอร์ใน CANARY_FLAGS'],
   ['CANARY_FLAGS', '', 'ชื่อ flag คั่นด้วยจุลภาค'],
-  ['SPLASH_SECONDS', '3', 'เวลาขั้นต่ำที่แสดงโลโก้และแถบสถานะการเชื่อมต่อฐานข้อมูล (วินาที)'],
+  ['SPLASH_SECONDS', '20', 'เวลาแสดงหน้าโลโก้และแถบสถานะการเชื่อมต่อฐานข้อมูล (วินาที, 20–30)'],
   ['LOCK_ATTEMPTS', '5', 'จำนวนครั้งที่ใส่รหัสผิดก่อนระงับชั่วคราว'],
   ['LOCK_MINUTES', '15', 'ระยะเวลาระงับชั่วคราว (นาที)'],
   ['IDLE_MINUTES', '0', '0 = ไม่ออกจากระบบอัตโนมัติ'],
@@ -93,7 +96,8 @@ function doGet(e) {
     if (cfg.MAINTENANCE === 'on' && p.admin !== '1') boot.maintenance = cfg.MAINTENANCE_MESSAGE;
     if (p.code && p.state) boot.social = oauthCallback_(p.code, p.state, null);
     if (p.error && p.state) boot.social = { ok: false, msg: 'ผู้ให้บริการยกเลิกหรือปฏิเสธการเข้าสู่ระบบ (' + String(p.error).slice(0, 60) + ')' };
-    boot.splash = Number(cfg.SPLASH_SECONDS) || 15;
+    boot.splash = Math.min(Math.max(Number(cfg.SPLASH_SECONDS) || 20, 1), 30);
+    boot.ga4 = /^G-[A-Z0-9]{4,16}$/.test(String(cfg.GA4_ID || '')) ? cfg.GA4_ID : '';
     boot.flags = publicFlags_(cfg, null);
   } catch (err) {
     logError_('doGet', err, '');
@@ -120,9 +124,9 @@ function renderIndex_(boot) {
   var t = HtmlService.createTemplateFromFile('Index');
   t.bootJson = JSON.stringify(boot).replace(/</g, '\\u003c').split(String.fromCharCode(0x2028)).join('\\u2028').split(String.fromCharCode(0x2029)).join('\\u2029');
   return t.evaluate()
-    .setTitle('THAI LAW LIBRARY | คลังกฎหมายไทย')
+    .setTitle('THAI LAW LIBRARY | คลังกฎหมาย')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1, viewport-fit=cover')
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.DEFAULT);
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
 function safeUrl_() {
@@ -199,8 +203,19 @@ var ROUTES = {
   secureAccount: { fn: apiSecureAccount_, auth: true, limit: 5 },
   linkSocial: { fn: apiLinkSocial_, auth: true, limit: 10 },
   aiChat: { fn: apiAiChat_, auth: true, limit: 20, flag: 'FLAG_AI' },
-  gmailThreads: { fn: apiGmailThreads_, auth: true, limit: 20, flag: 'FLAG_GMAIL', admin: true },
-  gmailSummarize: { fn: apiGmailSummarize_, auth: true, limit: 10, flag: 'FLAG_GMAIL', admin: true },
+  verifyOtp: { fn: apiVerifyOtp_, limit: 30 },
+  resendOtp: { fn: apiResendOtp_, limit: 10 },
+  hit: { fn: apiHit_, limit: 600, flag: 'FLAG_STATS' },
+  publicStats: { fn: apiPublicStats_, limit: 120 },
+  foreignCountries: { fn: apiForeignCountries_, limit: 60, flag: 'FLAG_FOREIGN' },
+  foreignLaws: { fn: apiForeignLaws_, limit: 120, flag: 'FLAG_FOREIGN' },
+  foreignLaw: { fn: apiForeignLaw_, limit: 120, flag: 'FLAG_FOREIGN' },
+  loginHistoryPdf: { fn: apiLoginHistoryPdf_, auth: true, limit: 10 },
+  backupPdf: { fn: apiBackupPdf_, auth: true, limit: 10 },
+  memberPdf: { fn: apiMemberPdf_, auth: true, limit: 10 },
+  clearFavorites: { fn: function () { return {}; }, auth: true, limit: 10 },
+  paymentInfo: { fn: apiPaymentInfo_, auth: true, limit: 30 },
+  paymentNotify: { fn: apiPaymentNotify_, auth: true, limit: 10 },
   media: { fn: apiMedia_, limit: 30, flag: 'FLAG_MEDIA' },
   makePdf: { fn: apiMakePdf_, auth: true, limit: 10, flag: 'FLAG_PDF' },
   reportProblem: { fn: apiReportProblem_, auth: true, limit: 10 },
@@ -227,6 +242,8 @@ function setup() {
   var def = ss.getSheetByName('Sheet1');
   if (def && def.getLastRow() === 0 && ss.getSheets().length > 1) { try { ss.deleteSheet(def); } catch (e) {} }
   seedConfig_();
+  ensureHeaders_();
+  migrateV4_();
   seedCatalog_(false);
   seedTreaties_(false);
   seedSources_();
@@ -234,6 +251,7 @@ function setup() {
   try { installTriggers_(); } catch (e) { Logger.log('ติดตั้ง trigger ไม่สำเร็จ: ' + e.message); }
   props.setProperty('INIT_DONE', CONFIG.VERSION);
   bumpCatalogVersion_();
+  try { formatWorkbook_(); } catch (e) { Logger.log('จัดรูปแบบชีตไม่สำเร็จ: ' + e.message); }
   Logger.log('ติดตั้งเรียบร้อย — Deploy เป็น Web app ได้ทันที');
 }
 
@@ -269,6 +287,9 @@ function healthCheck() {
       if (old || revokedOld) sh.deleteRow(i + 1);
     }
     report.push('sessions:pruned');
+    purgeOldLoginLog_(90);
+    report.push('loginlog:90d');
+    try { flushStats_(); report.push('stats:flushed'); } catch (e) { report.push('stats:error'); }
     ['LoginLog', 'ErrorLog', 'AuditLog'].forEach(function (n) {
       var s = sheet_(n), max = 20000, last = s.getLastRow();
       if (last > max) s.deleteRows(2, last - max);
@@ -376,7 +397,7 @@ function flagOn_(flag, cfg, member) {
 
 function publicFlags_(cfg, member) {
   var f = {};
-  ['FLAG_AI', 'FLAG_GMAIL', 'FLAG_MEDIA', 'FLAG_SOCIAL_LOGIN', 'FLAG_PDF', 'FLAG_IP_LOOKUP', 'FLAG_SOUND'].forEach(function (k) { f[k] = flagOn_(k, cfg, member); });
+  ['FLAG_AI', 'FLAG_FOREIGN', 'FLAG_STATS', 'FLAG_MEDIA', 'FLAG_SOCIAL_LOGIN', 'FLAG_PDF', 'FLAG_IP_LOOKUP', 'FLAG_SOUND'].forEach(function (k) { f[k] = flagOn_(k, cfg, member); });
   f.SAFE_MODE = cfg.FORCE_SAFE_MODE === 'on';
   f.IDLE_MINUTES = Number(cfg.IDLE_MINUTES) || 0;
   var props = PropertiesService.getScriptProperties();
@@ -553,7 +574,7 @@ function publicMember_(m) {
     memberId: m.memberId, username: m.username, title: m.title, firstName: m.firstName, lastName: m.lastName,
     displayName: m.displayName, birthDate: m.birthDate ? String(m.birthDate) : '', gender: m.gender, memberType: m.memberType,
     education: json_(m.educationJson, {}), work: json_(m.workJson, {}), phone: m.phone, address: m.address, bio: m.bio,
-    avatar: m.avatar || '', recoveryQ: m.recoveryQ, createdAt: m.createdAt, lastLogin: m.lastLogin,
+    avatar: m.avatar || '', email: m.email || '', emailVerified: m.emailVerified === true || m.emailVerified === 'TRUE', recoveryQ: m.recoveryQ, createdAt: m.createdAt, lastLogin: m.lastLogin,
     accountStatus: m.accountStatus || 'ปกติ', privacy: json_(m.privacyJson, {}), role: m.role || 'member',
     social: Object.keys(json_(m.socialJson, {})), extra: json_(m.extraJson, {}), plan: planState_(m)
   };
@@ -599,6 +620,7 @@ function apiRegister_(p) {
   if (!f.displayName) errors.push('กรุณากรอกชื่อที่ใช้แสดงในระบบ');
   if (!f.birthDate) errors.push('กรุณาระบุวันเดือนปีเกิด');
   if (!f.memberType) errors.push('กรุณาเลือกสถานะของผู้สมัคร');
+  if (!validEmail_(f.email)) errors.push('กรุณากรอกอีเมลให้ถูกต้อง เพื่อรับรหัสผ่านชั้นที่ 2 ทางอีเมล');
   if (!validUsername_(u)) errors.push('ชื่อผู้ใช้งานต้องเป็นภาษาอังกฤษหรือตัวเลข 4–24 ตัวอักษร');
   if (normalizeAdminPass_(f.adminPass) !== normalizeAdminPass_(f.adminPass2)) errors.push('รหัสผ่านจากผู้ดูแลระบบทั้งสองช่องไม่ตรงกัน');
   else if (!checkAdminPass_(f.adminPass, null)) errors.push('รหัสผ่านจากผู้ดูแลระบบไม่ถูกต้อง');
@@ -628,6 +650,7 @@ function apiRegister_(p) {
       educationJson: cell_(JSON.stringify(f.education || {})), workJson: cell_(JSON.stringify(f.work || {})),
       phone: cell_(f.phone), address: cell_(f.address), bio: cell_(f.bio), avatar: '',
       adminHash: '', personalHash: hashPassword_(f.personalPass, salt), salt: salt,
+      email: cell_(String(f.email || '').trim().toLowerCase()), emailVerified: false, otpHash: '', otpExp: '', otpTries: 0,
       recoveryQ: cell_(f.recoveryQ), recoveryAHash: hashPassword_(String(f.recoveryA).trim().toLowerCase(), salt + 'R'),
       plan: '', planCycle: '', planExpires: '', trialStart: now, createdAt: now, lastLogin: '',
       accountStatus: 'ปกติ', failCount: 0, lockUntil: '', lockCount: 0, socialJson: JSON.stringify(social),
@@ -678,15 +701,15 @@ function apiLogin_(p) {
       upd.failCount = 0;
       upd.lockCount = Number(m.lockCount || 0) + 1;
       msg = 'ท่านกรอกรหัสผ่านไม่ถูกต้องครบ ' + maxAttempts + ' ครั้ง ระบบจึงระงับการเข้าสู่ระบบชั่วคราว ' + lockMin + ' นาที';
-      var sev = upd.lockCount >= 3 ? 'CRITICAL' : (upd.lockCount >= 2 ? 'HIGH' : 'MEDIUM');
+      var sev = upd.lockCount >= 3 ? 'CRITICAL' : 'HIGH';
       raiseIncident_({ type: 'Brute force / การสุ่มรหัสผ่าน', severity: sev, memberId: m.memberId, username: m.username, ip: info.ip, location: info.location, device: [info.device, info.os, info.browser].join(' / '), attempts: maxAttempts * upd.lockCount, detail: 'มีการกรอกรหัสผ่านผิดติดต่อกัน ' + maxAttempts + ' ครั้ง (การระงับสะสม ' + upd.lockCount + ' ครั้ง)', action: 'ระงับการเข้าสู่ระบบ ' + lockMin + ' นาที', alertMember: true });
     }
     updateRow_('Members', m._row, upd);
-    logBase.result = 'FAIL'; logBase.reason = !okAdmin ? 'รหัสชั้นที่ 1 ไม่ถูกต้อง' : 'รหัสชั้นที่ 2 ไม่ถูกต้อง'; appendRow_('LoginLog', logBase);
+    logBase.result = 'FAIL'; logBase.reason = !okAdmin ? 'รหัสชั้นที่ 1 ไม่ถูกต้อง' : 'รหัสชั้นที่ 3 (รหัสผ่านส่วนตัว) ไม่ถูกต้อง'; appendRow_('LoginLog', logBase);
     if (fc >= 3 && fc < maxAttempts) Utilities.sleep(300 * (fc - 2));
     return fail_(fc >= maxAttempts ? 'LOCKED' : 'BAD_CREDENTIALS', msg);
   }
-  return finishLogin_(m, info, logBase, 'รหัสผ่าน 2 ชั้น');
+  return startOtp_(m, info, 'รหัสผ่าน 3 ชั้น', p.email);
 }
 
 function finishLogin_(m, info, logBase, method) {
