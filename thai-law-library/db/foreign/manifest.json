@@ -1,0 +1,118 @@
+{
+ "built": "2026-11-16T14:47:56Z",
+ "countries": {
+  "CN": {
+   "laws": 22552,
+   "sections": 877552,
+   "dataset": "twang2218/chinese-law-and-regulations",
+   "source": {
+    "name": "国家法律法规数据库 (flk.npc.gov.cn) ผ่านชุดข้อมูล twang2218/chinese-law-and-regulations",
+    "license": "Apache-2.0 (ตัวบทกฎหมายจีนไม่มีลิขสิทธิ์ตามกฎหมายลิขสิทธิ์จีน มาตรา 5)",
+    "url": "https://flk.npc.gov.cn"
+   }
+  },
+  "KR": {
+   "laws": 5561,
+   "sections": 174324,
+   "dataset": "endomorphosis/ipfs_korea_laws",
+   "source": {
+    "name": "ชุดข้อมูลเปิด endomorphosis/ipfs_korea_laws (ตัวบทจากแหล่งทางการของรัฐ)",
+    "license": "Official Republic of Korea legislative texts (헌법·법률·조약·명령·조례 및 규칙) are not protected by copyright (저작권법 제7조 제1호). Research snapshot of 국가법령정보센터 (법제처) HTML. Site chrome / database compilation may have separate terms. Not legal advice; 관보 and law.go.kr authentic text prevail.",
+    "url": "https://huggingface.co/datasets/endomorphosis/ipfs_korea_laws"
+   }
+  },
+  "VN": {
+   "laws": 771,
+   "sections": 42237,
+   "dataset": "endomorphosis/ipfs_vietnam_laws",
+   "source": {
+    "name": "ชุดข้อมูลเปิด endomorphosis/ipfs_vietnam_laws (ตัวบทจากแหล่งทางการของรัฐ)",
+    "license": "Official Socialist Republic of Vietnam legislative texts from CSDL quốc gia về pháp luật (vbpl.vn, Bộ Tư pháp / Chính phủ), Công báo điện tử (congbao.chinhphu.vn) and Cổng TTĐT Chính phủ (vanban.chinhphu.vn). Công báo / VBPL authentic text prevails. Not Thư viện pháp luật. Not legal advice.",
+    "url": "https://huggingface.co/datasets/endomorphosis/ipfs_vietnam_laws"
+   }
+  },
+  "LA": {
+   "laws": 5176,
+   "sections": 58105,
+   "dataset": "endomorphosis/ipfs_laos_laws",
+   "source": {
+    "name": "ชุดข้อมูลเปิด endomorphosis/ipfs_laos_laws (ตัวบทจากแหล่งทางการของรัฐ)",
+    "license": "Lao Official Gazette. Authentic official text prevails. Not legal advice.",
+    "url": "https://huggingface.co/datasets/endomorphosis/ipfs_laos_laws"
+   }
+  },
+  "ID": {
+   "laws": 2088,
+   "sections": 110938,
+   "dataset": "endomorphosis/ipfs_indonesia_laws",
+   "source": {
+    "name": "ชุดข้อมูลเปิด endomorphosis/ipfs_indonesia_laws (ตัวบทจากแหล่งทางการของรัฐ)",
+    "license": "Official Indonesian legislative texts from JDIH BPK (peraturan.bpk.go.id), the Database Peraturan of Badan Pemeriksa Keuangan. Public-sector official texts; the authentic source is the State Gazette (Lembaran Negara / Tambahan Lembaran Negara). Not Pasal.id. Not legal advice.",
+    "url": "https://huggingface.co/datasets/endomorphosis/ipfs_indonesia_laws"
+   }
+  },
+  "MY": {
+   "laws": 1499,
+   "sections": 131422,
+   "dataset": "endomorphosis/ipfs_malaysia_laws",
+   "source": {
+    "name": "ชุดข้อมูลเปิด endomorphosis/ipfs_malaysia_laws (ตัวบทจากแหล่งทางการของรัฐ)",
+    "license": "Malaysian official texts from the Attorney-General's Chambers Federal Legislation Portal (lom.agc.gov.my). AGC portal terms / copyright AGC Malaysia. Online texts are not the printed Gazette for s.61 of the Interpretation Acts 1948 and 1967; the printed Gazette and authentic Laws of Malaysia reprint",
+    "url": "https://huggingface.co/datasets/endomorphosis/ipfs_malaysia_laws"
+   }
+  },
+  "PH": {
+   "laws": 10870,
+   "sections": 93180,
+   "dataset": "endomorphosis/ipfs_philippines_laws",
+   "source": {
+    "name": "ชุดข้อมูลเปิด endomorphosis/ipfs_philippines_laws (ตัวบทจากแหล่งทางการของรัฐ)",
+    "license": "Official Philippine legislative texts (Republic Acts and Constitution) from the Official Gazette of the Republic of the Philippines and the Senate of the Philippines Legislative Reference Bureau issuances library. Official Gazette authentic text prevails. Not Lawphil. Not Chan Robles. Not legal advi",
+    "url": "https://huggingface.co/datasets/endomorphosis/ipfs_philippines_laws"
+   }
+  },
+  "SG": {
+   "laws": 701,
+   "sections": 5029,
+   "dataset": "endomorphosis/ipfs_singapore_laws",
+   "source": {
+    "name": "ชุดข้อมูลเปิด endomorphosis/ipfs_singapore_laws (ตัวบทจากแหล่งทางการของรัฐ)",
+    "license": "Singapore Statutes Online (sso.agc.gov.sg) is an unofficial reproduction published by the Legislation Division of the Attorney-General's Chambers. The printed Gazette and AGC official text prevail. Research snapshot with provenance. Not legal advice.",
+    "url": "https://huggingface.co/datasets/endomorphosis/ipfs_singapore_laws"
+   }
+  },
+  "BN": {
+   "laws": 239,
+   "sections": 21394,
+   "dataset": "endomorphosis/ipfs_brunei_laws",
+   "source": {
+    "name": "ชุดข้อมูลเปิด endomorphosis/ipfs_brunei_laws (ตัวบทจากแหล่งทางการของรัฐ)",
+    "license": "Laws of Brunei / Attorney General's Chambers (agc.gov.bn). Authentic official text prevails. Not legal advice.",
+    "url": "https://huggingface.co/datasets/endomorphosis/ipfs_brunei_laws"
+   }
+  }
+ },
+ "thai2": {
+  "laws": 49923,
+  "sections": 349696,
+  "types": {
+   "ประกาศ": 31195,
+   "อื่น ๆ": 2910,
+   "พระราชบัญญัติ/พระราชกำหนด (เพิ่มเติม)": 142,
+   "คำสั่ง": 1570,
+   "กฎกระทรวง": 4374,
+   "ระเบียบ": 3908,
+   "พระราชกฤษฎีกา": 3920,
+   "ข้อบังคับ": 848,
+   "กฎ": 521,
+   "ข้อกำหนด": 535
+  },
+  "dataset": "pythainlp/thailaw-v1.0",
+  "license": "CC0-1.0",
+  "totalRows": 52556
+ },
+ "thaiMain": {
+  "laws": 4304,
+  "sections": 118803
+ }
+}
