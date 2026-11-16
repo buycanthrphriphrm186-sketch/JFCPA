@@ -164,4 +164,116 @@ body.ai-focus .ai2-dock{bottom:10px}
 
 /* ---- ประวัติ / อื่น ๆ ---- */
 @media (max-width:420px){.fnav-t{font-size:.8rem}.nav-arrow{width:52px;height:52px}}
+
+/* ---- ฮีโร่หมุนเวียน ---- */
+.hero .hv{overflow:hidden}
+.hv-card{position:absolute;left:0;top:0;overflow:hidden;border-radius:16px;background:var(--sky-100);box-shadow:0 10px 30px rgba(16,24,40,.18);will-change:transform}
+.hv-card img{width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1s var(--ease);display:block}
+.hv-card img.ok{opacity:1}
+.hv-veil{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 42%,color-mix(in srgb,var(--bg) 78%,transparent) 0%,color-mix(in srgb,var(--bg) 30%,transparent) 55%,transparent 80%);pointer-events:none}
+.hv-tilted .tg-plane{position:absolute;left:50%;top:50%;width:150%;height:190%;display:flex;gap:18px;transform:translate(-50%,-50%) rotateX(48deg) rotateZ(-30deg);transform-style:preserve-3d}
+.hv-tilted .tg-col{flex:1;display:flex;flex-direction:column;gap:18px;animation:tgUp 40s linear infinite}
+.hv-tilted .tg-col.down{animation-name:tgDown}
+.hv-tilted .hv-card{position:relative;width:100%;aspect-ratio:4/5;flex:none}
+@keyframes tgUp{from{transform:translateY(0)}to{transform:translateY(-50%)}}
+@keyframes tgDown{from{transform:translateY(-50%)}to{transform:translateY(0)}}
+.hv-orbital .ob-wrap{position:absolute;left:50%;top:56%;width:min(150vw,1100px);aspect-ratio:1;transform:translate(-50%,-50%)}
+.hv-orbital .ob-ring{position:absolute;inset:0;border-radius:50%;border:1.5px dashed var(--sky-200);animation:obSpin 90s linear infinite}
+.hv-orbital .ob-ring.r1{inset:22%;animation-duration:60s;animation-direction:reverse}
+.hv-orbital .ob-slot{position:absolute;left:50%;top:50%;width:0;height:0;transform:rotate(var(--a)) translateY(calc(-1 * var(--r,50%)))}
+.hv-orbital .r1 .ob-slot{--r:min(28vw,203px)}
+.hv-orbital .r2 .ob-slot{--r:min(75vw,550px)}
+.hv-orbital .ob-slot .hv-card{width:clamp(64px,10vw,120px);aspect-ratio:1;border-radius:50%;transform:translate(-50%,-50%) rotate(calc(-1 * var(--a)));border:3px solid #fff;animation:obCounter 90s linear infinite}
+.hv-orbital .r1 .ob-slot .hv-card{animation-duration:60s;animation-direction:reverse}
+.hv-orbital .ob-core{position:absolute;left:50%;top:50%;width:clamp(70px,9vw,110px);aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:#fff;box-shadow:0 0 0 10px var(--sky-50),var(--shadow-2);overflow:hidden}
+.hv-orbital .ob-core img{width:100%;height:100%;object-fit:cover}
+@keyframes obSpin{to{transform:rotate(360deg)}}
+@keyframes obCounter{to{transform:translate(-50%,-50%) rotate(calc(-1 * var(--a) - 360deg))}}
+.hv-smooth .s-main{left:0;top:0;width:100%;height:100%;border-radius:0;clip-path:inset(26% 30% 26% 30% round 28px)}
+.hv-smooth .s-main img{opacity:.0}
+.hv-smooth .s-main img.ok{opacity:.55}
+.hv-smooth .s-p{width:clamp(80px,14vw,180px);aspect-ratio:3/4}
+.hv-smooth .p1{left:4%;top:16%}.hv-smooth .p2{right:5%;left:auto;top:10%}.hv-smooth .p3{left:9%;top:58%}.hv-smooth .p4{right:8%;left:auto;top:62%}
+@media (max-width:640px){.hv-smooth .s-p{opacity:.55}}
+@media (prefers-reduced-motion: reduce){.hv-tilted .tg-col,.hv-orbital .ob-ring,.hv-orbital .ob-slot .hv-card{animation:none}}
+
+/* ---- วิดีโอแนะนำ ---- */
+.expl-frame{position:relative;border-radius:var(--r-lg);overflow:hidden;background:#05070F;aspect-ratio:16/9}
+.expl-frame canvas{width:100%;height:100%;display:block}
+.expl-cap{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);max-width:92%;background:rgba(14,17,22,.82);color:#fff;border-radius:10px;padding:6px 14px;font-size:clamp(.82rem,.7rem + .6vw,1.15rem);font-weight:600;text-align:center;line-height:1.45}
+.expl-fs{position:absolute;right:10px;top:10px;display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 14px;border-radius:999px;border:0;background:rgba(255,255,255,.92);color:#0E1116;font-weight:700;box-shadow:var(--shadow-1)}
+.expl-fs svg{width:18px;height:18px}
+.expl-frame:fullscreen{border-radius:0;aspect-ratio:auto;display:grid;place-items:center}
+.expl-frame:fullscreen canvas{width:100%;height:auto;max-height:100vh;object-fit:contain}
+.expl-frame.pseudo-fs{position:fixed;inset:0;z-index:300;border-radius:0;aspect-ratio:auto;display:grid;place-items:center}
+.expl-frame.pseudo-fs canvas{height:auto;max-height:100vh}
+
+/* ---- แดชบอร์ดสถิติ (สีเว็บไซต์: ฟ้า ส้ม น้ำเงินเข้ม) ---- */
+:root{--dv1:#2E86DE;--dv2:#F07C1E;--dv3:#1F5F99}
+:root[data-theme="dark"]{--dv1:#4FA3EA;--dv2:#FF8A2A;--dv3:#9CCBF0}
+@media (prefers-color-scheme: dark){:root[data-theme="system"]{--dv1:#4FA3EA;--dv2:#FF8A2A;--dv3:#9CCBF0}}
+.dash-kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,150px),1fr));gap:10px;margin-bottom:14px}
+.dk{display:flex;flex-direction:column;gap:2px;padding:12px 14px;border-radius:14px;background:var(--sky-50);border:1px solid var(--line)}
+.dk-l{font-size:.8rem;color:var(--muted)}
+.dk-v{font-size:clamp(1.3rem,1.1rem + .8vw,1.8rem);font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink);line-height:1.2}
+.dk-u{font-size:.75rem;color:var(--muted)}
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.dcard{margin:0;padding:14px;border-radius:16px;border:1px solid var(--line);background:var(--surface);min-width:0}
+.dcard.wide{grid-column:1/-1}
+.dcard figcaption{font-weight:700;margin-bottom:10px;font-size:.95rem}
+.area-wrap{position:relative}
+svg.area{width:100%;height:auto;display:block;touch-action:pan-y}
+.dgrid{stroke:var(--line);stroke-width:1}
+.dax{fill:var(--muted);font-size:11px;font-family:inherit}
+svg.area .dax{font-size:17px}
+.dfill{fill:var(--dv1);opacity:.14}
+.dline{fill:none;stroke:var(--dv1);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.dcross{stroke:var(--muted);stroke-width:1;stroke-dasharray:3 3}
+.ddot{fill:var(--dv1);stroke:var(--surface);stroke-width:2}
+.dhit{fill:transparent;cursor:crosshair}
+.dcross.hidden,.ddot.hidden{display:none}
+.dtip{position:absolute;top:4px;transform:translateX(-50%);background:var(--black);color:var(--black-ink);border-radius:10px;padding:6px 10px;font-size:.8rem;line-height:1.45;pointer-events:none;white-space:nowrap;box-shadow:var(--shadow-2)}
+.donut{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.donut svg{width:150px;height:150px;flex:none}
+.dnum{fill:var(--ink);font-size:22px;font-weight:700;font-family:inherit}
+.dleg{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;flex:1;min-width:150px}
+.dleg li{display:flex;align-items:center;gap:8px;font-size:.88rem}
+.dleg i{width:12px;height:12px;border-radius:4px;flex:none}
+.dleg span{flex:1}
+.hbars{display:flex;flex-direction:column;gap:8px}
+.hb{display:grid;grid-template-columns:minmax(0,9em) 1fr auto;align-items:center;gap:8px;font-size:.85rem}
+.hb-l{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hb-t{height:12px;background:var(--sky-50);border-radius:4px;overflow:hidden}
+.hb-t i{display:block;height:100%;border-radius:0 4px 4px 0}
+.hb-v{font-variant-numeric:tabular-nums}
+.fc-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.fc-list li{display:flex;justify-content:space-between;gap:10px;font-size:.88rem;border-bottom:1px dashed var(--line);padding-bottom:5px}
+
+/* ---- กฎหมายต่างประเทศ ---- */
+.fgn-entry{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px}
+.fgn-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:10px}
+.fgn-card{display:flex;align-items:center;gap:12px;text-align:left;padding:14px;border-radius:16px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);min-height:72px}
+.fgn-card:hover{border-color:var(--sky-300);box-shadow:var(--shadow-1)}
+.fgn-code{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:var(--black);color:var(--black-ink);font-weight:700;flex:none}
+.ok-t{color:var(--ok)}
+.fv-reader{position:fixed;inset:0;z-index:115;background:var(--bg);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.fv-in{max-width:860px;margin:0 auto;padding:14px 16px calc(40px + var(--safe-b))}
+.fv-top{display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:2;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding:6px 0 10px}
+.fv-title{min-width:0}.fv-title h3{overflow-wrap:anywhere}
+.fv-meta{margin-top:6px}
+.fv-head{margin:22px 0 8px;padding-bottom:4px;border-bottom:1px solid var(--line-strong);color:var(--sky-700)}
+.fv-art{padding:12px 0;border-bottom:1px dashed var(--line)}
+.fv-ah{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.fv-ah .secno{display:inline-block;background:var(--black);color:var(--black-ink);font-weight:700;border-radius:999px;padding:2px 12px;font-size:.88rem}
+.fv-ah .btn{margin-left:auto}
+.fv-trans:empty{display:none}
+.fv-trans{margin-top:8px;padding:10px 12px;border-radius:12px;background:var(--sky-50);border:1px solid var(--line)}
+.fv-tr-h{font-size:.78rem;color:var(--muted);display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.fv-text p{font-size:1.04rem}
+/* ---- ชำระเงิน ---- */
+.pay-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:12px}
+.pay-box{border:1px solid var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.pay-box h4{display:flex;align-items:center;gap:8px;font-size:.95rem}
+.pay-qr{display:flex;flex-direction:column;align-items:center;gap:6px}
+.pay-qr svg{width:220px;height:220px;background:#fff;border-radius:12px}
 </style>

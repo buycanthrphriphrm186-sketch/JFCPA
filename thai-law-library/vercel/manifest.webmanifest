@@ -1,0 +1,2 @@
+{ "name": "THAI LAW LIBRARY | คลังกฎหมาย", "short_name": "คลังกฎหมาย", "start_url": "/", "display": "standalone", "background_color": "#FFFFFF", "theme_color": "#2E86DE", "lang": "th",
+  "icons": [ { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" } ] }
