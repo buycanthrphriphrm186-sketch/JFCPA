@@ -14,8 +14,8 @@ var PLAN_FEATURES = {
   'basic.yearly': ['timer', 'folders', 'tools_basic', 'notes', 'pdf'],
   'standard.monthly': ['timer', 'folders', 'tools_basic', 'tools_all', 'compare', 'notes', 'pdf', 'ai'],
   'standard.yearly': ['timer', 'folders', 'tools_basic', 'tools_all', 'compare', 'notes', 'pdf', 'ai', 'backup'],
-  'pro.monthly': ['timer', 'folders', 'tools_basic', 'tools_all', 'compare', 'notes', 'pdf', 'ai', 'backup', 'gmail'],
-  'pro.yearly': ['timer', 'folders', 'tools_basic', 'tools_all', 'compare', 'notes', 'pdf', 'ai', 'backup', 'gmail', 'priority']
+  'pro.monthly': ['timer', 'folders', 'tools_basic', 'tools_all', 'compare', 'notes', 'pdf', 'ai', 'backup'],
+  'pro.yearly': ['timer', 'folders', 'tools_basic', 'tools_all', 'compare', 'notes', 'pdf', 'ai', 'backup', 'priority']
 };
 var FEATURE_NAMES = { timer: 'ตัวจับเวลาป้ายพลิก', folders: 'โฟลเดอร์ส่วนตัว', tools_basic: 'เครื่องมือพื้นฐาน', tools_all: 'เครื่องมือนักกฎหมายครบชุด', compare: 'เปรียบเทียบบทบัญญัติ', notes: 'สมุดบันทึก', pdf: 'พิมพ์ไฟล์ PDF', ai: 'ผู้ช่วย AI', backup: 'สำรองข้อมูล', gmail: 'AI สรุปอีเมล' };
 function planKey() { var p = (S.member && S.member.plan) || { tier: 'free' }; if (p.tier === 'free' || !p.active) return 'free'; return p.tier + '.' + (p.cycle || 'monthly'); }
@@ -54,6 +54,9 @@ function mergeUD(local, server) {
   Object.keys(server.opens || {}).forEach(function (k) { out.opens[k] = Math.max(out.opens[k] || 0, server.opens[k] || 0); });
   var nm = {}; out.notes.concat(server.notes || []).forEach(function (n) { if (!nm[n.id] || nm[n.id].u < n.u) nm[n.id] = n; }); out.notes = Object.keys(nm).map(function (k) { return nm[k]; });
   var fm = {}; (server.folders || []).concat(out.folders).forEach(function (f) { fm[f.id] = f; }); out.folders = Object.keys(fm).map(function (k) { return fm[k]; });
+  var ca = out.clearedAt = Object.assign({}, server.clearedAt || {}); Object.keys(local.clearedAt || {}).forEach(function (k) { ca[k] = Math.max(ca[k] || 0, local.clearedAt[k]); });
+  if (ca.read) out.history = out.history.filter(function (x) { return x.t > ca.read; });
+  if (ca.search) server.searches = (server.searches || []).filter(function (x) { return x.t > ca.search; });
   var sm = {}; out.searches = out.searches.concat(server.searches || []).filter(function (x) { if (sm[x.q]) return false; sm[x.q] = 1; return true; }).slice(0, 50);
   out.readNotices = Object.assign({}, server.readNotices || {}, out.readNotices);
   var am = {}; (server.aiChats || []).concat(out.aiChats).forEach(function (c) { if (!am[c.id] || (am[c.id].u || 0) < (c.u || 0)) am[c.id] = c; }); out.aiChats = Object.keys(am).map(function (k) { return am[k]; }).sort(function (a, b) { return (b.u || 0) - (a.u || 0); }).slice(0, 60);
@@ -109,6 +112,7 @@ function autoLogout() {
 
 /* ---------------- session lifecycle ---------------- */
 function onLoggedIn(r, remember) {
+  try { store.set('loginCount', Number(store.get('loginCount', 0)) + 1); } catch (e) {}
   S.token = r.token; S.member = r.member;
   store.set('token', r.token); store.set('member', r.member);
   if (!remember) { try { sessionStorage.setItem('tll.temp', '1'); } catch (e) {} store.set('tempSession', true); } else store.del('tempSession');
@@ -117,7 +121,7 @@ function onLoggedIn(r, remember) {
   (r.notices || []).forEach(function (n) { addNotice(n, true); });
   renderApp();
   nav('home', { noAnim: false });
-  toast('Welcome Back, ' + (r.member.displayName || r.member.firstName), 'ยินดีต้อนรับกลับสู่คลังกฎหมายไทย', 'ok');
+  toast('Welcome Back, ' + (r.member.displayName || r.member.firstName), 'ยินดีต้อนรับกลับสู่คลังกฎหมาย', 'ok');
   bootstrap(true);
 }
 function clearSession() {
@@ -160,7 +164,7 @@ function reactivatePrompt() {
 function securityAlert(a) {
   var name = S.member ? (S.member.title + S.member.firstName + ' ' + S.member.lastName + ' (' + S.member.username + ', ' + S.member.memberId + ')') : '';
   var html = '<div class="prose"><p>เรียน ' + esc(name) + '</p>' +
-    '<p>ระบบรักษาความปลอดภัยของคลังกฎหมายไทยตรวจพบเหตุการณ์ที่อาจเป็นการพยายามเข้าถึงบัญชีของท่านโดยไม่ได้รับอนุญาต ประเภทเหตุการณ์คือ “' + esc(a.type) + '” ระดับความรุนแรง ' + esc(a.severity) + ' เมื่อ ' + fmtDateTime(a.time) + ' รายละเอียดที่ตรวจพบ ได้แก่ ' + esc(a.detail) + (a.ip ? ' จากหมายเลข IP ' + esc(a.ip) : '') + (a.location ? ' ตำแหน่งโดยประมาณ ' + esc(a.location) : '') + (a.device ? ' อุปกรณ์ ' + esc(a.device) : '') + ' ระบบได้ดำเนินมาตรการเบื้องต้นแล้ว คือ ' + esc(a.action) + ' และได้จัดทำรายงานเหตุการณ์หมายเลข ' + esc(a.reportId) + ' ส่งถึงผู้ดูแลระบบเรียบร้อยแล้ว</p>' +
+    '<p>ระบบรักษาความปลอดภัยของคลังกฎหมายตรวจพบเหตุการณ์ที่อาจเป็นการพยายามเข้าถึงบัญชีของท่านโดยไม่ได้รับอนุญาต ประเภทเหตุการณ์คือ “' + esc(a.type) + '” ระดับความรุนแรง ' + esc(a.severity) + ' เมื่อ ' + fmtDateTime(a.time) + ' รายละเอียดที่ตรวจพบ ได้แก่ ' + esc(a.detail) + (a.ip ? ' จากหมายเลข IP ' + esc(a.ip) : '') + (a.location ? ' ตำแหน่งโดยประมาณ ' + esc(a.location) : '') + (a.device ? ' อุปกรณ์ ' + esc(a.device) : '') + ' ระบบได้ดำเนินมาตรการเบื้องต้นแล้ว คือ ' + esc(a.action) + ' และได้จัดทำรายงานเหตุการณ์หมายเลข ' + esc(a.reportId) + ' ส่งถึงผู้ดูแลระบบเรียบร้อยแล้ว</p>' +
     '<p>สาเหตุที่พบบ่อยของเหตุการณ์ลักษณะนี้ ได้แก่ การที่บุคคลอื่นทราบชื่อผู้ใช้งานของท่านและพยายามสุ่มรหัสผ่าน การใช้รหัสผ่านซ้ำกับเว็บไซต์อื่นที่เคยมีข้อมูลรั่วไหล หรือการเข้าสู่ระบบจากอุปกรณ์สาธารณะแล้วไม่ได้ออกจากระบบ</p>' +
     '<p>หากท่านกด “ยืนยัน” ระบบจะลบข้อมูลทั้งหมดที่จัดเก็บไว้บนอุปกรณ์นี้ทันที และตัดการเชื่อมต่อของบัญชีจากทุกอุปกรณ์ เพื่อป้องกันข้อมูลรั่วไหล ข้อมูลบัญชีบนเซิร์ฟเวอร์จะถูกเก็บรักษาไว้อย่างปลอดภัยโดยผู้ดูแลระบบ หลังจากนั้นกรุณาเข้าสู่ระบบใหม่และเปลี่ยนรหัสผ่านส่วนตัวทันที หากท่านเป็นผู้กรอกรหัสผ่านผิดด้วยตนเอง สามารถกด “ยกเลิก” ได้</p></div>';
   modal({ title: 'แจ้งเตือนความปลอดภัยของบัญชี', sub: 'รายงานหมายเลข ' + a.reportId, icon: 'shield', tone: 'bad', html: html, wide: true, ok: 'ยืนยัน', cancel: 'ยกเลิก', danger: true, dismiss: false }).then(function (ok) {
@@ -178,7 +182,7 @@ function doLogout(skipConfirm) {
     withLoading('กำลังออกจากระบบ', p.then(function () { return api('logout', {}).catch(function () {}); })).then(function () {
       var u = S.member && S.member.username;
       clearInterval(usageTimer); usageTimer = null;
-      clearSession(); renderWelcome(); toast('ออกจากระบบเรียบร้อยแล้ว', 'ขอบคุณที่ใช้บริการคลังกฎหมายไทย', 'ok');
+      clearSession(); renderWelcome(); toast('ออกจากระบบเรียบร้อยแล้ว', 'ขอบคุณที่ใช้บริการคลังกฎหมาย', 'ok');
       store.set('lastUser', u || '');
     });
   };
@@ -229,7 +233,7 @@ function renderApp() {
   ROOT.innerHTML = '<div id="netBar"></div>' + (SAFE_MODE ? '<div class="safe-bar">ระบบทำงานในโหมดปลอดภัย ฟีเจอร์เสริมบางส่วนถูกปิดชั่วคราวเพื่อความเสถียร</div>' : '') +
     '<header class="app-head"><div class="wrap">' +
       '<button class="icon-btn" id="btnMenu" aria-label="เมนูหลัก">' + ic('menu') + '</button>' +
-      '<button class="brand" id="btnBrand"><img src="' + LOGO + '" alt=""><span><span class="t1">THAI LAW LIBRARY</span><br><span class="t2">คลังกฎหมายไทย</span></span></button>' +
+      '<button class="brand" id="btnBrand"><img src="' + LOGO + '" alt=""><span><span class="t1">THAI LAW LIBRARY</span><br><span class="t2">คลังกฎหมาย</span></span></button>' +
       '<span class="spacer"></span>' +
       '<button class="icon-btn" id="btnSearch" aria-label="ค้นหา">' + ic('search') + '</button>' +
       '<button class="icon-btn" id="btnAI" aria-label="ผู้ช่วย AI" title="ผู้ช่วย AI">' + ic('ai') + '</button>' +
@@ -282,6 +286,7 @@ function nav(view, opt) {
 }
 var crashCount = 0;
 function renderView(view, opt) {
+  if (view !== 'ai') document.body.classList.remove('ai-focus');
   var box = document.getElementById('view'); if (!box) return;
   document.body.classList.toggle('readable', view === 'home' || view === 'treaties' || view === 'help');
   try {
@@ -306,8 +311,7 @@ function refreshCurrent() { if (S.ui && S.ui.view && document.getElementById('vi
 /* ---------------- hamburger main menu ---------------- */
 function openMainMenu() {
   drawer('left', function (d, close) {
-    var items = [['home', 'home', 'หน้าหลักและแดชบอร์ด'], ['content', 'book', 'กฎหมายทั้ง 5 หมวด และป้ายพลิกมาตรา'], ['treaties', 'globe', 'อนุสัญญาและสนธิสัญญาระหว่างประเทศ'], ['saved', 'bookmark', 'รายการโปรดและคลังเอกสารส่วนตัว'], ['history', 'history', 'ประวัติการเข้าใช้งานแยกตามวัน เดือน ปี'], ['time', 'clock', 'สถิติเวลาการใช้งาน'], ['profile', 'user', 'ข้อมูลสมาชิก'],
-      ['ai', 'ai', 'ถาม-ตอบ ค้นคว้า และสรุปเนื้อหา'], ['notes', 'note', 'จดบันทึก จัดรูปแบบ และพิมพ์ PDF'], ['tools', 'wrench', 'พจนานุกรม คำย่อ คำนวณระยะเวลา และอื่น ๆ'], ['notifications', 'bell', 'ศูนย์การแจ้งเตือน'], ['pricing', 'card', 'ทดลองใช้ 7 วัน และแพ็กเกจรายเดือน/รายปี'], ['help', 'help', 'คู่มือ คำถามที่พบบ่อย และติดต่อผู้ดูแลระบบ']];
+    var items = [['notes', 'note', 'จดบันทึก จัดรูปแบบ และพิมพ์ PDF'], ['tools', 'wrench', 'พจนานุกรม คำย่อ คำนวณระยะเวลา และอื่น ๆ'], ['pricing', 'card', 'ทดลองใช้ 7 วัน และแพ็กเกจรายเดือน/รายปี'], ['help', 'help', 'คู่มือ คำถามที่พบบ่อย และติดต่อผู้ดูแลระบบ']];
     d.innerHTML = '<div class="drawer-head"><img src="' + LOGO + '" alt="" style="width:40px;height:40px;border-radius:50%;background:#fff"><div class="grow"><b>' + tr('menu') + '</b><div class="tiny muted">THAI LAW LIBRARY</div></div><button class="icon-btn" data-x aria-label="ปิด">' + ic('x') + '</button></div>' +
       '<div class="drawer-body"><div class="menu-list">' + items.map(function (it) { return '<button class="menu-item" data-v="' + it[0] + '"><span class="mi">' + ic(it[1]) + '</span><span class="grow"><span class="mt">' + tr(it[0]) + '</span><br><span class="ms">' + esc(it[2]) + '</span></span>' + ic('chevR', 'chev') + '</button>'; }).join('') +
       '<div class="divider"></div><button class="menu-item" data-doc="about"><span class="mi">' + ic('info') + '</span><span class="mt">' + tr('about') + '</span></button><button class="menu-item" data-doc="privacy"><span class="mi">' + ic('shield') + '</span><span class="mt">' + tr('privacy') + '</span></button><button class="menu-item" data-doc="terms"><span class="mi">' + ic('file') + '</span><span class="mt">' + tr('terms') + '</span></button>' +
@@ -348,10 +352,10 @@ function lawShort(l) { return l ? (l.short || l.title) : ''; }
 function addSections(list) {
   var touched = {};
   (list || []).forEach(function (s) {
-    if (SECS[s.id]) { Object.assign(SECS[s.id], s); return; }
+    if (SECS[s.id]) { var ex = SECS[s.id]; if (ex._named) { var nm = ex.name, hd = ex.head; Object.assign(ex, s); ex.name = nm; if (hd) ex.head = hd; } else Object.assign(ex, s); return; }
     SECS[s.id] = s; (SECS_BY_LAW[s.law] = SECS_BY_LAW[s.law] || []).push(s); touched[s.law] = 1;
   });
-  Object.keys(touched).forEach(function (k) { SECS_BY_LAW[k].sort(secCmp); });
+  Object.keys(touched).forEach(function (k) { SECS_BY_LAW[k].sort(secCmp); try { nameLawSections(SECS_BY_LAW[k]); } catch (e) {} });
 }
 var LAW_LOADED = {}, LAW_LOADING = {}, IDS_TRIED = {};
 function ensureLaw(id) {
@@ -426,7 +430,7 @@ function suggestions(q) {
 /* quick search + advanced search */
 function openQuickSearch(initial) {
   modal({ title: 'ค้นหากฎหมาย', icon: 'search', wide: true, ok: 'ปิด', cancel: false, html:
-    '<div class="input">' + ic('search') + '<input id="qsIn" list="qsList" placeholder="เช่น มาตรา 420, ละเมิด, ประมวลกฎหมายอาญา, พ.ศ. 2560" value="' + esc(initial || '') + '"><datalist id="qsList"></datalist></div>' +
+    '<div class="input">' + ic('search') + '<input id="qsIn" placeholder="เช่น มาตรา 420, ละเมิด, ป.อ., civil code, พ.ศ. 2560" value="' + esc(initial || '') + '"></div>' +
     '<details class="acc" style="margin-top:10px"><summary>' + ic('filter') + ' ค้นหาแบบละเอียด' + ic('chevD', 'chev') + '</summary><div class="acc-b grid g3">' +
       '<div class="field"><label for="qsCat">ประเภทกฎหมาย</label><div class="input"><select id="qsCat"><option value="">ทุกประเภท</option>' + CATS.map(function (c) { return '<option>' + esc(c) + '</option>'; }).join('') + '</select></div></div>' +
       '<div class="field"><label for="qsYear">ปี พ.ศ.</label><div class="input"><input id="qsYear" inputmode="numeric" maxlength="4" placeholder="เช่น 2560"></div></div>' +
@@ -434,10 +438,11 @@ function openQuickSearch(initial) {
     '<div id="qsRecent" style="margin-top:10px"></div><div id="qsRes" style="margin-top:10px"></div>',
     onOpen: function (m, ctl) {
       var inp = $('#qsIn', m);
+      attachSuggest(inp, { cat: function () { return $('#qsCat', m).value; } });
       function run() {
         var q = inp.value.trim(), opt = { cat: $('#qsCat', m).value, year: $('#qsYear', m).value.trim(), sort: $('#qsSort', m).value };
-        $('#qsList', m).innerHTML = suggestions(q).map(function (s) { return '<option value="' + esc(s) + '">'; }).join('');
         var r = searchAll(q, opt), box = $('#qsRes', m);
+        if (q && !r.laws.length && !r.sections.length) expandQuery(q).slice(1).some(function (eq) { var r2 = searchAll(eq, opt); if (r2.laws.length || r2.sections.length) { r = r2; return true; } return false; });
         $('#qsRecent', m).innerHTML = (!q && S.ud && S.ud.searches.length) ? '<div class="muted small" style="margin-bottom:6px">ค้นหาล่าสุด</div><div class="hscroll">' + S.ud.searches.slice(0, 10).map(function (x) { return '<button class="chip" data-q="' + esc(x.q) + '">' + ic('history') + esc(x.q) + '</button>'; }).join('') + '</div>' : '';
         if (!q && !opt.cat && !opt.year) { box.innerHTML = ''; return; }
         if (!r.laws.length && !r.sections.length) { box.innerHTML = '<div class="empty"><div class="eic">' + ic('search') + '</div><h3>ไม่พบผลการค้นหา</h3><p>ไม่พบกฎหมายหรือมาตราที่ตรงกับ “' + esc(q) + '” กรุณาตรวจสอบตัวสะกด ลองใช้คำที่สั้นลง หรือเลือกประเภทกฎหมายใหม่</p></div>'; return; }
@@ -489,7 +494,7 @@ VIEWS.home = function (el) {
       homeBox('list', 'หมวดหมู่กฎหมายที่ใช้งานบ่อย', CATS.slice().sort(function (a, b) { return (catUse[b] || 0) - (catUse[a] || 0); }).map(function (c) { return '<button class="entry cat-open" data-cat="' + esc(c) + '" style="width:100%;text-align:left"><span class="li-ic" style="width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--sky-100);color:var(--sky-700)">' + ic(CAT_ICON[c]) + '</span><span class="grow et">' + esc(c) + '</span><span class="es">' + (catUse[c] || 0) + ' ครั้ง</span></button>'; }).join(''), '') +
       homeBox('search', 'ประวัติการค้นหาล่าสุด', ud.searches.slice(0, 6).map(function (x) { return '<button class="entry search-again" data-q="' + esc(x.q) + '" style="width:100%;text-align:left"><span class="grow et">' + esc(x.q) + '</span><span class="es">' + fmtDateTime(x.t) + '</span></button>'; }).join(''), 'ยังไม่มีประวัติการค้นหา') +
     '</div>' +
-    '<div class="view-head"><div><h2>เกี่ยวกับคลังกฎหมายไทย</h2><p class="sub">เหตุผลในการจัดทำ แนวคิด และวิธีใช้งานอย่างละเอียด</p></div></div>' +
+    '<div class="view-head"><div><h2>เกี่ยวกับคลังกฎหมาย</h2><p class="sub">เหตุผลในการจัดทำ แนวคิด และวิธีใช้งานอย่างละเอียด</p></div></div>' +
     '<div class="grid g2">' + HOME_ARTICLES.map(function (a, i) { return '<article class="panel corner rise ' + (i % 3 === 1 ? 'o' : '') + '"><div class="panel-title"><span class="ic ' + (i % 3 === 1 ? 'o' : i % 3 === 2 ? 'k' : '') + '">' + ic(a[0]) + '</span><h3>' + esc(a[1]) + '</h3></div><div class="prose">' + readMore(a[2], 6) + '</div></article>'; }).join('') + '</div>' +
     '<p class="credit-note" style="margin-top:18px">หมายเหตุ: ภาพประกอบในเว็บไซต์ใช้เฉพาะภาพที่เจ้าของอนุญาตตามสัญญาอนุญาตของแหล่งภาพ พร้อมระบุเครดิตทุกภาพ</p>';
   $('#homeSearch', el).onclick = function () { openQuickSearch(); };
@@ -507,13 +512,13 @@ function secEntry(id, sub) {
   return '<button class="entry" data-sec="' + esc(id) + '" style="width:100%;text-align:left"><span class="grow"><span class="et">' + esc(lawShort(LAWS[s.law])) + ' มาตรา ' + esc(s.no) + ' ' + esc(s.name) + '</span><br><span class="es">' + esc(sub) + '</span></span>' + ic('chevR') + '</button>';
 }
 var HOME_ARTICLES = [
-  ['info', 'เหตุผลในการจัดทำเว็บไซต์', '<p>การศึกษากฎหมายไทยในปัจจุบันต้องอาศัยการเข้าถึงตัวบทที่ถูกต้องและเป็นปัจจุบัน แต่ข้อมูลกฎหมายกระจายอยู่ในหลายแหล่ง บางแหล่งไม่ได้ปรับปรุงตามการแก้ไขเพิ่มเติม และการค้นหามาตราที่ต้องการในเวลาอันสั้นยังเป็นเรื่องยากสำหรับผู้เริ่มต้น คลังกฎหมายไทยจึงจัดทำขึ้นเพื่อรวมกฎหมายทั้งห้าหมวดไว้ในที่เดียว จัดรูปแบบให้อ่านง่ายตามแบบเอกสารราชการ และเพิ่มเครื่องมือที่ช่วยให้การทบทวนบทบัญญัติเป็นกิจวัตรที่ทำได้จริง</p><p>ผู้จัดทำเชื่อว่าความเข้าใจกฎหมายที่ดีเริ่มจากการอ่านตัวบทอย่างสม่ำเสมอ เว็บไซต์นี้จึงไม่ได้มุ่งให้ผู้ใช้จดจำคำอธิบายของผู้อื่น แต่มุ่งให้ผู้ใช้กลับไปหาตัวบทได้ทุกครั้งที่ต้องการ ทั้งในห้องเรียน ในการเตรียมสอบ และในการปฏิบัติงานจริง</p>'],
+  ['info', 'เหตุผลในการจัดทำเว็บไซต์', '<p>การศึกษากฎหมายไทยในปัจจุบันต้องอาศัยการเข้าถึงตัวบทที่ถูกต้องและเป็นปัจจุบัน แต่ข้อมูลกฎหมายกระจายอยู่ในหลายแหล่ง บางแหล่งไม่ได้ปรับปรุงตามการแก้ไขเพิ่มเติม และการค้นหามาตราที่ต้องการในเวลาอันสั้นยังเป็นเรื่องยากสำหรับผู้เริ่มต้น คลังกฎหมายจึงจัดทำขึ้นเพื่อรวมกฎหมายทั้งห้าหมวดไว้ในที่เดียว จัดรูปแบบให้อ่านง่ายตามแบบเอกสารราชการ และเพิ่มเครื่องมือที่ช่วยให้การทบทวนบทบัญญัติเป็นกิจวัตรที่ทำได้จริง</p><p>ผู้จัดทำเชื่อว่าความเข้าใจกฎหมายที่ดีเริ่มจากการอ่านตัวบทอย่างสม่ำเสมอ เว็บไซต์นี้จึงไม่ได้มุ่งให้ผู้ใช้จดจำคำอธิบายของผู้อื่น แต่มุ่งให้ผู้ใช้กลับไปหาตัวบทได้ทุกครั้งที่ต้องการ ทั้งในห้องเรียน ในการเตรียมสอบ และในการปฏิบัติงานจริง</p>'],
   ['book', 'การใช้งานเมนูเนื้อหาและป้ายพลิกมาตรา', '<p>เมนูเนื้อหาแบ่งกฎหมายเป็นห้าหมวด ได้แก่ รัฐธรรมนูญ พระราชบัญญัติประกอบรัฐธรรมนูญ พระราชบัญญัติและพระราชกำหนด ประกาศคณะปฏิวัติและคณะรัฐประหาร และประมวลกฎหมาย ผู้ใช้ต้องเลือกหมวดก่อน แล้วพิมพ์ชื่อกฎหมายในช่องค้นหา ระบบจะแสดงรายชื่อกฎหมายที่ตรงกันเป็นกรอบ เมื่อกดกรอบของกฎหมายที่ต้องการ ระบบจึงแสดงป้ายพลิกมาตราของกฎหมายฉบับนั้นทั้งหมด</p><p>ป้ายพลิกแต่ละใบแสดงเลขมาตราและชื่อมาตราตามที่ใช้เรียกกันในวงวิชาการ กดปุ่ม “พลิก” ที่มุมขวาล่างเพื่ออ่านตัวบท กดปุ่มลูกศรมุมขวาบนเพื่อขยายดูป้ายเพียงใบเดียวแบบเต็มหน้าจอ กดปุ่มจับเวลาเพื่อฝึกท่องจำ และกดปุ่มบันทึกเพื่อเก็บมาตรานั้นไว้ในรายการโปรด</p>'],
   ['timer', 'ตัวจับเวลาสำหรับการท่องจำ', '<p>ตัวจับเวลาออกแบบตามรูปแบบที่ผู้ใช้คุ้นเคย มีเวลาสำเร็จรูป 1, 3, 5, 10, 15 และ 25 นาที และสามารถกำหนดเวลาเองได้ แถบเวลาจะเป็นสีเขียวเมื่อเหลือเวลามากกว่าครึ่ง เปลี่ยนเป็นสีส้มเมื่อเหลือเวลาน้อยกว่าครึ่ง และเปลี่ยนเป็นสีแดงเมื่อเหลือเวลาน้อยกว่าหนึ่งในห้า ตัวเลขเวลาเปลี่ยนสีตามแถบเสมอ</p><p>เมื่อกดเริ่ม หยุด หรือรีเซ็ต จะมีเสียงยืนยันสั้น ๆ และในห้าวินาทีสุดท้ายระบบจะส่งเสียงเตือนทุกวินาที เมื่อหมดเวลาจะมีเสียงสัญญาณยาวเพื่อให้ผู้ใช้ทราบโดยไม่ต้องจ้องหน้าจอ ผู้ใช้สามารถปิดเสียงได้ในเมนูการตั้งค่า</p>'],
   ['bookmark', 'บันทึก ประวัติ และเวลา', '<p>มาตราที่บันทึกไว้จะแสดงในเมนูบันทึก จัดกลุ่มตามวัน เดือน หรือปีที่บันทึก ผู้ใช้สามารถสร้างโฟลเดอร์ส่วนตัว ตั้งชื่อโฟลเดอร์เอง จัดหมวดหมู่ เพิ่มคำอธิบายส่วนตัว ค้นหา และเรียงลำดับตามวันที่บันทึกได้ ระบบบันทึกประวัติการเปิดอ่านป้ายพลิกทุกครั้งโดยอัตโนมัติ และแยกตามวัน เดือน ปีเช่นเดียวกัน</p><p>เมนูเวลาแสดงระยะเวลาการใช้งานของแต่ละวันเป็นชั่วโมง นาที และวินาที พร้อมกราฟเปรียบเทียบย้อนหลัง และจัดอันดับมาตราที่ผู้ใช้เปิดอ่านมากที่สุดสามอันดับแรก ข้อมูลทั้งหมดซิงก์กับฐานข้อมูลของระบบ จึงไม่สูญหายเมื่อเปลี่ยนอุปกรณ์</p>'],
   ['globe', 'อนุสัญญาและสนธิสัญญาระหว่างประเทศ', '<p>เมนูอนุสัญญารวบรวมสนธิสัญญาที่เผยแพร่โดยกรมสนธิสัญญาและกฎหมาย กระทรวงการต่างประเทศ ทั้งฉบับที่มีคำแปลภาษาไทย ฉบับที่ไม่มีคำแปล และตัวอย่างสนธิสัญญาของไทยในอดีต ทุกฉบับมีคำอธิบายภาษาไทยที่สรุปสาระสำคัญอย่างครบถ้วน ผู้ใช้กดเข้าไปอ่านเฉพาะฉบับที่สนใจได้ และเปิดอ่านต้นฉบับจากแหล่งข้อมูลต้นทางได้ทุกครั้ง</p><p>ระบบตรวจสอบเว็บไซต์ต้นทางทุกวัน หากมีการเพิ่มหรือแก้ไขรายการ ระบบจะปรับปรุงข้อมูลให้อัตโนมัติ</p>'],
   ['ai', 'ผู้ช่วย AI และเครื่องมือสำหรับนักกฎหมาย', '<p>ผู้ช่วย AI แยกเป็นหน้าเฉพาะ ใช้งานได้เหมือนแอปผู้ช่วยทั่วไป สามารถถามได้ทั้งเรื่องกฎหมาย ประวัติศาสตร์ เหตุการณ์ปัจจุบัน และความรู้รอบตัว สำหรับคำถามทางกฎหมาย ระบบกำหนดให้ AI แยกข้อกฎหมายออกจากคำอธิบาย ระบุแหล่งอ้างอิง และไม่สร้างเลขมาตราหรือคำพิพากษาขึ้นเอง</p><p>เมนูเครื่องมือมีพจนานุกรมศัพท์กฎหมาย รวมคำย่อ เครื่องคำนวณวันและระยะเวลา เครื่องมือจัดรูปแบบการอ้างอิง แบบฟอร์มสรุปคำพิพากษา การเปรียบเทียบบทบัญญัติ ลำดับขั้นตอนทางกฎหมาย และเครื่องมือเปิดอ่านเอกสาร ส่วนสมุดบันทึกใช้จัดรูปแบบข้อความได้ใกล้เคียงโปรแกรมประมวลผลคำและพิมพ์เป็นไฟล์ PDF</p>'],
-  ['shield', 'ความปลอดภัยและความเป็นส่วนตัว', '<p>การเข้าสู่ระบบต้องผ่านรหัสผ่านสองชั้นทุกครั้ง รหัสผ่านทุกชุดเก็บเป็นค่าแฮช ระบบจำกัดจำนวนครั้งที่กรอกรหัสผิด ตรวจจับการแทรกคำสั่งอันตราย บันทึกประวัติการเข้าสู่ระบบพร้อมอุปกรณ์และตำแหน่งโดยประมาณ และแจ้งเตือนเมื่อมีการเข้าสู่ระบบจากอุปกรณ์ใหม่ ผู้ใช้สามารถตรวจสอบอุปกรณ์ที่เคยเข้าสู่ระบบ และออกจากระบบทุกอุปกรณ์ได้ด้วยตนเอง</p><p>ผู้ใช้มีสิทธิขอสำเนาข้อมูล แก้ไขข้อมูล ปิดใช้งานบัญชีชั่วคราว และลบบัญชีถาวรตามกฎหมายคุ้มครองข้อมูลส่วนบุคคล โดยดำเนินการได้เองที่เมนูการตั้งค่า</p>'],
+  ['shield', 'ความปลอดภัยและความเป็นส่วนตัว', '<p>การเข้าสู่ระบบต้องผ่านรหัสผ่านสามชั้นทุกครั้ง (รหัสจากผู้ดูแลระบบ รหัสทางอีเมล และรหัสผ่านส่วนตัว) รหัสผ่านทุกชุดเก็บเป็นค่าแฮช ระบบจำกัดจำนวนครั้งที่กรอกรหัสผิด ตรวจจับการแทรกคำสั่งอันตราย บันทึกประวัติการเข้าสู่ระบบพร้อมอุปกรณ์และตำแหน่งโดยประมาณ และแจ้งเตือนเมื่อมีการเข้าสู่ระบบจากอุปกรณ์ใหม่ ผู้ใช้สามารถตรวจสอบอุปกรณ์ที่เคยเข้าสู่ระบบ และออกจากระบบทุกอุปกรณ์ได้ด้วยตนเอง</p><p>ผู้ใช้มีสิทธิขอสำเนาข้อมูล แก้ไขข้อมูล ปิดใช้งานบัญชีชั่วคราว และลบบัญชีถาวรตามกฎหมายคุ้มครองข้อมูลส่วนบุคคล โดยดำเนินการได้เองที่เมนูการตั้งค่า</p>'],
   ['help', 'กรณีระบบขัดข้อง', '<p>หากหน้าใดแสดงผลไม่ได้ ระบบจะแสดงกรอบแจ้งว่าส่วนนั้นขัดข้องชั่วคราว พร้อมปุ่มลองอีกครั้งและปุ่มแจ้งปัญหา โดยส่วนอื่นของเว็บไซต์ยังใช้งานได้ตามปกติ หากการเชื่อมต่อฐานข้อมูลขาดหาย ระบบจะเก็บข้อมูลที่ผู้ใช้บันทึกไว้ในอุปกรณ์ และซิงก์ให้อัตโนมัติเมื่อเชื่อมต่อได้อีกครั้ง</p><p>' + esc(SYS_DOWN_TEXT) + '</p>']
 ];
 
@@ -541,9 +546,9 @@ VIEWS.content = function (el) {
       box.innerHTML = '<div class="panel"><div class="empty"><div class="eic">' + ic('layers') + '</div><h3>กรุณาเลือกหมวดกฎหมาย</h3><p>เลือกหมวดกฎหมายจากปุ่มด้านบนก่อน ได้แก่ รัฐธรรมนูญ พระราชบัญญัติประกอบรัฐธรรมนูญ พระราชบัญญัติ/พระราชกำหนด ปร./ปว./คปค./คสช. หรือประมวลกฎหมาย จากนั้นพิมพ์ชื่อกฎหมายที่ต้องการในช่องค้นหา ระบบจะแสดงรายชื่อกฎหมายให้เลือก</p></div></div>';
       return;
     }
-    box.innerHTML = '<div class="input">' + ic('search') + '<input id="ctQ" list="ctList" placeholder="พิมพ์ชื่อกฎหมายในหมวด ' + esc(st.cat) + '" value="' + esc(st.q) + '"><datalist id="ctList"></datalist>' + (st.q ? '<button class="icon-btn" id="ctClear" aria-label="ล้าง" style="width:38px;height:38px">' + ic('x') + '</button>' : '') + '</div><div id="ctRes" style="margin-top:14px"></div>';
+    box.innerHTML = '<div class="input">' + ic('search') + '<input id="ctQ" placeholder="พิมพ์ชื่อกฎหมายหรือคำย่อในหมวด ' + esc(st.cat) + '" value="' + esc(st.q) + '">' + (st.q ? '<button class="icon-btn" id="ctClear" aria-label="ล้าง" style="width:38px;height:38px">' + ic('x') + '</button>' : '') + '</div><div id="ctRes" style="margin-top:14px"></div>';
     var inp = $('#ctQ', box);
-    $('#ctList', box).innerHTML = (S.catalog ? S.catalog.laws.filter(function (l) { return l.cat === st.cat; }) : []).map(function (l) { return '<option value="' + esc(l.title) + '">'; }).join('');
+    attachSuggest(inp, { cat: function () { return st.cat; } });
     inp.addEventListener('input', debounce(function () { st.q = inp.value; st.law = ''; store.set('ui', S.ui); results(); }, 160));
     inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') recordSearch(inp.value.trim()); });
     var cl = $('#ctClear', box); if (cl) cl.onclick = function () { st.q = ''; st.law = ''; store.set('ui', S.ui); body(); };
@@ -560,8 +565,8 @@ VIEWS.content = function (el) {
         '<div class="group-h">กฎหมายในหมวดนี้ <span class="cnt">' + inCat.length + ' รายการ</span></div><div class="col anim-list">' + inCat.slice(0, 60).map(lawItem).join('') + '</div>';
       return;
     }
-    var nq = norm(q);
-    var match = inCat.filter(function (l) { return norm(l.title + ' ' + (l.short || '')).indexOf(nq) > -1; });
+    var nq = norm(q), nqs = expandQuery(q).map(norm).filter(Boolean);
+    var match = inCat.filter(function (l) { var hay = norm(l.title + ' ' + (l.short || '')); return nqs.some(function (e) { return hay.indexOf(e) > -1; }); });
     if (!match.length) {
       var other = S.catalog.laws.filter(function (l) { return l.cat !== st.cat && norm(l.title + ' ' + (l.short || '') + ' ' + l.cat).indexOf(nq) > -1; });
       var catWord = CATS.filter(function (c) { return c !== st.cat && (nq.indexOf(norm(c.split('/')[0])) > -1 || norm(c).indexOf(nq) > -1); })[0];
@@ -597,7 +602,7 @@ function renderLaw(box, l) {
     '</div>' + (l.url ? '<div class="row" style="margin-top:8px"><a class="btn sm" href="' + esc(l.url) + '" target="_blank" rel="noopener">' + ic('external') + ' แหล่งข้อมูลต้นทาง</a></div>' : '') +
     (secs.length ? '<div class="row wrapr" style="margin-top:12px;gap:8px"><div class="input" style="min-height:44px;flex:1 1 100%">' + ic('search') + '<input id="inLawQ" placeholder="ค้นหาเลขมาตรา ชื่อมาตรา หรือข้อความในมาตรา" value="' + esc(st.inLaw || '') + '"></div>' +
       '<div class="seg" id="lawSort"><button data-s="no" class="' + (st.sort !== 'name' && st.sort !== 'fav' ? 'on' : '') + '">เลขมาตรา</button><button data-s="name" class="' + (st.sort === 'name' ? 'on' : '') + '">ชื่อ ก-ฮ</button><button data-s="fav" class="' + (st.sort === 'fav' ? 'on' : '') + '">ที่บันทึก</button></div>' +
-      '<details class="acc" style="flex:1 1 100%"><summary>' + ic('list') + ' สารบัญมาตรา' + ic('chevD', 'chev') + '</summary><div class="acc-b hscroll">' + secs.map(function (s) { return '<button class="chip" data-jump="' + esc(s.id) + '">ม. ' + esc(s.no) + '</button>'; }).join('') + '</div></details></div>' : '') +
+      '<details class="acc toc" style="flex:1 1 100%"><summary>' + ic('list') + ' สารบัญมาตรา <span class="cnt">' + secs.length + ' มาตรา</span>' + ic('chevD', 'chev') + '</summary><div class="acc-b">' + tocHtml(secs) + '</div></details></div>' : '') +
     '</section><div id="cardsBox"></div>';
   $('#lawBack', box).onclick = function () { st.law = ''; store.set('ui', S.ui); refreshCurrent(); };
   if (!secs.length) {
@@ -616,23 +621,37 @@ function renderLaw(box, l) {
   }
   var inq = $('#inLawQ', box); if (inq) inq.addEventListener('input', debounce(function () { st.inLaw = inq.value; store.set('ui', S.ui); draw(); }, 160));
   on(box, 'click', '#lawSort [data-s]', function (e, b) { st.sort = b.getAttribute('data-s'); store.set('ui', S.ui); $$('#lawSort button', box).forEach(function (x) { x.classList.toggle('on', x === b); }); draw(); });
-  on(box, 'click', '[data-jump]', function (e, b) { var c = document.querySelector('.flip[data-id="' + CSS.escape(b.getAttribute('data-jump')) + '"]'); if (c) { c.scrollIntoView({ behavior: 'smooth', block: 'center' }); c.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.03)' }, { transform: 'scale(1)' }], { duration: 600 }); } });
+  on(box, 'click', '[data-jump]', function (e, b) { if (st.inLaw || st.sort === 'fav') { st.inLaw = ''; st.sort = 'no'; var iq = $('#inLawQ', box); if (iq) iq.value = ''; $$('#lawSort button', box).forEach(function (x) { x.classList.toggle('on', x.getAttribute('data-s') === 'no'); }); draw(); } var c = document.querySelector('.flip[data-id="' + CSS.escape(b.getAttribute('data-jump')) + '"]'); if (c) { c.scrollIntoView({ behavior: 'smooth', block: 'center' }); c.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.03)' }, { transform: 'scale(1)' }], { duration: 600 }); } });
   bindCards(box);
   draw();
 }
 
-/* ---------------- flip card ---------------- */
+/* สารบัญจัดกลุ่มตามภาค/ลักษณะ/หมวด/ส่วน — แต่ละกลุ่มพับเก็บได้ ไม่มีแถบเลื่อนซ้อนภายใน */
+function tocHtml(secs) {
+  var groups = [], cur = null;
+  secs.forEach(function (s) {
+    var hd = s.head || '';
+    if (!cur || cur.h !== hd) { cur = { h: hd, list: [] }; groups.push(cur); }
+    cur.list.push(s);
+  });
+  if (groups.length === 1 && !groups[0].h) return '<div class="toc-chips">' + groups[0].list.map(tocChip).join('') + '</div>';
+  return groups.map(function (g, i) {
+    return '<details class="toc-g"' + (groups.length <= 3 || i === 0 ? ' open' : '') + '><summary><span class="grow">' + esc(g.h || 'บทบัญญัติส่วนต้น') + '</span><span class="cnt">' + g.list.length + ' มาตรา · ม. ' + esc(g.list[0].no) + (g.list.length > 1 ? '–' + esc(g.list[g.list.length - 1].no) : '') + '</span>' + ic('chevD', 'chev') + '</summary><div class="toc-chips">' + g.list.map(tocChip).join('') + '</div></details>';
+  }).join('');
+}
+function tocChip(s) { return '<button class="chip" data-jump="' + esc(s.id) + '" title="' + esc(s.name) + '">ม. ' + esc(s.no) + '</button>'; }
+
+/* ---------------- flip card (หน้ารายการ: ไม่มีปุ่มพลิก กดป้ายเพื่อขยาย แล้วพลิกในหน้าขยาย) ---------------- */
 function cardHtml(s, q) {
   var l = LAWS[s.law] || {};
   var fav = !!(S.ud && S.ud.favorites[s.id]);
-  return '<div class="flip" data-id="' + esc(s.id) + '"><div class="flip-in">' +
-    '<div class="face front"><div class="top"><span class="law-s">' + esc(lawShort(l)) + '</span><button class="zoom" data-act="zoom" aria-label="ขยายป้ายนี้">' + ic('maximize') + '</button></div>' +
-      '<div class="center"><span class="secno">มาตรา ' + esc(s.no) + '</span><div class="pname">' + (q ? highlight(esc(s.name), q) : esc(s.name)) + '</div></div>' +
-      '<div class="bar"><button class="cbtn" data-act="timer" aria-label="จับเวลา">' + ic('timer') + '<span>จับเวลา</span></button><button class="cbtn fav ' + (fav ? 'on' : '') + '" data-act="fav" aria-label="บันทึกรายการโปรด">' + ic(fav ? 'bookmarkOn' : 'bookmark') + '</button><button class="cbtn flipb" data-act="flip">' + ic('flip') + '<span>พลิก</span></button></div>' +
+  var snip = '';
+  if (q && q.length > 1) { var nt = norm(s.text), i = nt.indexOf(norm(q)); if (i > -1) snip = '<div class="snip">' + highlight(esc((i > 30 ? '…' : '') + s.text.replace(/\s+/g, ' ').slice(Math.max(0, i - 30), i + 90) + '…'), q) + '</div>'; }
+  return '<div class="flip gcard" data-id="' + esc(s.id) + '" tabindex="0" role="button" aria-label="มาตรา ' + esc(s.no) + ' ' + esc(s.name) + ' กดเพื่อขยายและพลิกอ่านตัวบท"><div class="flip-in">' +
+    '<div class="face front"><div class="top"><span class="law-s">' + esc(lawShort(l)) + (s.head ? '<br><span class="hd">' + esc(s.head) + '</span>' : '') + '</span><button class="zoom" data-act="zoom" aria-label="ขยายป้ายนี้">' + ic('maximize') + '</button></div>' +
+      '<div class="center"><span class="secno">มาตรา ' + esc(s.no) + '</span><div class="pname">' + (q ? highlight(esc(s.name), q) : esc(s.name)) + '</div>' + snip + '</div>' +
+      '<div class="bar"><button class="cbtn" data-act="timer" aria-label="จับเวลา">' + ic('timer') + '<span>จับเวลา</span></button><button class="cbtn fav ' + (fav ? 'on' : '') + '" data-act="fav" aria-label="บันทึกรายการโปรด">' + ic(fav ? 'bookmarkOn' : 'bookmark') + '</button><span class="open-hint">' + ic('maximize') + ' แตะเพื่ออ่าน</span></div>' +
       '<div class="tline hidden"><i></i></div></div>' +
-    '<div class="face back"><div class="top"><span class="law-s">' + esc(lawShort(l)) + ' · <b>มาตรา ' + esc(s.no) + '</b></span><button class="zoom" data-act="zoom" aria-label="ขยายป้ายนี้">' + ic('maximize') + '</button></div>' +
-      '<div class="body"><h4>' + esc(s.name) + '</h4>' + lawHtml(s.text, q) + '</div>' +
-      '<div class="bar"><button class="cbtn" data-act="copy" aria-label="คัดลอกตัวบท">' + ic('copy') + '</button><button class="cbtn fav ' + (fav ? 'on' : '') + '" data-act="fav" aria-label="บันทึกรายการโปรด">' + ic(fav ? 'bookmarkOn' : 'bookmark') + '</button><button class="cbtn flipb" data-act="flip">' + ic('flip') + '<span>พลิก</span></button></div></div>' +
     '</div></div>';
 }
 function bindCards(root) {
@@ -640,12 +659,13 @@ function bindCards(root) {
     e.stopPropagation();
     var card = b.closest('.flip'), id = card.getAttribute('data-id'), act = b.getAttribute('data-act');
     tap();
-    if (act === 'flip') { SND.click(); card.classList.toggle('flipped'); if (card.classList.contains('flipped')) logOpen(id); }
-    else if (act === 'zoom') openFocus(id);
+    if (act === 'zoom') openFocus(id);
     else if (act === 'timer') { if (gate('timer')) openFocus(id, { timer: true }); }
     else if (act === 'fav') toggleFav(id);
     else if (act === 'copy') { var s = SECS[id]; copyText(lawShort(LAWS[s.law]) + ' มาตรา ' + s.no + '\n' + s.text); }
   });
+  on(root, 'click', '.flip.gcard', function (e, c) { if (e.target.closest('[data-act]')) return; tap(); SND.click(); openFocus(c.getAttribute('data-id')); });
+  root.addEventListener('keydown', function (e) { var c = e.target.closest && e.target.closest('.flip.gcard'); if (c && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openFocus(c.getAttribute('data-id')); } });
 }
 function logOpen(id) {
   if (!S.ud) return;
@@ -672,46 +692,71 @@ function toggleFav(id, forceOn) {
 }
 function updateFavButtons(id) {
   var on_ = !!S.ud.favorites[id];
-  $$('.flip[data-id="' + CSS.escape(id) + '"] [data-act="fav"]').forEach(function (b) { b.classList.toggle('on', on_); b.innerHTML = ic(on_ ? 'bookmarkOn' : 'bookmark') + (b.querySelector('span') ? '' : '') + (b.getAttribute('data-label') ? '<span>' + b.getAttribute('data-label') + '</span>' : ''); });
+  $$('.flip[data-id="' + CSS.escape(id) + '"] [data-act="fav"]').forEach(function (b) { b.classList.toggle('on', on_); b.innerHTML = ic(on_ ? 'bookmarkOn' : 'bookmark') + (b.getAttribute('data-label') ? '<span>' + b.getAttribute('data-label') + '</span>' : ''); });
 }
 
-/* ---------------- focus (ป้ายเดียว + ปุ่มต่าง ๆ + ลูกศรกลับด้านล่าง) ---------------- */
+/* ---------------- focus: ป้ายขยาย (ขนาดตามเนื้อหา เลื่อนจากด้านนอก) + ลูกศรซ้าย = กลับรายการ, ลูกศรขวา = มาตราถัดไป ---------------- */
 var focusEl = null;
-function closeFocus() { if (focusEl) { focusEl.remove(); focusEl = null; document.body.style.overflow = ''; } }
+function closeFocus() { if (focusEl) { focusEl.remove(); focusEl = null; document.body.style.overflow = ''; stopClockLoop(); syncScrollLock(); } }
+function nextSecId(id, dir) {
+  var s = SECS[id]; if (!s) return null;
+  var list = SECS_BY_LAW[s.law] || [], i = list.indexOf(s);
+  var n = list[i + (dir || 1)];
+  return n ? n.id : null;
+}
 function openFocus(id, opt) {
   opt = opt || {};
   var s = SECS[id];
   if (!s) { delete IDS_TRIED[id]; if (!ensureIds([id], function () { if (SECS[id]) openFocus(id, opt); else toast('ไม่พบมาตรานี้ในฐานข้อมูล', '', 'warn'); })) toast('ไม่พบมาตรานี้ในฐานข้อมูล', '', 'warn'); return; }
+  var keepTimer = focusEl && TIMERS._shown;
   closeFocus();
   logOpen(id);
   var l = LAWS[s.law] || {};
   var fav = !!S.ud.favorites[id];
-  focusEl = h('<div class="focus" role="dialog" aria-modal="true" aria-label="ป้ายมาตรา"><div class="stagec">' +
+  var dock = '<div class="tdock"></div>';
+  focusEl = h('<div class="focus ' + (opt.slide ? 'no-anim' : '') + '" role="dialog" aria-modal="true" aria-label="ป้ายมาตรา"><div class="stagec ' + (opt.slide ? 'slide-' + opt.slide : '') + '">' +
     '<div class="flip ' + (opt.back ? 'flipped' : '') + '" data-id="' + esc(id) + '"><div class="flip-in">' +
-      '<div class="face front"><div class="top"><span class="law-s">' + esc(l.title || '') + '</span></div><div class="center"><span class="secno">มาตรา ' + esc(s.no) + '</span><div class="pname">' + esc(s.name) + '</div><div class="muted small">' + esc(s.tags || '') + '</div></div>' +
-        '<div class="bar"><button class="cbtn" data-f="timer">' + ic('timer') + '<span>จับเวลา</span></button><button class="cbtn fav ' + (fav ? 'on' : '') + '" data-act="fav" data-label="บันทึก">' + ic(fav ? 'bookmarkOn' : 'bookmark') + '<span>บันทึก</span></button><button class="cbtn flipb" data-f="flip">' + ic('flip') + '<span>พลิก</span></button></div><div class="tline hidden"><i></i></div></div>' +
-      '<div class="face back"><div class="top"><span class="law-s">' + esc(l.title || '') + ' · <b>มาตรา ' + esc(s.no) + '</b></span></div><div class="body"><h4>' + esc(s.name) + '</h4>' + lawHtml(s.text) + '<p class="tiny muted" style="margin-top:10px">ที่มา: ' + esc(l.title || '') + (l.src ? ' — ' + esc(l.src) : '') + (l.status ? ' — ' + esc(l.status) : '') + ' — ตรวจสอบฉบับปัจจุบันกับสำนักงานคณะกรรมการกฤษฎีกาก่อนนำไปอ้างอิง</p></div>' +
-        '<div class="bar"><button class="cbtn" data-f="copy">' + ic('copy') + '</button><button class="cbtn" data-f="ai" aria-label="ถาม AI เกี่ยวกับมาตรานี้">' + ic('ai') + '</button><button class="cbtn" data-f="note" aria-label="เพิ่มหมายเหตุ">' + ic('edit') + '</button><button class="cbtn" data-f="pdf" aria-label="ดาวน์โหลด PDF">' + ic('download') + '</button><button class="cbtn flipb" data-f="flip">' + ic('flip') + '<span>พลิก</span></button></div></div>' +
+      '<div class="face front"><div class="top"><span class="law-s">' + esc(l.title || '') + (s.head ? '<br><span class="hd">' + esc(s.head) + '</span>' : '') + '</span></div><div class="center"><span class="secno">มาตรา ' + esc(s.no) + '</span><div class="pname">' + esc(s.name) + '</div><div class="muted small">' + esc(s.tags || '') + '</div></div>' +
+        '<div class="bar"><button class="cbtn" data-f="timer">' + ic('timer') + '<span>จับเวลา</span></button><button class="cbtn fav ' + (fav ? 'on' : '') + '" data-act="fav" data-label="บันทึก">' + ic(fav ? 'bookmarkOn' : 'bookmark') + '<span>บันทึก</span></button><button class="cbtn flipb" data-f="flip">' + ic('flip') + '<span>พลิก</span></button></div>' + dock + '<div class="tline hidden"><i></i></div></div>' +
+      '<div class="face back"><div class="top"><span class="law-s">' + esc(l.title || '') + ' · <b>มาตรา ' + esc(s.no) + '</b></span></div><div class="body"><h4>' + esc(s.name) + '</h4>' + lawHtml(s.text) + '<p class="tiny muted src-note">ที่มา: ' + esc(l.title || '') + (l.src ? ' — ' + esc(l.src) : '') + (l.status ? ' — ' + esc(l.status) : '') + ' — ตรวจสอบฉบับปัจจุบันกับสำนักงานคณะกรรมการกฤษฎีกาก่อนนำไปอ้างอิง</p></div>' +
+        '<div class="bar"><button class="cbtn" data-f="copy" aria-label="คัดลอกตัวบท">' + ic('copy') + '</button><button class="cbtn" data-f="ai" aria-label="ถาม AI เกี่ยวกับมาตรานี้">' + ic('ai') + '</button><button class="cbtn" data-f="note" aria-label="เพิ่มหมายเหตุ">' + ic('edit') + '</button><button class="cbtn" data-f="pdf" aria-label="ดาวน์โหลด PDF">' + ic('download') + '</button><button class="cbtn" data-f="timer" aria-label="จับเวลา">' + ic('timer') + '</button><button class="cbtn flipb" data-f="flip">' + ic('flip') + '<span>พลิก</span></button></div>' + dock + '</div>' +
     '</div></div>' +
-    '<div id="focusTimer"></div>' +
-    '<button class="back-arrow" data-f="close" aria-label="กลับ">' + ic('arrowL') + '</button>' +
+    '<div class="fnav"><button class="nav-arrow" data-f="close" aria-label="กลับไปหน้ารายการ">' + ic('arrowL') + '</button><span class="fnav-t">' + esc(lawShort(l)) + ' · มาตรา ' + esc(s.no) + '</span><button class="nav-arrow next" data-f="next" aria-label="มาตราถัดไป">' + ic('arrowR') + '</button></div>' +
   '</div></div>');
   document.body.appendChild(focusEl);
   document.body.style.overflow = 'hidden';
+  syncScrollLock();
+  focusEl.scrollTop = 0;
   var card = focusEl.querySelector('.flip');
   on(focusEl, 'click', '[data-f]', function (e, b) {
     var f = b.getAttribute('data-f'); tap();
-    if (f === 'flip') { SND.click(); card.classList.toggle('flipped'); }
+    if (f === 'flip') { SND.click(); card.classList.toggle('flipped'); focusEl.scrollTo({ top: 0, behavior: 'smooth' }); }
     else if (f === 'close') closeFocus();
-    else if (f === 'timer') { if (gate('timer')) timerPanel(id); }
+    else if (f === 'next') goNext(1);
+    else if (f === 'timer') { if (gate('timer')) { if (TIMERS._shown) hideTimer(); else timerPanel(id); } }
     else if (f === 'copy') copyText((l.title || '') + ' มาตรา ' + s.no + '\n' + s.text);
     else if (f === 'ai') { if (gate('ai')) { closeFocus(); S.ui.aiPrefill = 'อธิบาย' + (l.title || '') + ' มาตรา ' + s.no + ' (' + s.name + ') ให้เข้าใจง่าย พร้อมองค์ประกอบและตัวอย่าง'; S.ui.aiContext = (l.title || '') + ' มาตรา ' + s.no + '\n' + s.text; nav('ai'); } }
     else if (f === 'note') favNoteDialog(id);
     else if (f === 'pdf') { if (gate('pdf')) makePdf((l.short || l.title) + ' มาตรา ' + s.no, '<h2>' + esc(l.title) + '</h2><h3>มาตรา ' + esc(s.no) + ' ' + esc(s.name) + '</h3>' + lawHtml(s.text)); }
   });
+  function goNext(dir) {
+    var nid = nextSecId(id, dir);
+    if (nid) { SND.click(); openFocus(nid, { slide: dir > 0 ? 'next' : 'prev', back: card.classList.contains('flipped'), timer: !!TIMERS._shown }); return; }
+    var lw = LAWS[s.law];
+    if (lw && lw.n && !LAW_LOADED[s.law]) { toast('กำลังโหลดมาตราถัดไป', lw.title, ''); ensureLaw(s.law).then(function (ok) { if (ok && focusEl && nextSecId(id, dir)) goNext(dir); }); return; }
+    toast(dir > 0 ? 'นี่คือมาตราสุดท้ายของกฎหมายฉบับนี้' : 'นี่คือมาตราแรกของกฎหมายฉบับนี้', '', '');
+  }
   on(focusEl, 'click', '[data-act="fav"]', function () { toggleFav(id); });
-  focusEl.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeFocus(); });
-  if (opt.timer) timerPanel(id);
+  focusEl.addEventListener('click', function (e) { if (e.target === focusEl) closeFocus(); });
+  focusEl.tabIndex = -1; focusEl.focus({ preventScroll: true });
+  focusEl.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' || e.key === 'ArrowLeft') { e.preventDefault(); closeFocus(); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); goNext(1); }
+  });
+  var sx = null;
+  focusEl.addEventListener('touchstart', function (e) { sx = e.touches.length === 1 ? [e.touches[0].clientX, e.touches[0].clientY] : null; }, { passive: true });
+  focusEl.addEventListener('touchend', function (e) { if (!sx) return; var dx = e.changedTouches[0].clientX - sx[0], dy = e.changedTouches[0].clientY - sx[1]; if (Math.abs(dx) > 80 && Math.abs(dx) > Math.abs(dy) * 1.8 && dx < 0) goNext(1); sx = null; });
+  if (opt.timer || keepTimer) timerPanel(id);
   syncTimerBadges();
 }
 function favNoteDialog(id) {
@@ -720,45 +765,56 @@ function favNoteDialog(id) {
     onOk: function (m) { toggleFav(id, true); S.ud.favorites[id].note = $('#fnText', m).value; saveUD(); toast('บันทึกหมายเหตุแล้ว', '', 'ok'); return true; } });
 }
 
-/* ---------------- timer (สีสากล: เขียว > ส้ม > แดง + เสียง) ---------------- */
+/* ---------------- timer: ติดอยู่ด้านล่างของป้ายและพลิกไปพร้อมป้าย (ตัวเลขดิจิทัล + นาฬิกาเข็ม 2 เข็ม + ลูกบอลเด้ง) ---------------- */
 var TIMERS = {};
 function timerColor(frac) { return frac > 0.5 ? '#1E8E3E' : frac > 0.2 ? '#F07C1E' : '#D93025'; }
+function hideTimer() { TIMERS._shown = false; if (focusEl) $$('.tdock', focusEl).forEach(function (d) { d.innerHTML = ''; }); stopClockLoop(); }
 function timerPanel(id) {
-  var box = document.getElementById('focusTimer'); if (!box) return;
+  if (!focusEl) return;
+  var docks = $$('.tdock', focusEl); if (!docks.length) return;
+  TIMERS._shown = true;
   var tm = TIMERS[id] || (TIMERS[id] = { total: 300, left: 300, running: false, iv: null });
-  box.innerHTML = '<div class="timer-panel enter"><div class="row" style="margin-bottom:6px"><b class="grow">' + ic('timer') + ' ตัวจับเวลา</b><span class="tiny muted">กดเลือกเวลา หรือกำหนดเอง</span></div>' +
-    '<div class="hscroll" id="tmPresets">' + [1, 3, 5, 10, 15, 25].map(function (mm) { return '<button class="chip sky ' + (tm.total === mm * 60 ? 'on' : '') + '" data-m="' + mm + '">' + mm + ' นาที</button>'; }).join('') + '<button class="chip" data-m="custom">' + ic('edit') + ' กำหนดเอง</button></div>' +
-    '<div class="timer-display" id="tmDisp">--:--</div><div class="timer-track"><i id="tmBar"></i></div>' +
+  var html = '<div class="timer-panel enter"><div class="row" style="margin-bottom:6px"><b class="grow">' + ic('timer') + ' ตัวจับเวลา</b><button class="icon-btn sm" data-tm="hide" aria-label="ซ่อนตัวจับเวลา">' + ic('x') + '</button></div>' +
+    '<div class="hscroll tm-presets">' + [1, 3, 5, 10, 15, 25].map(function (mm) { return '<button class="chip sky ' + (tm.total === mm * 60 ? 'on' : '') + '" data-m="' + mm + '">' + mm + ' นาที</button>'; }).join('') + '<button class="chip" data-m="custom">' + ic('edit') + ' กำหนดเอง</button></div>' +
+    '<div class="tm-main"><canvas class="aclock" width="240" height="240" aria-label="นาฬิกาเข็มแสดงเวลาที่เหลือ" role="img"></canvas><div class="tm-dig"><div class="timer-display tm-disp">--:--</div><div class="timer-track"><i class="tm-bar"></i></div></div></div>' +
     '<div class="timer-legend"><span><b style="background:#1E8E3E"></b>เหลือเวลามาก (มากกว่า 50%)</span><span><b style="background:#F07C1E"></b>เหลือครึ่งหนึ่ง (20–50%)</span><span><b style="background:#D93025"></b>ใกล้หมดเวลา (น้อยกว่า 20%)</span></div>' +
-    '<div class="row" style="justify-content:center;margin-top:10px;gap:10px"><button class="btn" id="tmReset">' + ic('reset') + ' รีเซ็ต</button><button class="btn lg o" id="tmToggle"></button></div></div>';
+    '<div class="row" style="justify-content:center;margin-top:10px;gap:10px"><button class="btn" data-tm="reset">' + ic('reset') + ' รีเซ็ต</button><button class="btn lg o" data-tm="toggle"></button></div></div>';
+  docks.forEach(function (d) { d.innerHTML = html; });
   function paint() {
+    if (!focusEl) return;
     var frac = tm.total ? tm.left / tm.total : 0, col = timerColor(frac);
-    var d = $('#tmDisp', box); if (!d) return;
-    d.textContent = pad(Math.floor(tm.left / 60)) + ':' + pad(tm.left % 60); d.style.color = col;
-    var bar = $('#tmBar', box); bar.style.width = (frac * 100) + '%'; bar.style.background = col;
-    $('#tmToggle', box).innerHTML = tm.running ? ic('pause') + ' หยุด' : ic('play') + (tm.left < tm.total && tm.left > 0 ? ' ทำต่อ' : ' เริ่ม');
+    $$('.tm-disp', focusEl).forEach(function (d) { d.textContent = pad(Math.floor(tm.left / 60)) + ':' + pad(tm.left % 60); d.style.color = col; });
+    $$('.tm-bar', focusEl).forEach(function (bar) { bar.style.width = (frac * 100) + '%'; bar.style.background = col; });
+    $$('[data-tm="toggle"]', focusEl).forEach(function (b) { b.innerHTML = tm.running ? ic('pause') + ' หยุด' : ic('play') + (tm.left < tm.total && tm.left > 0 ? ' ทำต่อ' : ' เริ่ม'); });
+    $$('.tm-presets .chip', focusEl).forEach(function (c) { c.classList.toggle('on', +c.getAttribute('data-m') * 60 === tm.total); });
     syncTimerBadges();
   }
   tm.paint = paint;
-  on($('#tmPresets', box), 'click', '[data-m]', function (e, b) {
-    var v = b.getAttribute('data-m');
-    function setMin(mm) { stopTimer(id); tm.total = tm.left = Math.round(mm * 60); $$('#tmPresets .chip', box).forEach(function (c) { c.classList.toggle('on', c === b); }); paint(); SND.click(); }
-    if (v === 'custom') {
-      modal({ title: 'กำหนดเวลาเอง', icon: 'timer', html: '<div class="grid g2"><div class="field"><label for="cMin">นาที</label><div class="input"><input id="cMin" type="number" min="0" max="180" value="' + Math.floor(tm.total / 60) + '"></div></div><div class="field"><label for="cSec">วินาที</label><div class="input"><input id="cSec" type="number" min="0" max="59" value="' + (tm.total % 60) + '"></div></div></div>', ok: 'ตั้งเวลา',
-        onOk: function (m) { var mm = clamp(+$('#cMin', m).value || 0, 0, 180), ss = clamp(+$('#cSec', m).value || 0, 0, 59); if (!mm && !ss) { toast('กรุณาระบุเวลามากกว่า 0', '', 'warn'); return false; } setMin(mm + ss / 60); return true; } });
-    } else setMin(+v);
+  docks.forEach(function (d) {
+    on(d, 'click', '[data-m]', function (e, b) {
+      var v = b.getAttribute('data-m');
+      function setMin(mm) { stopTimer(id); tm.total = tm.left = Math.round(mm * 60); paint(); SND.click(); }
+      if (v === 'custom') {
+        modal({ title: 'กำหนดเวลาเอง', icon: 'timer', html: '<div class="grid g2"><div class="field"><label for="cMin">นาที</label><div class="input"><input id="cMin" type="number" min="0" max="180" value="' + Math.floor(tm.total / 60) + '"></div></div><div class="field"><label for="cSec">วินาที</label><div class="input"><input id="cSec" type="number" min="0" max="59" value="' + (tm.total % 60) + '"></div></div></div>', ok: 'ตั้งเวลา',
+          onOk: function (m) { var mm = clamp(+$('#cMin', m).value || 0, 0, 180), ss = clamp(+$('#cSec', m).value || 0, 0, 59); if (!mm && !ss) { toast('กรุณาระบุเวลามากกว่า 0', '', 'warn'); return false; } setMin(mm + ss / 60); return true; } });
+      } else setMin(+v);
+    });
+    on(d, 'click', '[data-tm]', function (e, b) {
+      var a = b.getAttribute('data-tm');
+      if (a === 'toggle') { tm.running ? stopTimer(id, true) : startTimer(id); }
+      else if (a === 'reset') { stopTimer(id); tm.left = tm.total; SND.stop(); paint(); }
+      else if (a === 'hide') hideTimer();
+    });
   });
-  $('#tmToggle', box).onclick = function () { tm.running ? stopTimer(id, true) : startTimer(id); };
-  $('#tmReset', box).onclick = function () { stopTimer(id); tm.left = tm.total; SND.stop(); paint(); };
   paint();
-  box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  startClockLoop(id);
 }
 function startTimer(id) {
   var tm = TIMERS[id]; if (!tm) return;
   if (tm.left <= 0) tm.left = tm.total;
-  tm.running = true; SND.start();
+  tm.running = true; tm.tickAt = Date.now(); SND.start();
   tm.iv = setInterval(function () {
-    tm.left--;
+    tm.left--; tm.tickAt = Date.now();
     if (tm.left <= 5 && tm.left > 0) SND.tick();
     if (tm.left <= 0) { tm.left = 0; stopTimer(id); SND.end(); toast('หมดเวลาแล้ว', 'มาตรา ' + (SECS[id] ? SECS[id].no : ''), 'warn'); }
     tm.paint && tm.paint(); syncTimerBadges();
@@ -773,13 +829,62 @@ function stopTimer(id, sound) {
 }
 function syncTimerBadges() {
   Object.keys(TIMERS).forEach(function (id) {
-    var tm = TIMERS[id];
+    var tm = TIMERS[id]; if (!tm || typeof tm !== 'object') return;
     $$('.flip[data-id="' + CSS.escape(id) + '"] .tline').forEach(function (tl) {
       var active = tm.running || (tm.left > 0 && tm.left < tm.total);
       tl.classList.toggle('hidden', !active);
       var frac = tm.total ? tm.left / tm.total : 0; var i = tl.querySelector('i'); i.style.width = (frac * 100) + '%'; i.style.background = timerColor(frac);
     });
   });
+}
+/* นาฬิกาเข็ม: เข็มยาว = นาทีที่เหลือ, เข็มสั้น = ชั่วโมง/สัดส่วนเวลาที่เหลือ; ลูกบอลตกด้วยแรงโน้มถ่วงและเด้งออกจากเข็มนาทีและขอบหน้าปัด
+   ใช้ขั้นเวลาคงที่และจำกัดความเร็ว เพื่อให้เคลื่อนที่นิ่งและไม่หลุดออกนอกหน้าปัด */
+var CLOCK = { raf: 0, id: null, balls: null, last: 0 };
+function stopClockLoop() { if (CLOCK.raf) cancelAnimationFrame(CLOCK.raf); CLOCK.raf = 0; }
+function startClockLoop(id) {
+  stopClockLoop(); CLOCK.id = id; CLOCK.last = 0;
+  if (!CLOCK.ball) CLOCK.ball = { x: 0.25, y: -0.45, vx: 0.35, vy: 0 };
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function frame(t) {
+    if (!focusEl) { CLOCK.raf = 0; return; }
+    var tm = TIMERS[CLOCK.id]; if (!tm) return;
+    var dt = CLOCK.last ? Math.min((t - CLOCK.last) / 1000, 0.05) : 0.016; CLOCK.last = t;
+    var sub = tm.running ? Math.min((Date.now() - (tm.tickAt || Date.now())) / 1000, 1) : 0;
+    var left = Math.max(tm.left - sub, 0);
+    var minA = (left / 60 % 60) / 60 * Math.PI * 2, hrA = (tm.total ? left / tm.total : 0) * Math.PI * 2;
+    if (!reduce && !document.hidden) stepBall(dt, minA);
+    $$('.aclock', focusEl).forEach(function (cv) { drawClock(cv, minA, hrA, timerColor(tm.total ? tm.left / tm.total : 0)); });
+    CLOCK.raf = requestAnimationFrame(frame);
+  }
+  CLOCK.raf = requestAnimationFrame(frame);
+}
+function stepBall(dt, minA) {
+  var b = CLOCK.ball, R = 0.82, r = 0.07, g = 1.6, steps = 4, h_ = dt / steps;
+  var hx = Math.sin(minA) * 0.74, hy = -Math.cos(minA) * 0.74;
+  for (var k = 0; k < steps; k++) {
+    b.vy += g * h_; b.x += b.vx * h_; b.y += b.vy * h_;
+    var d = Math.hypot(b.x, b.y);
+    if (d > R - r) { var nx = b.x / d, ny = b.y / d, vn = b.vx * nx + b.vy * ny; if (vn > 0) { b.vx -= 1.9 * vn * nx; b.vy -= 1.9 * vn * ny; } b.x = nx * (R - r); b.y = ny * (R - r); }
+    var L2 = hx * hx + hy * hy, tt = clamp((b.x * hx + b.y * hy) / L2, 0, 1), px = hx * tt, py = hy * tt, dx = b.x - px, dy = b.y - py, dd = Math.hypot(dx, dy) || 1e-6;
+    if (dd < r + 0.02) { var mx = dx / dd, my = dy / dd, v2 = b.vx * mx + b.vy * my; if (v2 < 0) { b.vx -= 1.92 * v2 * mx; b.vy -= 1.92 * v2 * my; } b.x = px + mx * (r + 0.02); b.y = py + my * (r + 0.02); }
+  }
+  var sp = Math.hypot(b.vx, b.vy);
+  if (sp > 2.2) { b.vx *= 2.2 / sp; b.vy *= 2.2 / sp; }
+  if (sp < 0.25 && b.y > 0.5) { b.vy = -1.55; b.vx = (b.x > 0 ? -0.5 : 0.5); }
+}
+function drawClock(cv, minA, hrA, col) {
+  var ctx = cv.getContext('2d'), W = cv.width, c = W / 2, R = W / 2 - 6;
+  var st = getComputedStyle(document.documentElement);
+  var ink = (st.getPropertyValue('--ink') || '#0E1116').trim(), face = (st.getPropertyValue('--surface') || '#fff').trim(), line = (st.getPropertyValue('--line-strong') || '#c7d3df').trim();
+  ctx.clearRect(0, 0, W, W);
+  ctx.beginPath(); ctx.arc(c, c, R, 0, Math.PI * 2); ctx.fillStyle = face; ctx.fill(); ctx.lineWidth = 6; ctx.strokeStyle = col; ctx.stroke();
+  for (var i = 0; i < 60; i++) { var a = i / 60 * Math.PI * 2, big = i % 5 === 0; ctx.beginPath(); ctx.moveTo(c + Math.sin(a) * (R - (big ? 18 : 10)), c - Math.cos(a) * (R - (big ? 18 : 10))); ctx.lineTo(c + Math.sin(a) * (R - 5), c - Math.cos(a) * (R - 5)); ctx.lineWidth = big ? 3 : 1.2; ctx.strokeStyle = big ? ink : line; ctx.stroke(); }
+  function hand(a, len, w, color) { ctx.beginPath(); ctx.moveTo(c - Math.sin(a) * 10, c + Math.cos(a) * 10); ctx.lineTo(c + Math.sin(a) * len, c - Math.cos(a) * len); ctx.lineCap = 'round'; ctx.lineWidth = w; ctx.strokeStyle = color; ctx.stroke(); }
+  hand(hrA, R * 0.5, 8, ink);
+  hand(minA, W / 2 * 0.74, 5, col);
+  ctx.beginPath(); ctx.arc(c, c, 7, 0, Math.PI * 2); ctx.fillStyle = ink; ctx.fill();
+  var b = CLOCK.ball, sc = W / 2;
+  ctx.beginPath(); ctx.arc(c + b.x * sc, c + b.y * sc, 0.07 * sc, 0, Math.PI * 2); ctx.fillStyle = '#F07C1E'; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = ink; ctx.stroke();
 }
 
 /* ---------------- PDF ---------------- */

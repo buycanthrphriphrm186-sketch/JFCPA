@@ -733,7 +733,7 @@ function aiLimit_(m, cfg) {
 
 function apiAiChat_(p, ctx) {
   var key = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
-  if (!key) return fail_('NOT_CONFIGURED', 'ผู้ดูแลระบบยังไม่ได้เชื่อมต่อบริการ AI (GEMINI_API_KEY) กรุณาติดต่อผู้ดูแลระบบ');
+  if (!key) return fail_('NOT_CONFIGURED', 'ผู้ดูแลระบบยังไม่ได้เชื่อมต่อบริการ AI กรุณาติดต่อผู้ดูแลระบบ');
   var limit = aiLimit_(ctx.member, ctx.cfg);
   if (limit <= 0) return fail_('PLAN', 'แพ็กเกจปัจจุบันของท่านยังไม่รวมผู้ช่วย AI กรุณาอัปเกรดแพ็กเกจที่หน้าแพ็กเกจและราคา');
   var cache = CacheService.getScriptCache();
@@ -750,7 +750,7 @@ function apiAiChat_(p, ctx) {
     return { role: m.role === 'model' ? 'model' : 'user', parts: [{ text: String(m.text || '').slice(0, 12000) }] };
   });
   if (!msgs.length) return fail_('EMPTY', 'กรุณาพิมพ์คำถาม');
-  var body = { systemInstruction: { parts: [{ text: AI_SYSTEM + (p.context ? '\n\nบริบทจากหน้าเว็บ:\n' + String(p.context).slice(0, 8000) : '') }] }, contents: msgs, generationConfig: { temperature: 0.4, maxOutputTokens: 4096 } };
+  var body = { systemInstruction: { parts: [{ text: AI_SYSTEM + (p.context ? '\n\nบริบทจากหน้าเว็บ:\n' + String(p.context).slice(0, 8000) : '') }] }, contents: msgs, generationConfig: { temperature: 0.4, maxOutputTokens: 8192 } };
   if (p.search !== false) body.tools = [{ google_search: {} }];
   var model = ctx.cfg.GEMINI_MODEL || 'gemini-2.5-flash';
   var out = geminiCall_(model, key, body);

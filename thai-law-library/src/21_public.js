@@ -8,7 +8,7 @@ var CONTACTS = [
   { k: 'tiktok', name: 'TikTok', handle: '@ball___2008', url: 'https://www.tiktok.com/@ball___2008?_r=1&_t=ZS-9BNH09vu23K' },
   { k: 'line', name: 'LINE Official', handle: 'lin.ee/zte6Icw', url: 'https://lin.ee/zte6Icw' }
 ];
-var NO_PASS_TEXT = 'การเข้าใช้งานคลังกฎหมายไทยต้องใช้รหัสผ่านชั้นที่ 1 ซึ่งผู้ดูแลระบบเป็นผู้ออกให้แก่สมาชิกเท่านั้น หากท่านยังไม่ได้รับรหัสผ่านดังกล่าว กรุณาติดต่อผู้ดูแลระบบผ่านช่องทางด้านล่าง โดยแจ้งชื่อ-นามสกุล และวัตถุประสงค์ในการใช้งาน ผู้ดูแลระบบจะตรวจสอบและแจ้งรหัสผ่านให้ท่านเป็นการส่วนตัวโดยเร็ว';
+var NO_PASS_TEXT = 'การเข้าใช้งานคลังกฎหมายต้องใช้รหัสผ่านชั้นที่ 1 ซึ่งผู้ดูแลระบบเป็นผู้ออกให้แก่สมาชิกเท่านั้น หากท่านยังไม่ได้รับรหัสผ่านดังกล่าว กรุณาติดต่อผู้ดูแลระบบผ่านช่องทางด้านล่าง โดยแจ้งชื่อ-นามสกุล และวัตถุประสงค์ในการใช้งาน ผู้ดูแลระบบจะตรวจสอบและแจ้งรหัสผ่านให้ท่านเป็นการส่วนตัวโดยเร็ว';
 var SYS_DOWN_TEXT = 'ขณะนี้ระบบไม่สามารถให้บริการได้ตามปกติ ข้อมูลของท่านยังคงได้รับการเก็บรักษาไว้อย่างปลอดภัย กรุณารอสักครู่แล้วลองใหม่อีกครั้ง หากยังพบปัญหาต่อเนื่อง กรุณาแจ้งผู้ดูแลระบบผ่านช่องทางติดต่อที่ระบุไว้ เพื่อให้ดำเนินการแก้ไขโดยเร็ว';
 
 /* ---------------- splash: โลโก้ + วงกลมแสดงระดับการเชื่อมต่อฐานข้อมูลจริง ---------------- */
@@ -37,7 +37,7 @@ function runSplash(minSec, ready, onDone) {
     setTimeout(function () { sp.classList.add('warp'); setTimeout(function () { sp.remove(); }, 900); onDone(); }, 280);
   }
   if (skip) { setTimeout(function () { skip.classList.remove('hidden'); }, 4000); skip.onclick = end; }
-  var maxT = setTimeout(end, 20000);
+  var maxT = setTimeout(end, Math.max(minSec * 1000 + 10000, 20000));
   Promise.resolve(ready).catch(function () {}).then(function () {
     var wait = Math.max(0, minSec * 1000 - (Date.now() - t0));
     setTimeout(function () { clearTimeout(maxT); end(); }, wait);
@@ -48,7 +48,7 @@ function runSplash(minSec, ready, onDone) {
 function pubHeader(back) {
   return '<header class="pub-head"><div class="wrap">' +
     (back ? '<button class="icon-btn" data-go="' + back + '" aria-label="ย้อนกลับ">' + ic('arrowL') + '</button>' : '') +
-    '<button class="brand" data-go="welcome" aria-label="กลับหน้าแรก"><img src="' + LOGO + '" alt=""><span><span class="t1">THAI LAW LIBRARY</span><br><span class="t2">คลังกฎหมายไทย</span></span></button>' +
+    '<button class="brand" data-go="welcome" aria-label="กลับหน้าแรก"><img src="' + LOGO + '" alt=""><span><span class="t1">THAI LAW LIBRARY</span><br><span class="t2">คลังกฎหมาย</span></span></button>' +
     '<nav class="pub-nav"><button class="btn sm ghost hide-sm" data-doc="about">เกี่ยวกับเรา</button><button class="btn sm ghost hide-sm" data-go="contact">ติดต่อ</button><button class="btn sm k" data-go="login">เข้าสู่ระบบ</button></nav>' +
     '</div></header>';
 }
@@ -56,7 +56,7 @@ function pubFooter() {
   return '<footer class="pub-foot"><div class="wrap">' +
     '<div class="row wrapr" style="gap:8px"><button class="btn sm ghost" data-doc="about">' + ic('info') + ' เกี่ยวกับเรา</button><button class="btn sm ghost" data-doc="privacy">' + ic('shield') + ' นโยบายความเป็นส่วนตัว</button><button class="btn sm ghost" data-doc="terms">' + ic('file') + ' ข้อกำหนดการใช้งาน</button><button class="btn sm ghost" data-go="contact">' + ic('mail') + ' ติดต่อผู้ดูแลระบบ</button></div>' +
     '<p class="credit-note" id="creditNote">หมายเหตุ: ภาพประกอบบนเว็บไซต์นี้ดึงจาก Wikimedia Commons, Unsplash, Pexels และ Pixabay เฉพาะภาพที่เจ้าของภาพอนุญาตให้นำไปใช้ได้ตามสัญญาอนุญาตของแต่ละแหล่ง โดยระบุชื่อผู้สร้างสรรค์และสัญญาอนุญาตไว้ที่ภาพทุกภาพ หากเจ้าของภาพประสงค์ให้นำภาพออก กรุณาติดต่อผู้ดูแลระบบ</p>' +
-    '<p class="tiny muted">© ' + yr(new Date().getFullYear()) + ' THAI LAW LIBRARY คลังกฎหมายไทย · เวอร์ชัน ' + esc(APP_VERSION) + ' · ข้อมูลกฎหมายใช้เพื่อการศึกษาและค้นคว้า มิใช่คำปรึกษาทางกฎหมาย</p>' +
+    '<p class="tiny muted">© ' + yr(new Date().getFullYear()) + ' THAI LAW LIBRARY คลังกฎหมาย · เวอร์ชัน ' + esc(APP_VERSION) + ' · ข้อมูลกฎหมายใช้เพื่อการศึกษาและค้นคว้า มิใช่คำปรึกษาทางกฎหมาย</p>' +
     '</div></footer>';
 }
 on(document, 'click', '[data-go]', function (e, el) { e.preventDefault(); go(el.getAttribute('data-go')); });
@@ -135,8 +135,8 @@ function renderWelcome() {
     '<section class="hero enter">' + corridorHtml(9, 46, 58) + '<div class="fade-top"></div>' +
       '<div class="content"><div class="col" style="align-items:center;gap:14px">' +
         '<span class="tag k">ศูนย์รวมกฎหมายไทยเพื่อการศึกษาและค้นคว้า</span>' +
-        '<h1>คลังกฎหมายไทย<br><span style="color:var(--sky-700)">THAI LAW LIBRARY</span></h1>' +
-        '<p class="lead">“คลังกฎหมายไทย — แหล่งรวบรวมความรู้ทางกฎหมาย เพื่อการศึกษา การค้นคว้า และการเข้าถึงกฎหมายไทยอย่างเป็นระบบ”</p>' +
+        '<h1>คลังกฎหมาย<br><span style="color:var(--sky-700)">THAI LAW LIBRARY</span></h1>' +
+        '<p class="lead">“คลังกฎหมาย — แหล่งรวบรวมความรู้ทางกฎหมาย เพื่อการศึกษา การค้นคว้า และการเข้าถึงกฎหมายไทยอย่างเป็นระบบ”</p>' +
       '</div><div class="col" style="align-items:center;gap:12px"><div class="cta"><button class="btn lg k" data-go="login">' + ic('lock') + ' เข้าสู่ระบบ</button><button class="btn lg o" data-go="register">' + ic('user') + ' สมัครสมาชิก</button></div>' +
       '<div class="cta"><button class="btn sm" data-doc="about">เกี่ยวกับเรา</button><button class="btn sm" data-doc="privacy">นโยบายความเป็นส่วนตัว</button><button class="btn sm" data-doc="terms">ข้อกำหนดการใช้งาน</button></div></div></div>' +
     '</section>' +
@@ -147,10 +147,10 @@ function renderWelcome() {
         featureBox('bookmark', 'ระบบจัดเก็บและค้นหาบทบัญญัติ', 'บันทึกมาตราที่สนใจ แยกตามวัน เดือน ปี สร้างโฟลเดอร์ส่วนตัว และเพิ่มหมายเหตุของตนเองได้') +
         featureBox('book', 'แหล่งเรียนรู้สำหรับผู้สนใจกฎหมาย', 'ป้ายพลิกมาตราพร้อมตัวจับเวลาท่องจำ อนุสัญญาระหว่างประเทศพร้อมคำอธิบาย และเครื่องมือสำหรับนักกฎหมาย') +
       '</div>' +
-      '<section class="panel corner rise" style="margin-bottom:22px"><div class="panel-title"><span class="ic k">' + ic('book2') + '</span><h2>เรื่องราวของคลังกฎหมายไทย</h2></div><div class="prose">' + DOCS.about.body + '</div>' +
+      '<section class="panel corner rise" style="margin-bottom:22px"><div class="panel-title"><span class="ic k">' + ic('book2') + '</span><h2>เรื่องราวของคลังกฎหมาย</h2></div><div class="prose">' + DOCS.about.body + '</div>' +
         '<div id="aboutVideo"></div></section>' +
       '<section class="panel rise" style="margin-bottom:22px"><div class="panel-title"><span class="ic o">' + ic('route') + '</span><h2>ขั้นตอนเริ่มต้นใช้งาน</h2></div>' +
-        '<div class="timeline">' + ['เปิดเว็บไซต์ THAI LAW LIBRARY และอ่านข้อมูลแนะนำ', 'ติดต่อผู้ดูแลระบบเพื่อรับรหัสผ่านชั้นที่ 1 (รหัสผ่านจากผู้ดูแลระบบ)', 'กดสมัครสมาชิก กรอกข้อมูลประจำตัว ข้อมูลการศึกษาหรือการทำงาน', 'กำหนดชื่อผู้ใช้งาน และตั้งรหัสผ่านส่วนตัว (ชั้นที่ 2) ของตนเอง', 'ระบบตรวจสอบข้อมูล ป้องกันข้อมูลซ้ำ และสร้างรหัสสมาชิก (Member ID) ให้อัตโนมัติ', 'เข้าสู่ระบบด้วยรหัสผ่านทั้งสองชั้น แล้วเริ่มใช้งานหน้าหลัก'].map(function (s, i) { return '<div class="tl ' + (i === 5 ? 'o' : '') + '"><h4>ขั้นตอนที่ ' + (i + 1) + '</h4><p class="muted">' + esc(s) + '</p></div>'; }).join('') + '</div></section>' +
+        '<div class="timeline">' + ['เปิดเว็บไซต์ THAI LAW LIBRARY และอ่านข้อมูลแนะนำ', 'ติดต่อผู้ดูแลระบบเพื่อรับรหัสผ่านชั้นที่ 1 (รหัสผ่านจากผู้ดูแลระบบ)', 'กดสมัครสมาชิก กรอกข้อมูลประจำตัว ข้อมูลการศึกษาหรือการทำงาน', 'กำหนดชื่อผู้ใช้งาน และตั้งรหัสผ่านส่วนตัว (ชั้นที่ 3) ของตนเอง และระบุอีเมลสำหรับรับรหัสผ่านชั้นที่ 2', 'ระบบตรวจสอบข้อมูล ป้องกันข้อมูลซ้ำ และสร้างรหัสสมาชิก (Member ID) ให้อัตโนมัติ', 'เข้าสู่ระบบด้วยรหัสผ่านทั้งสองชั้น แล้วเริ่มใช้งานหน้าหลัก'].map(function (s, i) { return '<div class="tl ' + (i === 5 ? 'o' : '') + '"><h4>ขั้นตอนที่ ' + (i + 1) + '</h4><p class="muted">' + esc(s) + '</p></div>'; }).join('') + '</div></section>' +
       '<section class="panel rise" style="margin-bottom:22px"><div class="panel-title"><span class="ic">' + ic('image') + '</span><h2>ภาพประกอบจากแหล่งที่ได้รับอนุญาต</h2></div><div class="media-strip" id="mediaStrip"></div><p class="credit-note" id="heroCredits" style="margin-top:10px"></p></section>' +
     '</main>' + pubFooter();
   observeRise(ROOT);
@@ -170,13 +170,13 @@ function featureBox(icon, title, text) {
 
 /* ---------------- documents (About / Privacy / Terms) ---------------- */
 var DOCS = {
-  about: { title: 'เกี่ยวกับคลังกฎหมายไทย', icon: 'info', body: [
-    '<p>คลังกฎหมายไทย หรือ THAI LAW LIBRARY เริ่มต้นจากปัญหาที่ผู้ศึกษากฎหมายจำนวนมากประสบเหมือนกัน คือ ตัวบทกฎหมายของประเทศไทยมีจำนวนมาก กระจายอยู่ในหลายแหล่ง และมีการแก้ไขเพิ่มเติมอยู่เสมอ นักเรียน นักศึกษา และผู้ปฏิบัติงานด้านกฎหมายจึงต้องเสียเวลาไม่น้อยในการค้นหาตัวบทฉบับที่ถูกต้อง ก่อนที่จะได้เริ่มทำความเข้าใจเนื้อหาจริง ๆ ผู้จัดทำจึงตั้งใจรวบรวมกฎหมายไทยไว้ในที่เดียว จัดเป็นหมวดหมู่ที่ชัดเจน และออกแบบเครื่องมือที่ช่วยให้การอ่าน การท่องจำ และการทบทวนบทบัญญัติเป็นเรื่องที่ทำได้ทุกวัน</p>',
+  about: { title: 'เกี่ยวกับคลังกฎหมาย', icon: 'info', body: [
+    '<p>คลังกฎหมาย หรือ THAI LAW LIBRARY เริ่มต้นจากปัญหาที่ผู้ศึกษากฎหมายจำนวนมากประสบเหมือนกัน คือ ตัวบทกฎหมายของประเทศไทยมีจำนวนมาก กระจายอยู่ในหลายแหล่ง และมีการแก้ไขเพิ่มเติมอยู่เสมอ นักเรียน นักศึกษา และผู้ปฏิบัติงานด้านกฎหมายจึงต้องเสียเวลาไม่น้อยในการค้นหาตัวบทฉบับที่ถูกต้อง ก่อนที่จะได้เริ่มทำความเข้าใจเนื้อหาจริง ๆ ผู้จัดทำจึงตั้งใจรวบรวมกฎหมายไทยไว้ในที่เดียว จัดเป็นหมวดหมู่ที่ชัดเจน และออกแบบเครื่องมือที่ช่วยให้การอ่าน การท่องจำ และการทบทวนบทบัญญัติเป็นเรื่องที่ทำได้ทุกวัน</p>',
     '<p>เนื้อหากฎหมายในระบบแบ่งออกเป็นห้าหมวดตามแนวทางของฐานข้อมูลกฎหมายของรัฐ ได้แก่ รัฐธรรมนูญ พระราชบัญญัติประกอบรัฐธรรมนูญ พระราชบัญญัติและพระราชกำหนด ประกาศของคณะปฏิวัติ คณะปฏิรูปการปกครอง คณะมนตรีความมั่นคงแห่งชาติ และคณะรักษาความสงบแห่งชาติ รวมถึงประมวลกฎหมาย ข้อมูลรายชื่อกฎหมายอ้างอิงจากฐานข้อมูลกฎหมายของสำนักงานคณะกรรมการกฤษฎีกา และระบบจะตรวจสอบแหล่งข้อมูลต้นทางเป็นประจำทุกวัน เพื่อเพิ่มรายการใหม่หรือปรับปรุงรายการที่มีการเปลี่ยนแปลง ส่วนอนุสัญญาและสนธิสัญญาระหว่างประเทศอ้างอิงจากเว็บไซต์กรมสนธิสัญญาและกฎหมาย กระทรวงการต่างประเทศ พร้อมคำอธิบายภาษาไทยที่อ่านเข้าใจง่ายสำหรับทุกฉบับ</p>',
-    '<p>หัวใจของการเรียนรู้ในคลังกฎหมายไทยคือ “ป้ายพลิกมาตรา” ด้านหน้าของป้ายแสดงเลขมาตราและชื่อมาตราตามที่ใช้เรียกกันในวงวิชาการ เช่น มาตรา 420 ละเมิด หรือมาตรา 1382 การครอบครองปรปักษ์ เมื่อพลิกป้ายจะพบตัวบทเต็มที่จัดย่อหน้าและวรรคตามรูปแบบเอกสารราชการ ผู้ใช้สามารถตั้งเวลานับถอยหลังเพื่อฝึกท่องจำ โดยแถบสีจะเปลี่ยนจากสีเขียวเป็นสีส้มและสีแดงเมื่อเวลาใกล้หมด พร้อมเสียงเตือนห้าวินาทีสุดท้าย และสามารถบันทึกมาตราที่สนใจเป็นรายการโปรดได้ทันที ระบบจะจัดเก็บรายการโปรดแยกตามวัน เดือน และปีที่บันทึกอย่างแม่นยำ</p>',
+    '<p>หัวใจของการเรียนรู้ในคลังกฎหมายคือ “ป้ายพลิกมาตรา” ด้านหน้าของป้ายแสดงเลขมาตราและชื่อมาตราตามที่ใช้เรียกกันในวงวิชาการ เช่น มาตรา 420 ละเมิด หรือมาตรา 1382 การครอบครองปรปักษ์ เมื่อพลิกป้ายจะพบตัวบทเต็มที่จัดย่อหน้าและวรรคตามรูปแบบเอกสารราชการ ผู้ใช้สามารถตั้งเวลานับถอยหลังเพื่อฝึกท่องจำ โดยแถบสีจะเปลี่ยนจากสีเขียวเป็นสีส้มและสีแดงเมื่อเวลาใกล้หมด พร้อมเสียงเตือนห้าวินาทีสุดท้าย และสามารถบันทึกมาตราที่สนใจเป็นรายการโปรดได้ทันที ระบบจะจัดเก็บรายการโปรดแยกตามวัน เดือน และปีที่บันทึกอย่างแม่นยำ</p>',
     '<p>นอกเหนือจากตัวบท ระบบยังมีเครื่องมือที่นักกฎหมายใช้จริงในการทำงาน เช่น พจนานุกรมศัพท์กฎหมาย รวมคำย่อทางกฎหมาย เครื่องคำนวณวันและระยะเวลาตามหลักการนับระยะเวลาในประมวลกฎหมายแพ่งและพาณิชย์ เครื่องมือจัดรูปแบบการอ้างอิงกฎหมาย แบบฟอร์มสรุปคำพิพากษา เครื่องมือเปรียบเทียบบทบัญญัติ สมุดบันทึกที่จัดรูปแบบได้ใกล้เคียงโปรแกรมประมวลผลคำและพิมพ์เป็นไฟล์ PDF ได้ ตลอดจนผู้ช่วย AI ที่ช่วยอธิบายบทบัญญัติด้วยภาษาที่เข้าใจง่าย โดยระบุแหล่งอ้างอิงและแยกข้อกฎหมายออกจากคำอธิบายอย่างชัดเจน</p>',
-    '<p>ด้านความปลอดภัย ระบบใช้การยืนยันตัวตนด้วยรหัสผ่านสองชั้น ชั้นแรกเป็นรหัสผ่านที่ผู้ดูแลระบบออกให้ ชั้นที่สองเป็นรหัสผ่านที่สมาชิกกำหนดเอง รหัสผ่านทุกชุดจัดเก็บในรูปแบบค่าแฮชซึ่งไม่สามารถถอดกลับเป็นข้อความเดิมได้ มีการจำกัดจำนวนครั้งในการกรอกรหัสผิด ตรวจจับรูปแบบการโจมตีที่พบบ่อย และจัดทำรายงานเหตุการณ์ด้านความปลอดภัยเพื่อให้ผู้ดูแลระบบตรวจสอบได้ทุกครั้ง ข้อมูลของสมาชิกจัดเก็บใน Google Sheets ภายใต้บัญชีของผู้ดูแลระบบ และไม่เปิดเผยต่อบุคคลภายนอก</p>',
-    '<p>คลังกฎหมายไทยจัดทำขึ้นเพื่อการศึกษาและการค้นคว้า ข้อมูลทุกส่วนผ่านการรวบรวมและจัดรูปแบบด้วยความระมัดระวัง แต่ผู้ใช้ควรตรวจสอบตัวบทฉบับปัจจุบันจากราชกิจจานุเบกษาหรือสำนักงานคณะกรรมการกฤษฎีกาทุกครั้งก่อนนำไปใช้อ้างอิงในทางคดีหรือในการปฏิบัติงาน และหากพบข้อมูลที่อาจคลาดเคลื่อน ผู้จัดทำยินดีรับฟังและแก้ไขโดยเร็วผ่านเมนูรายงานข้อมูลกฎหมายที่อาจผิดพลาด</p>'
+    '<p>ด้านความปลอดภัย ระบบใช้การยืนยันตัวตนด้วยรหัสผ่านสามชั้น ชั้นแรกเป็นรหัสผ่านที่ผู้ดูแลระบบออกให้ ชั้นที่สองเป็นรหัสใช้ครั้งเดียวที่ส่งทางอีเมล ชั้นที่สามเป็นรหัสผ่านที่สมาชิกกำหนดเอง รหัสผ่านทุกชุดจัดเก็บในรูปแบบค่าแฮชซึ่งไม่สามารถถอดกลับเป็นข้อความเดิมได้ มีการจำกัดจำนวนครั้งในการกรอกรหัสผิด ตรวจจับรูปแบบการโจมตีที่พบบ่อย และจัดทำรายงานเหตุการณ์ด้านความปลอดภัยเพื่อให้ผู้ดูแลระบบตรวจสอบได้ทุกครั้ง ข้อมูลของสมาชิกจัดเก็บใน Google Sheets ภายใต้บัญชีของผู้ดูแลระบบ และไม่เปิดเผยต่อบุคคลภายนอก</p>',
+    '<p>คลังกฎหมายจัดทำขึ้นเพื่อการศึกษาและการค้นคว้า ข้อมูลทุกส่วนผ่านการรวบรวมและจัดรูปแบบด้วยความระมัดระวัง แต่ผู้ใช้ควรตรวจสอบตัวบทฉบับปัจจุบันจากราชกิจจานุเบกษาหรือสำนักงานคณะกรรมการกฤษฎีกาทุกครั้งก่อนนำไปใช้อ้างอิงในทางคดีหรือในการปฏิบัติงาน และหากพบข้อมูลที่อาจคลาดเคลื่อน ผู้จัดทำยินดีรับฟังและแก้ไขโดยเร็วผ่านเมนูรายงานข้อมูลกฎหมายที่อาจผิดพลาด</p>'
   ].join('') },
   privacy: { title: 'นโยบายความเป็นส่วนตัว', icon: 'shield', body: [
     '<h3>1. ข้อมูลที่เราเก็บรวบรวม</h3><p>ในการสมัครสมาชิก ระบบเก็บรวบรวมข้อมูลที่ท่านกรอกด้วยตนเอง ได้แก่ คำนำหน้าชื่อ ชื่อ นามสกุล ชื่อที่ใช้แสดง วันเดือนปีเกิด เพศ (ถ้าระบุ) รูปโปรไฟล์ (ถ้ามี) สถานะการศึกษาหรือการทำงาน ชื่อสถานศึกษาหรือหน่วยงาน ชื่อผู้ใช้งาน และคำถามสำหรับกู้คืนบัญชี ส่วนรหัสผ่านและคำตอบสำหรับกู้คืนบัญชีจัดเก็บเป็นค่าแฮชเท่านั้น ผู้ดูแลระบบไม่สามารถทราบรหัสผ่านส่วนตัวของท่านได้</p>',
@@ -187,8 +187,8 @@ var DOCS = {
     '<h3>5. บริการของบุคคลที่สาม</h3><p>ระบบอาจเรียกใช้บริการภายนอกเพื่อเพิ่มประสิทธิภาพการใช้งาน ได้แก่ Google Fonts สำหรับแบบอักษร บริการตรวจสอบหมายเลข IP ขณะเข้าสู่ระบบ บริการคลังภาพ Wikimedia Commons, Unsplash, Pexels และ Pixabay และบริการ Google Gemini สำหรับผู้ช่วย AI ซึ่งจะได้รับเฉพาะข้อความคำถามที่ท่านพิมพ์ ระบบไม่ส่งรหัสผ่านหรือข้อมูลบัญชีไปยังบริการเหล่านี้</p>'
   ].join('') },
   terms: { title: 'ข้อกำหนดการใช้งาน', icon: 'file', body: [
-    '<h3>1. การยอมรับข้อกำหนด</h3><p>การสมัครสมาชิกและการใช้งานคลังกฎหมายไทยถือว่าท่านได้อ่าน เข้าใจ และยอมรับข้อกำหนดการใช้งานฉบับนี้ หากท่านไม่ยอมรับข้อกำหนดส่วนใด กรุณางดใช้งานเว็บไซต์</p>',
-    '<h3>2. บัญชีผู้ใช้งานและรหัสผ่าน</h3><p>สมาชิกแต่ละรายต้องมีรหัสสมาชิกประจำตัวและชื่อผู้ใช้งานที่ไม่ซ้ำกับผู้อื่น การเข้าสู่ระบบต้องผ่านการตรวจสอบรหัสผ่านสองชั้นทุกครั้ง ได้แก่ รหัสผ่านที่ผู้ดูแลระบบออกให้ และรหัสผ่านส่วนตัวที่สมาชิกกำหนดเอง สมาชิกมีหน้าที่เก็บรักษารหัสผ่านเป็นความลับ ห้ามเปิดเผยหรือให้ผู้อื่นใช้บัญชีของตน หากสงสัยว่ารหัสผ่านรั่วไหล ต้องเปลี่ยนรหัสผ่านและออกจากระบบทุกอุปกรณ์โดยทันที</p>',
+    '<h3>1. การยอมรับข้อกำหนด</h3><p>การสมัครสมาชิกและการใช้งานคลังกฎหมายถือว่าท่านได้อ่าน เข้าใจ และยอมรับข้อกำหนดการใช้งานฉบับนี้ หากท่านไม่ยอมรับข้อกำหนดส่วนใด กรุณางดใช้งานเว็บไซต์</p>',
+    '<h3>2. บัญชีผู้ใช้งานและรหัสผ่าน</h3><p>สมาชิกแต่ละรายต้องมีรหัสสมาชิกประจำตัวและชื่อผู้ใช้งานที่ไม่ซ้ำกับผู้อื่น การเข้าสู่ระบบต้องผ่านการตรวจสอบรหัสผ่านสามชั้นทุกครั้ง ได้แก่ รหัสผ่านที่ผู้ดูแลระบบออกให้ รหัสใช้ครั้งเดียวทางอีเมล และรหัสผ่านส่วนตัวที่สมาชิกกำหนดเอง สมาชิกมีหน้าที่เก็บรักษารหัสผ่านเป็นความลับ ห้ามเปิดเผยหรือให้ผู้อื่นใช้บัญชีของตน หากสงสัยว่ารหัสผ่านรั่วไหล ต้องเปลี่ยนรหัสผ่านและออกจากระบบทุกอุปกรณ์โดยทันที</p>',
     '<h3>3. ลักษณะของข้อมูลกฎหมาย</h3><p>ข้อมูลกฎหมาย คำอธิบาย และคำตอบของผู้ช่วย AI จัดทำขึ้นเพื่อการศึกษาและการค้นคว้าเท่านั้น มิใช่คำปรึกษาทางกฎหมายจากผู้ประกอบวิชาชีพ และไม่อาจใช้แทนตัวบทที่ประกาศในราชกิจจานุเบกษา ผู้ใช้ต้องตรวจสอบตัวบทฉบับปัจจุบันก่อนนำไปใช้ในทางคดีหรือการปฏิบัติงานทุกครั้ง</p>',
     '<h3>4. การใช้งานที่ไม่อนุญาต</h3><p>ห้ามมิให้ผู้ใดพยายามเข้าถึงระบบหรือข้อมูลของผู้อื่นโดยไม่ได้รับอนุญาต สุ่มรหัสผ่าน แทรกคำสั่งหรือสคริปต์อันตราย ดึงข้อมูลจำนวนมากโดยอัตโนมัติ หรือกระทำการใดที่ทำให้ระบบขัดข้อง การกระทำดังกล่าวอาจเป็นความผิดตามพระราชบัญญัติว่าด้วยการกระทำความผิดเกี่ยวกับคอมพิวเตอร์ พ.ศ. 2550 ระบบจะบันทึกเหตุการณ์ ระงับบัญชี และรายงานต่อผู้ดูแลระบบทันที</p>',
     '<h3>5. แพ็กเกจและการชำระเงิน</h3><p>สมาชิกใหม่ได้รับสิทธิทดลองใช้งานครบทุกฟังก์ชันเป็นเวลา 7 วันนับแต่วันสมัครสมาชิก หลังจากนั้นสามารถเลือกสมัครแพ็กเกจรายเดือนหรือรายปีตามความต้องการ การชำระเงินดำเนินการผ่านผู้ดูแลระบบ และสิทธิการใช้งานจะเปิดหลังจากผู้ดูแลระบบยืนยันการชำระเงินแล้ว</p>',
@@ -299,11 +299,12 @@ on(document, 'click', '[data-oauth]', function (e, a) {
 function renderLogin(prefill) {
   document.body.classList.remove('readable');
   ROOT.innerHTML = pubHeader('welcome') + '<main class="auth-wrap enter"><div class="auth-card">' +
-    '<div class="auth-head"><img src="' + LOGO + '" alt=""><span class="t1">THAI LAW LIBRARY</span><h2>คลังกฎหมายไทย</h2><p class="muted">เข้าสู่ระบบ (Sign In)</p></div>' +
+    '<div class="auth-head"><img src="' + LOGO + '" alt=""><span class="t1">THAI LAW LIBRARY</span><h2>คลังกฎหมาย</h2><p class="muted">เข้าสู่ระบบ (Sign In)</p></div>' +
     '<form id="loginForm" class="col" style="gap:14px" novalidate autocomplete="on">' +
       '<div class="field"><label for="lUser">ชื่อผู้ใช้งาน หรือ รหัสสมาชิก <span class="req">*</span></label><div class="input">' + ic('user') + '<input id="lUser" autocomplete="username" placeholder="Username / Member ID" maxlength="40" value="' + esc(prefill || store.get('lastUser', '')) + '"></div><div class="err" id="lUserE"></div></div>' +
       pwField('lAdmin', 'รหัสผ่านชั้นที่ 1 (จากผู้ดูแลระบบ)', { icon: 'shield', ph: 'Administrator Password', hint: 'รหัสผ่านที่ได้รับจากผู้ดูแลระบบ ผู้ใช้งานไม่สามารถกำหนดเองได้' }) +
-      pwField('lPass', 'รหัสผ่านชั้นที่ 2 (รหัสผ่านส่วนตัว)', { icon: 'key', ph: 'Personal Password', ac: 'current-password', hint: 'รหัสผ่านที่ท่านกำหนดเองในขั้นตอนสมัครสมาชิก' }) +
+      pwField('lPass', 'รหัสผ่านชั้นที่ 3 (รหัสผ่านส่วนตัว)', { icon: 'key', ph: 'Personal Password', ac: 'current-password', hint: 'รหัสผ่านที่ท่านกำหนดเองในขั้นตอนสมัครสมาชิก' }) +
+      '<div class="panel flat otp-note"><span>' + ic('mail') + '</span><p class="small">รหัสผ่านชั้นที่ 2 คือรหัส 6 หลักที่ระบบส่งไปยังอีเมลของท่านทุกครั้ง หลังจากรหัสผ่านชั้นที่ 1 และชั้นที่ 3 ถูกต้อง</p></div>' +
       '<div class="row" style="justify-content:space-between;flex-wrap:wrap"><label class="check"><input type="checkbox" id="lRemember" checked><span>จดจำการเข้าสู่ระบบ</span></label><button type="button" class="btn sm ghost" data-go="forgot" style="color:var(--sky-700)">ลืมรหัสผ่าน?</button></div>' +
       '<button class="btn lg k block" type="submit">' + ic('lock') + ' เข้าสู่ระบบ</button>' +
     '</form>' +
@@ -326,7 +327,7 @@ function renderLogin(prefill) {
     var remember = $('#lRemember').checked;
     function doLogin() {
       withLoading('กำลังตรวจสอบข้อมูลเข้าสู่ระบบ', clientInfo().then(function (ci) { return api('login', { username: u, adminPass: a, personalPass: p, client: ci }, { timeout: 30000 }); }), doLogin)
-        .then(function (r) { store.set('lastUser', u); onLoggedIn(r, remember); })
+        .then(function (r) { store.set('lastUser', u); if (r.otpRequired) otpFlow(r, remember); else onLoggedIn(r, remember); })
         .catch(function (er) {
           if (er.code === 'LOCKED' || er.code === 'ACCOUNT_SUSPENDED') alertBox('ไม่สามารถเข้าสู่ระบบได้', er.msg + (er.code === 'ACCOUNT_SUSPENDED' ? '' : ''), { icon: 'lock', tone: 'bad' });
           else { setErr('lPass', er.msg || SYS_DOWN_TEXT); if (window._lastFail) window._lastFail(); window._lastFail = toast('เข้าสู่ระบบไม่สำเร็จ', er.msg || SYS_DOWN_TEXT, 'bad'); }
@@ -336,7 +337,7 @@ function renderLogin(prefill) {
   };
 }
 
-/* หลังยืนยันโซเชียล: ขอรหัสผ่านส่วนตัว (ชั้นที่ 2) ก่อนเข้าสู่ระบบ */
+/* หลังยืนยันโซเชียล: ขอรหัสผ่านส่วนตัว (ชั้นที่ 3) ก่อนเข้าสู่ระบบ */
 function handleSocialBoot(soc) {
   try { google.script.history.replace(null, {}, ''); } catch (e) {}
   if (!soc) return false;
@@ -350,12 +351,12 @@ function handleSocialBoot(soc) {
   renderLogin(soc.username);
   modal({
     title: 'ยืนยันรหัสผ่านส่วนตัว', icon: 'key', sub: 'ยืนยันตัวตนกับ ' + soc.provider + ' สำเร็จ บัญชี ' + soc.username,
-    html: pwField('sPass', 'รหัสผ่านชั้นที่ 2 (รหัสผ่านส่วนตัว)', { icon: 'key' }),
+    html: pwField('sPass', 'รหัสผ่านชั้นที่ 3 (รหัสผ่านส่วนตัว)', { icon: 'key' }),
     ok: 'เข้าสู่ระบบ',
     onOk: function (m) {
       var p = $('#sPass', m).value; if (!p) { setErr('sPass', 'กรุณากรอกรหัสผ่านส่วนตัว'); return false; }
       return clientInfo().then(function (ci) { return api('socialLogin', { ticket: soc.ticket, personalPass: p, client: ci }); })
-        .then(function (r) { onLoggedIn(r, true); return true; })
+        .then(function (r) { if (r.otpRequired) setTimeout(function () { otpFlow(r, true); }, 320); else onLoggedIn(r, true); return true; })
         .catch(function (er) { setErr('sPass', er.msg); return false; });
     }
   });
@@ -442,6 +443,7 @@ function regStep(n) {
       '<div class="grid g2">' + selectField('rTitle', 'คำนำหน้าชื่อ', TITLES, REG.title, true, 'rTitleO') + textField('rDisplay', 'ชื่อที่ใช้แสดงในระบบ (Display Name)', REG.displayName, true) +
       textField('rFirst', 'ชื่อจริง', REG.firstName, true, { ac: 'given-name' }) + textField('rLast', 'นามสกุล', REG.lastName, true, { ac: 'family-name' }) +
       textField('rBirth', 'วันเดือนปีเกิด', REG.birthDate, true, { type: 'date' }) + selectField('rGender', 'เพศ (ไม่บังคับ)', ['ชาย', 'หญิง', 'ไม่ระบุ', 'อื่น ๆ'], REG.gender, false, 'rGenderO') + '</div>' +
+      '<div style="margin-top:12px">' + textField('rEmail', 'อีเมล (สำหรับรับรหัสผ่านชั้นที่ 2)', REG.email, true, { type: 'email', ac: 'email', max: 120, ph: 'name@example.com', hint: 'ทุกครั้งที่เข้าสู่ระบบ ระบบจะส่งรหัสผ่านชั้นที่ 2 (รหัส 6 หลัก ใช้ครั้งเดียว) ไปยังอีเมลนี้' }) + '</div>' +
       '<div class="field" style="margin-top:12px"><span class="lbl">รูปโปรไฟล์ (ไม่บังคับ)</span><div class="row"><div class="avatar" id="rAvPrev" style="width:72px;height:72px">' + (REG.avatarDataUrl ? '<img src="' + REG.avatarDataUrl + '" alt="" style="width:100%;height:100%;object-fit:cover">' : ic('camera')) + '</div><label class="btn">' + ic('upload') + ' เลือกไฟล์<input type="file" id="rAv" class="sr"></label><span class="muted small">รองรับไฟล์ทุกประเภทและทุกขนาด ระบบจะปรับภาพให้คมชัดและเหมาะสมอัตโนมัติ</span></div></div>' +
       '<div class="row" style="margin-top:20px"><button class="btn" data-go="welcome">ยกเลิก</button><span class="spacer"></span><button class="btn k" id="rNext1">ถัดไป ' + ic('arrowR') + '</button></div>';
     $('#rAv').onchange = function () { pickAvatar(this.files[0]).then(function (r) { REG.avatarDataUrl = r.dataUrl; $('#rAvPrev').innerHTML = '<img src="' + r.dataUrl + '" alt="" style="width:100%;height:100%;object-fit:cover">'; }).catch(function (e) { toast('ไม่สามารถใช้ไฟล์นี้เป็นรูปโปรไฟล์ได้', e.message, 'warn'); }); };
@@ -449,7 +451,9 @@ function regStep(n) {
       REG.title = $('#rTitle').value === 'อื่น ๆ' ? $('#rTitleO').value.trim() : $('#rTitle').value; REG.titleSel = $('#rTitle').value; REG.rTitleO = $('#rTitleO').value;
       REG.displayName = $('#rDisplay').value.trim(); REG.firstName = $('#rFirst').value.trim(); REG.lastName = $('#rLast').value.trim(); REG.birthDate = $('#rBirth').value;
       REG.gender = $('#rGender').value === 'อื่น ๆ' ? $('#rGenderO').value.trim() : $('#rGender').value;
+      REG.email = $('#rEmail').value.trim().toLowerCase();
       var ok = true;
+      if (!/^[^\s@<>()",;:]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(REG.email)) { setErr('rEmail', 'กรุณากรอกอีเมลที่ถูกต้อง ระบบจะส่งรหัสผ่านชั้นที่ 2 ไปยังอีเมลนี้'); ok = false; } else setErr('rEmail', '');
       [['rTitle', REG.title, 'กรุณาเลือกหรือระบุคำนำหน้าชื่อ'], ['rDisplay', REG.displayName, 'กรุณากรอกชื่อที่ใช้แสดง'], ['rFirst', REG.firstName, 'กรุณากรอกชื่อจริง'], ['rLast', REG.lastName, 'กรุณากรอกนามสกุล'], ['rBirth', REG.birthDate, 'กรุณาระบุวันเดือนปีเกิด']].forEach(function (x) { setErr(x[0], x[1] ? '' : x[2]); if (!x[1]) ok = false; });
       if (REG.birthDate && new Date(REG.birthDate) > new Date()) { setErr('rBirth', 'วันเกิดต้องไม่เป็นวันในอนาคต'); ok = false; }
       if (ok) regStep(2);
@@ -528,7 +532,7 @@ function regStep(n) {
     };
   } else if (n === 4) {
     var e = REG.education || {}, w = REG.work || {};
-    var rows = [['คำนำหน้าชื่อ', REG.title], ['ชื่อ - นามสกุล', REG.firstName + ' ' + REG.lastName], ['ชื่อที่ใช้แสดง', REG.displayName], ['วันเดือนปีเกิด', REG.birthDate ? fmtDate(REG.birthDate + 'T00:00:00', true) : '-'], ['เพศ', REG.gender || 'ไม่ระบุ'], ['สถานะผู้สมัคร', REG.memberType]];
+    var rows = [['คำนำหน้าชื่อ', REG.title], ['ชื่อ - นามสกุล', REG.firstName + ' ' + REG.lastName], ['ชื่อที่ใช้แสดง', REG.displayName], ['วันเดือนปีเกิด', REG.birthDate ? fmtDate(REG.birthDate + 'T00:00:00', true) : '-'], ['เพศ', REG.gender || 'ไม่ระบุ'], ['อีเมล', REG.email], ['สถานะผู้สมัคร', REG.memberType]];
     if (e.school) rows = rows.concat([['สถานศึกษา', e.school], ['คณะ', e.faculty], ['สาขาวิชา', e.major], ['ระดับการศึกษา', e.level], ['ชั้นปี', e.year]]);
     if (w.org || w.position || w.career) rows = rows.concat([['หน่วยงาน', w.org || '-'], ['ตำแหน่ง', w.position || '-'], ['สายงาน', w.career || '-'], ['ประสบการณ์', w.experience || '-']]);
     rows = rows.concat([['ชื่อผู้ใช้งาน', REG.username], ['คำถามกู้คืนบัญชี', REG.recoveryQ]]);
@@ -540,7 +544,7 @@ function regStep(n) {
       if (!$('#rAccept').checked) { $('#rAcceptE').textContent = 'กรุณายอมรับข้อกำหนดการใช้งานและนโยบายความเป็นส่วนตัว'; return; }
       confirmBox('ยืนยันการสมัครสมาชิก', 'ระบบจะตรวจสอบข้อมูลและสร้างบัญชีสมาชิกให้ท่าน ท่านต้องการดำเนินการต่อหรือไม่').then(function (ok) {
         if (!ok) return;
-        var form = { title: REG.title, firstName: REG.firstName, lastName: REG.lastName, displayName: REG.displayName, birthDate: REG.birthDate, gender: REG.gender, memberType: REG.memberType === 'อื่น ๆ' && w.otherType ? 'อื่น ๆ: ' + w.otherType : REG.memberType,
+        var form = { title: REG.title, firstName: REG.firstName, lastName: REG.lastName, displayName: REG.displayName, birthDate: REG.birthDate, gender: REG.gender, email: REG.email, memberType: REG.memberType === 'อื่น ๆ' && w.otherType ? 'อื่น ๆ: ' + w.otherType : REG.memberType,
           education: REG.education, work: REG.work, username: REG.username, adminPass: REG._a1, adminPass2: REG._a2, personalPass: REG._p1, personalPass2: REG._p2, recoveryQ: REG.recoveryQ, recoveryA: REG.recoveryA, accept: true, avatarDataUrl: REG.avatarDataUrl || '' };
         withLoading('กำลังตรวจสอบข้อมูลและสร้างบัญชี', api('register', { form: form, socialTicket: REG.socialTicket || '' }, { timeout: 40000 })).then(function (r) {
           REG = {}; renderRegSuccess(r.member);

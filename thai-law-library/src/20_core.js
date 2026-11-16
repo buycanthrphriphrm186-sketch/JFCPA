@@ -47,6 +47,7 @@ var ICONS = {
   flip: '<path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/>',
   timer: '<path d="M10 2h4"/><path d="M12 14l3-3"/><circle cx="12" cy="14" r="8"/>',
   maximize: '<path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/>',
+  minimize: '<path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/>',
   play: '<path d="M7 4v16l13-8z"/>',
   pause: '<path d="M7 4h4v16H7zM14 4h4v16h-4z"/>',
   reset: '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>',
@@ -300,6 +301,7 @@ function modal(o) {
     }
     function key(e) { if (e.key === 'Escape' && o.dismiss !== false) finish(false); }
     document.addEventListener('keydown', key);
+    wrap.addEventListener('click', function (e) { if (e.target === wrap && o.dismiss !== false) finish(false); });
     var cb = m.querySelector('[data-c]'); if (cb) cb.onclick = function () { finish(false); };
     m.querySelector('[data-ok]').onclick = function () {
       if (o.onOk) {
@@ -315,6 +317,23 @@ function modal(o) {
 }
 function confirmBox(title, text, opt) { opt = opt || {}; return modal({ title: title, text: text, icon: opt.icon || 'help', tone: opt.tone, ok: opt.ok || 'ยืนยัน', cancel: opt.cancel || 'ยกเลิก', danger: opt.danger }); }
 function alertBox(title, text, opt) { opt = opt || {}; return modal({ title: title, text: text, icon: opt.icon || 'info', tone: opt.tone, ok: opt.ok || 'รับทราบ', cancel: false }); }
+
+/* ---------------- ล็อกการเลื่อนพื้นหลังเมื่อมีหน้าต่างซ้อน (ป๊อปอัป ลิ้นชัก ป้ายขยาย) ---------------- */
+var scrollLockY = 0;
+function syncScrollLock() {
+  var layer = document.getElementById('layer');
+  var need = !!(document.querySelector('.focus,.av-view,.fv-reader') || (layer && layer.querySelector('.modal-wrap,.drawer,.loading-ov')));
+  var root = document.documentElement, has = root.classList.contains('scroll-lock');
+  if (need && !has) { scrollLockY = window.scrollY; root.classList.add('scroll-lock'); document.body.style.top = -scrollLockY + 'px'; }
+  else if (!need && has) { root.classList.remove('scroll-lock'); document.body.style.top = ''; window.scrollTo(0, scrollLockY); }
+}
+(function () {
+  try {
+    var mo = new MutationObserver(function () { syncScrollLock(); });
+    var start = function () { mo.observe(document.body, { childList: true }); var l = document.getElementById('layer'); if (l) mo.observe(l, { childList: true }); };
+    if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
+  } catch (e) {}
+})();
 
 /* ---------------- drawer ---------------- */
 function drawer(side, build) {
@@ -390,15 +409,35 @@ function deviceInfo() {
 var IPINFO = null;
 function lookupIp() {
   if (IPINFO || !(S.flags && S.flags.FLAG_IP_LOOKUP)) return Promise.resolve(IPINFO || {});
-  var ctrl = window.AbortController ? new AbortController() : null;
-  var tm = setTimeout(function () { ctrl && ctrl.abort(); }, 1800);
-  return fetch('https://ipapi.co/json/', ctrl ? { signal: ctrl.signal } : {}).then(function (r) { return r.json(); }).then(function (j) {
-    clearTimeout(tm);
-    IPINFO = { ip: j.ip || '', location: [j.city, j.region, j.country_name].filter(Boolean).join(', '), isp: j.org || '' };
-    return IPINFO;
-  }).catch(function () { clearTimeout(tm); return {}; });
+  function get(url, map) {
+    var ctrl = window.AbortController ? new AbortController() : null;
+    var tm = setTimeout(function () { ctrl && ctrl.abort(); }, 2200);
+    return fetch(url, ctrl ? { signal: ctrl.signal } : {}).then(function (r) { return r.json(); }).then(function (j) { clearTimeout(tm); var o = map(j); if (!o || !o.ip) throw new Error('empty'); return o; }, function (e) { clearTimeout(tm); throw e; });
+  }
+  return get('https://ipapi.co/json/', function (j) { return j.error ? null : { ip: j.ip || '', location: [j.city, j.region, j.country_name].filter(Boolean).join(', '), isp: j.org || '' }; })
+    .catch(function () { return get('https://ipwho.is/', function (j) { return j.success === false ? null : { ip: j.ip || '', location: [j.city, j.region, j.country].filter(Boolean).join(', '), isp: (j.connection && (j.connection.org || j.connection.isp)) || '' }; }); })
+    .then(function (o) { o.location = o.location ? o.location + ' (โดยประมาณจาก IP)' : ''; IPINFO = o; return o; })
+    .catch(function () { return {}; });
 }
-function clientInfo() { return lookupIp().then(function (ip) { var d = deviceInfo(); return { device: d.device, os: d.os, browser: d.browser, ip: ip.ip || '', location: ip.location || '', isp: ip.isp || '' }; }); }
+/* ตำแหน่งจริงจาก GPS ของอุปกรณ์ (ขออนุญาตผู้ใช้ก่อน) แล้วแปลงเป็นชื่อพื้นที่ — หากไม่อนุญาตหรือใช้ไม่ได้ จะใช้ตำแหน่งโดยประมาณจาก IP */
+var GEOINFO = null;
+function lookupGeo() {
+  if (GEOINFO) return Promise.resolve(GEOINFO);
+  if (!navigator.geolocation || (S.ud && S.ud.settings && S.ud.settings.geo === false) || store.get('geoDenied', false)) return Promise.resolve(null);
+  return new Promise(function (res) {
+    var done = false, t = setTimeout(function () { if (!done) { done = true; res(null); } }, 6000);
+    try {
+      navigator.geolocation.getCurrentPosition(function (p) {
+        var lat = p.coords.latitude, lon = p.coords.longitude;
+        fetch('https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=' + lat + '&longitude=' + lon + '&localityLanguage=th').then(function (r) { return r.json(); }).then(function (j) {
+          var loc = [j.locality || j.city, j.principalSubdivision, j.countryName].filter(Boolean).filter(function (x, i, a) { return a.indexOf(x) === i; }).join(', ');
+          GEOINFO = { location: (loc || (lat.toFixed(3) + ', ' + lon.toFixed(3))) + ' (ตำแหน่งจากอุปกรณ์ ±' + Math.round(p.coords.accuracy) + ' ม.)' };
+        }).catch(function () { GEOINFO = { location: lat.toFixed(3) + ', ' + lon.toFixed(3) + ' (ตำแหน่งจากอุปกรณ์)' }; }).then(function () { if (!done) { done = true; clearTimeout(t); res(GEOINFO); } });
+      }, function (err) { if (err && err.code === 1) store.set('geoDenied', true); if (!done) { done = true; clearTimeout(t); res(null); } }, { enableHighAccuracy: false, timeout: 5000, maximumAge: 600000 });
+    } catch (e) { if (!done) { done = true; clearTimeout(t); res(null); } }
+  });
+}
+function clientInfo() { return Promise.all([lookupIp(), lookupGeo()]).then(function (r) { var ip = r[0] || {}, g = r[1], d = deviceInfo(); return { device: d.device, os: d.os, browser: d.browser, ip: ip.ip || '', location: (g && g.location) || ip.location || '', isp: ip.isp || '' }; }); }
 
 /* ---------------- sounds (Web Audio) ---------------- */
 var AC = null;
@@ -455,13 +494,21 @@ window.addEventListener('scroll', function () {
 }, { passive: true });
 
 /* ---------------- law text formatting (ย่อหน้า + ไฮไลต์ "มาตรา") ---------------- */
-function lawHtml(text, q) {
-  var lines = String(text || '').split(/\n+/).map(function (s) { return s.trim(); }).filter(Boolean);
-  return '<div class="law-text">' + lines.map(function (ln) {
-    var cls = /^\(\d+\)|^\([ก-ฮ]\)/.test(ln) ? 'item' : /^\(เนื้อความ/.test(ln) ? 'note' : '';
+var WAK_TH = ['หนึ่ง', 'สอง', 'สาม', 'สี่', 'ห้า', 'หก', 'เจ็ด', 'แปด', 'เก้า', 'สิบ', 'สิบเอ็ด', 'สิบสอง', 'สิบสาม', 'สิบสี่', 'สิบห้า'];
+/* แสดงตัวบท: แยกวรรค/อนุมาตรา พร้อมป้ายสีเขียวอ่อน (วรรคหนึ่ง วรรคสอง … และอนุมาตรา) */
+function lawHtml(text, q, opt) {
+  opt = opt || {};
+  var lines = String(text || '').replace(/\r\n?/g, ' ').split(/\n+/).map(function (s) { return s.trim(); }).filter(Boolean);
+  var kinds = lines.map(function (ln) { return /^\(\s*[0-9๐-๙]+\s*\)|^[0-9๐-๙]+\)/.test(ln) ? 'item' : /^\(\s*[ก-ฮ]\s*\)/.test(ln) ? 'sub' : /^\(เนื้อความ|^\[|^หมายเหตุ/.test(ln) ? 'note' : 'p'; });
+  var paraTotal = kinds.filter(function (k) { return k === 'p'; }).length, pi = 0;
+  return '<div class="law-text">' + lines.map(function (ln, i) {
+    var k = kinds[i], label = '';
+    if (k === 'p') { pi++; if (paraTotal > 1 && !opt.noLabels) label = '<span class="wk">วรรค' + (WAK_TH[pi - 1] || pi) + '</span>'; }
+    else if (k === 'item' && !opt.noLabels) label = '<span class="wk sub">อนุมาตรา ' + esc((ln.match(/^\(?\s*([0-9๐-๙]+)/) || [])[1] || '') + '</span>';
+    else if (k === 'sub' && !opt.noLabels) label = '<span class="wk sub">อนุ ' + esc((ln.match(/^\(\s*([ก-ฮ])/) || [])[1] || '') + '</span>';
     var s = esc(ln).replace(/มาตรา\s*([0-9๐-๙]+(?:\/[0-9๐-๙]+)?)/g, '<span class="sec-ref">มาตรา $1</span>');
     if (q) s = highlight(s, q);
-    return '<p class="' + cls + '">' + s + '</p>';
+    return '<p class="' + (k === 'p' ? '' : k === 'sub' ? 'item sub' : k) + '">' + label + s + '</p>';
   }).join('') + '</div>';
 }
 function highlight(html, q) {

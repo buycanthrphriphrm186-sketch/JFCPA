@@ -38,7 +38,7 @@ function boot() {
   }
   var hasSession = !!(S.token && S.member);
   if (hasSession) { loadLocalUD(); applySettings(); }
-  var secs = BOOT.maintenance ? 1 : hasSession ? 1 : (+BOOT.splash || 3);
+  var secs = BOOT.maintenance ? 1 : Math.min(Math.max(+BOOT.splash || 20, 20), 30);
   store.set('seenSplash', true);
 
   /* ขั้นตอนเชื่อมต่อจริง: วงกลมบนหน้าโลโก้เติมตามความคืบหน้า */

@@ -1,4 +1,4 @@
-# THAI LAW LIBRARY — คลังกฎหมายไทย
+# THAI LAW LIBRARY — คลังกฎหมาย
 
 ระบบมี 2 ไฟล์แยกกัน:
 

@@ -98,24 +98,36 @@ VIEWS.history = function (el) {
   function draw() {
     var box = $('#hsList', el), ud = S.ud;
     if (st.tab === 'login') {
-      box.innerHTML = '<div class="skeleton" style="height:60px"></div>';
-      api('loginHistory', {}).then(function (r) {
-        if (!r.items.length) { box.innerHTML = '<div class="panel"><div class="empty"><div class="eic">' + ic('shield') + '</div><h3>ยังไม่มีประวัติ</h3></div></div>'; return; }
-        box.innerHTML = groupByPeriod(r.items, function (x) { return x.time; }, st.p).map(function (g) { return '<div class="group-h">' + esc(g.label) + ' <span class="cnt">' + g.items.length + ' ครั้ง</span></div>' + g.items.map(function (x) { return '<div class="entry"><span style="color:' + (x.result === 'SUCCESS' ? 'var(--ok)' : 'var(--bad)') + '">' + ic(x.result === 'SUCCESS' ? 'shieldCheck' : 'alert') + '</span><span class="grow"><span class="et">' + (x.result === 'SUCCESS' ? 'เข้าสู่ระบบสำเร็จ' : 'เข้าสู่ระบบไม่สำเร็จ') + ' · ' + esc(x.reason || '') + '</span><br><span class="es">' + fmtDateTime(x.time) + ' · ' + esc([x.device, x.os, x.browser].filter(Boolean).join(' / ')) + (x.ip ? ' · IP ' + esc(x.ip) : '') + (x.location ? ' · ' + esc(x.location) : '') + '</span></span></div>'; }).join(''); }).join('');
-      }).catch(function (e) { box.innerHTML = '<div class="panel"><div class="empty warn"><div class="eic">' + ic('wifiOff') + '</div><h3>โหลดข้อมูลไม่สำเร็จ</h3><p>' + esc(e.msg) + '</p></div></div>'; });
+      var paint = function (items) {
+        var head = '<div class="panel flat login-note"><div class="row wrapr" style="gap:10px;align-items:flex-start"><span style="color:var(--sky-600)">' + ic('shield') + '</span><p class="small grow">ประวัติการเข้าสู่ระบบและอุปกรณ์ใช้ตรวจสอบความปลอดภัยของบัญชี จึงไม่สามารถล้างเองได้ ระบบจะลบอัตโนมัติเมื่อครบ 3 เดือน (90 วัน) ท่านสามารถดาวน์โหลดเป็นเอกสาร PDF ได้</p><button class="btn sm k" id="hsPdf">' + ic('download') + ' ดาวน์โหลด PDF</button></div>' +
+          '<div class="row wrapr tiny muted" style="gap:14px;margin-top:8px"><span>สำเร็จ <b style="color:var(--ok)">' + items.filter(function (x) { return x.result === 'SUCCESS'; }).length + '</b> ครั้ง</span><span>ไม่สำเร็จ <b style="color:var(--bad)">' + items.filter(function (x) { return x.result !== 'SUCCESS'; }).length + '</b> ครั้ง</span></div></div>';
+        if (!items.length) { box.innerHTML = head + '<div class="panel"><div class="empty"><div class="eic">' + ic('shield') + '</div><h3>ยังไม่มีประวัติ</h3></div></div>'; }
+        else box.innerHTML = head + groupByPeriod(items, function (x) { return x.time; }, st.p).map(function (g) { return '<div class="group-h">' + esc(g.label) + ' <span class="cnt">' + g.items.length + ' ครั้ง</span></div>' + g.items.map(function (x) { return '<div class="entry"><span style="color:' + (x.result === 'SUCCESS' ? 'var(--ok)' : 'var(--bad)') + '">' + ic(x.result === 'SUCCESS' ? 'shieldCheck' : 'alert') + '</span><span class="grow"><span class="et">' + (x.result === 'SUCCESS' ? 'เข้าสู่ระบบสำเร็จ' : 'เข้าสู่ระบบไม่สำเร็จ') + ' · ' + esc(x.reason || '') + '</span><br><span class="es">' + fmtDateTime(x.time) + ' · ' + esc([x.device, x.os, x.browser].filter(Boolean).join(' / ')) + (x.ip ? ' · IP ' + esc(x.ip) : '') + (x.location ? ' · ' + esc(x.location) : '') + '</span></span></div>'; }).join(''); }).join('');
+        var pb = $('#hsPdf', el); if (pb) pb.onclick = function () { officialPdf('loginHistoryPdf', 'กำลังสร้างรายงานประวัติการเข้าสู่ระบบ'); };
+      };
+      var cache = VIEWS.history.loginCache;
+      if (cache) paint(cache.items); else box.innerHTML = '<div class="skeleton" style="height:60px"></div>';
+      if (!cache || Date.now() - cache.t > 60000) api('loginHistory', {}).then(function (r) {
+        VIEWS.history.loginCache = { t: Date.now(), items: r.items || [] };
+        if (st.tab === 'login' && box.isConnected) paint(r.items || []);
+      }).catch(function (e) { if (!cache) box.innerHTML = '<div class="panel"><div class="empty warn"><div class="eic">' + ic('wifiOff') + '</div><h3>โหลดข้อมูลไม่สำเร็จ</h3><p>' + esc(e.msg) + '</p></div></div>'; });
       return;
     }
     var items, getT, row;
     if (st.tab === 'read') { items = ud.history; getT = function (x) { return x.t; }; row = function (x) { var s = SECS[x.id]; if (!s) return ''; return '<button class="entry" data-open="' + esc(x.id) + '" style="width:100%;text-align:left"><span class="grow"><span class="et">' + esc(lawShort(LAWS[s.law])) + ' มาตรา ' + esc(s.no) + ' ' + esc(s.name) + '</span><br><span class="es">เปิดอ่านเวลา ' + fmtTime(x.t) + ' น.</span></span>' + ic('chevR') + '</button>'; }; }
     else if (st.tab === 'search') { items = ud.searches; getT = function (x) { return x.t; }; row = function (x) { return '<button class="entry" data-q="' + esc(x.q) + '" style="width:100%;text-align:left"><span class="grow"><span class="et">' + esc(x.q) + '</span><br><span class="es">' + fmtDateTime(x.t) + '</span></span>' + ic('search') + '</button>'; }; }
-    else { items = Object.keys(ud.favorites).map(function (k) { return { id: k, t: ud.favorites[k].t }; }); getT = function (x) { return x.t; }; row = function (x) { var s = SECS[x.id]; if (!s) return ''; return '<button class="entry" data-open="' + esc(x.id) + '" style="width:100%;text-align:left"><span class="grow"><span class="et">บันทึก ' + esc(lawShort(LAWS[s.law])) + ' มาตรา ' + esc(s.no) + '</span><br><span class="es">' + fmtDateTime(x.t) + '</span></span></button>'; }; }
+    else { var sca = (ud.clearedAt || {}).saved || 0; items = Object.keys(ud.favorites).map(function (k) { return { id: k, t: ud.favorites[k].t }; }).filter(function (x) { return x.t > sca; }).sort(function (a, c) { return c.t - a.t; }); getT = function (x) { return x.t; }; row = function (x) { var s = SECS[x.id]; if (!s) return ''; return '<button class="entry" data-open="' + esc(x.id) + '" style="width:100%;text-align:left"><span class="grow"><span class="et">บันทึก ' + esc(lawShort(LAWS[s.law])) + ' มาตรา ' + esc(s.no) + '</span><br><span class="es">' + fmtDateTime(x.t) + '</span></span></button>'; }; }
     if (!items.length) { box.innerHTML = '<div class="panel"><div class="empty"><div class="eic">' + ic('history') + '</div><h3>ยังไม่มีประวัติ</h3><p>เมื่อท่านเปิดอ่านป้ายพลิก ค้นหา หรือบันทึกเอกสาร ระบบจะบันทึกให้อัตโนมัติ</p></div></div>'; return; }
     box.innerHTML = groupByPeriod(items, getT, st.p).map(function (g) { return '<div class="group-h">' + esc(g.label) + ' <span class="cnt">' + g.items.length + ' รายการ</span></div><div class="anim-list">' + g.items.slice(0, 200).map(row).join('') + '</div>'; }).join('') +
-      '<div class="row" style="justify-content:center;margin-top:18px"><button class="btn danger" id="hsClear">' + ic('trash') + ' ล้างประวัติ' + (st.tab === 'read' ? 'การอ่าน' : st.tab === 'search' ? 'การค้นหา' : '') + '</button></div>';
+      '<div class="row" style="justify-content:center;margin-top:18px"><button class="btn danger" id="hsClear">' + ic('trash') + ' ล้างประวัติ' + (st.tab === 'read' ? 'การอ่าน' : st.tab === 'search' ? 'การค้นหา' : 'การบันทึก') + '</button></div>';
     var cl = $('#hsClear', el);
     if (cl) cl.onclick = function () {
-      if (st.tab === 'saved') { toast('ประวัติการบันทึกจะลดลงเมื่อลบรายการโปรดในเมนูบันทึก', '', ''); return; }
-      confirmBox('ยืนยันการล้างประวัติ', 'ประวัติที่ล้างแล้วไม่สามารถกู้คืนได้ (สถิติเวลาและอันดับการใช้งานยังคงอยู่)', { danger: true, icon: 'trash', tone: 'bad' }).then(function (ok) { if (!ok) return; if (st.tab === 'read') ud.history = []; else ud.searches = []; saveUD(true); draw(); toast('ล้างประวัติแล้ว', '', 'ok'); });
+      confirmBox('ยืนยันการล้างประวัติ', st.tab === 'saved' ? 'ล้างเฉพาะประวัติการบันทึกที่แสดงในหน้านี้ รายการโปรดและโฟลเดอร์ของท่านยังคงอยู่ครบ' : 'ประวัติที่ล้างแล้วไม่สามารถกู้คืนได้ (สถิติเวลาและอันดับการใช้งานยังคงอยู่)', { danger: true, icon: 'trash', tone: 'bad' }).then(function (ok) {
+        if (!ok) return;
+        ud.clearedAt = ud.clearedAt || {}; ud.clearedAt[st.tab] = Date.now();
+        if (st.tab === 'read') ud.history = []; else if (st.tab === 'search') ud.searches = [];
+        saveUD(true); draw(); toast('ล้างประวัติแล้ว', '', 'ok');
+      });
     };
   }
   on(el, 'click', '#perSeg [data-p]', function (e, b) { st.p = b.getAttribute('data-p'); store.set('ui', S.ui); $$('#perSeg button', el).forEach(function (x) { x.classList.toggle('on', x === b); }); draw(); });
@@ -170,7 +182,7 @@ VIEWS.profile = function (el) {
   el.innerHTML = '<div class="view-head"><div><h2>' + tr('profile') + '</h2><p class="sub">ข้อมูลทั้งหมดที่ท่านกรอกในการสมัครสมาชิกและแก้ไขภายหลัง</p></div><button class="btn" id="pfEdit">' + ic('gear') + ' ' + tr('settings') + '</button></div>' +
     '<section class="panel corner" style="margin-bottom:16px"><div class="row wrapr" style="gap:18px">' + avatarHtml(96) + '<div class="grow"><h2>' + esc((m.title || '') + (m.firstName || '') + ' ' + (m.lastName || '')) + '</h2><div class="muted">' + esc(m.displayName || '') + ' · @' + esc(m.username || '') + '</div><div class="row wrapr" style="gap:6px;margin-top:8px"><span class="tag k">' + esc(m.memberId || '') + '</span><span class="tag">' + esc(m.memberType || '') + '</span><span class="tag ' + (m.accountStatus === 'ปกติ' ? 'ok' : 'bad') + '">สถานะ: ' + esc(m.accountStatus || 'ปกติ') + '</span>' + (m.role === 'admin' ? '<span class="tag o">ผู้ดูแลระบบ</span>' : '') + '</div>' + (m.bio ? '<p class="muted" style="margin-top:8px">' + esc(m.bio) + '</p>' : '') + '</div></div></section>' +
     '<div class="grid g2">' +
-      '<section class="panel rise"><div class="panel-title"><span class="ic">' + ic('user') + '</span><h3>ข้อมูลประจำตัว</h3></div>' + kv([['คำนำหน้าชื่อ', m.title], ['ชื่อจริง', m.firstName], ['นามสกุล', m.lastName], ['ชื่อที่แสดง', m.displayName], ['วันเดือนปีเกิด', m.birthDate ? fmtDate(m.birthDate.length <= 10 ? m.birthDate + 'T00:00:00' : m.birthDate, true) : '-'], ['เพศ', m.gender || 'ไม่ระบุ'], ['หมายเลขโทรศัพท์', m.phone || 'ไม่ได้ระบุ'], ['ที่อยู่', m.address || 'ไม่ได้ระบุ'], ['ประวัติส่วนตัว', m.bio || 'ไม่ได้ระบุ']]) + '</section>' +
+      '<section class="panel rise"><div class="panel-title"><span class="ic">' + ic('user') + '</span><h3>ข้อมูลประจำตัว</h3></div>' + kv([['คำนำหน้าชื่อ', m.title], ['ชื่อจริง', m.firstName], ['นามสกุล', m.lastName], ['ชื่อที่แสดง', m.displayName], ['วันเดือนปีเกิด', m.birthDate ? fmtDate(m.birthDate.length <= 10 ? m.birthDate + 'T00:00:00' : m.birthDate, true) : '-'], ['เพศ', m.gender || 'ไม่ระบุ'], ['อีเมล (รับรหัสผ่านชั้นที่ 2)', m.email ? m.email + (m.emailVerified ? ' (ยืนยันแล้ว)' : ' (ยังไม่ยืนยัน)') : 'ยังไม่ได้ระบุ'], ['หมายเลขโทรศัพท์', m.phone || 'ไม่ได้ระบุ'], ['ที่อยู่', m.address || 'ไม่ได้ระบุ'], ['ประวัติส่วนตัว', m.bio || 'ไม่ได้ระบุ']]) + '</section>' +
       '<section class="panel rise"><div class="panel-title"><span class="ic o">' + ic(e.school ? 'book2' : 'brief') + '</span><h3>ข้อมูลการศึกษาและการทำงาน</h3></div>' + kv([['สถานะผู้สมัคร', m.memberType]].concat(e.school ? [['สถานศึกษา', e.school], ['คณะ', e.faculty], ['สาขาวิชา', e.major], ['ระดับการศึกษา', e.level], ['ชั้นปี', e.year]] : []).concat(w.org || w.position || w.career ? [['หน่วยงาน', w.org], ['ตำแหน่งงาน', w.position], ['สายงาน', w.career], ['ประสบการณ์ทำงาน', w.experience]] : [])) + '</section>' +
       '<section class="panel rise"><div class="panel-title"><span class="ic k">' + ic('badge') + '</span><h3>ข้อมูลบัญชี</h3></div>' + kv([['รหัสสมาชิก', m.memberId], ['ชื่อผู้ใช้งาน', m.username], ['ประเภทสมาชิก', m.memberType], ['วันที่สมัครสมาชิก', fmtDateTime(m.createdAt)], ['เข้าใช้งานล่าสุด', fmtDateTime(m.lastLogin)], ['สถานะบัญชี', m.accountStatus || 'ปกติ'], ['บัญชีที่เชื่อมต่อ', (m.social || []).length ? m.social.join(', ') : 'ยังไม่ได้เชื่อมต่อ'], ['คำถามกู้คืนบัญชี', m.recoveryQ]]) + '</section>' +
       '<section class="panel rise"><div class="panel-title"><span class="ic">' + ic('card') + '</span><h3>แพ็กเกจการใช้งาน</h3></div>' + kv([['แพ็กเกจปัจจุบัน', plan.trial ? 'ทดลองใช้งานครบทุกฟังก์ชัน' : plan.tier === 'free' ? 'หมดระยะทดลองใช้งาน' : (PLAN_LABEL[plan.tier] || plan.tier) + ' (' + (plan.cycle === 'yearly' ? 'รายปี' : 'รายเดือน') + ')'], [plan.trial ? 'สิ้นสุดการทดลองใช้' : 'วันหมดอายุ', fmtDateTime(plan.trial ? plan.trialEnds : plan.expires)]]) + '<button class="btn sm o" style="margin-top:12px" id="pfPlan">' + ic('card') + ' ดูแพ็กเกจและราคา</button></section>' +
@@ -216,7 +228,7 @@ var SETTINGS_UI = {
     b.innerHTML = '<div class="row" style="margin-bottom:14px">' + avatarHtml(84) + '<div class="col" style="gap:6px"><label class="btn sm">' + ic('camera') + ' เปลี่ยนรูปโปรไฟล์<input type="file" id="spAv" class="sr"></label><span class="tiny muted">รองรับไฟล์ทุกชนิดและทุกขนาด</span></div></div>' +
       '<div class="col" style="gap:12px">' + selectField('spTitle', 'คำนำหน้าชื่อ', TITLES, TITLES.indexOf(m.title) > -1 ? m.title : 'อื่น ๆ', true, 'spTitleO') + textField('spFirst', 'ชื่อจริง', m.firstName, true) + textField('spLast', 'นามสกุล', m.lastName, true) + textField('spDisp', 'ชื่อที่แสดง (Display Name)', m.displayName, true) +
       '<div class="field"><span class="lbl">ชื่อผู้ใช้งาน (Username)</span><div class="input" style="background:var(--sky-50)">' + ic('user') + '<input value="' + esc(m.username) + '" disabled></div><div class="hint">เปลี่ยนได้ที่หัวข้อข้อมูลบัญชี</div></div>' +
-      textField('spBirth', 'วัน/เดือน/ปีเกิด', String(m.birthDate || '').slice(0, 10), true, { type: 'date' }) + selectField('spGender', 'เพศ (ไม่บังคับ)', ['ชาย', 'หญิง', 'ไม่ระบุ', 'อื่น ๆ'], m.gender, false, 'spGenderO') + textField('spPhone', 'หมายเลขโทรศัพท์ (ถ้ามี)', m.phone, false, { type: 'tel', max: 20 }) +
+      textField('spBirth', 'วัน/เดือน/ปีเกิด', String(m.birthDate || '').slice(0, 10), true, { type: 'date' }) + selectField('spGender', 'เพศ (ไม่บังคับ)', ['ชาย', 'หญิง', 'ไม่ระบุ', 'อื่น ๆ'], m.gender, false, 'spGenderO') + textField('spEmail', 'อีเมล (ใช้รับรหัสผ่านชั้นที่ 2 ทุกครั้งที่เข้าสู่ระบบ)', m.email || '', true, { type: 'email' }) + textField('spPhone', 'หมายเลขโทรศัพท์ (ถ้ามี)', m.phone, false, { type: 'tel', max: 20 }) +
       '<div class="field"><label for="spAddr">ที่อยู่ (ไม่บังคับ)</label><div class="input"><textarea id="spAddr" maxlength="400">' + esc(m.address || '') + '</textarea></div></div><div class="field"><label for="spBio">ประวัติส่วนตัว (Bio)</label><div class="input"><textarea id="spBio" maxlength="600">' + esc(m.bio || '') + '</textarea></div></div>' +
       '<button class="btn k block" id="spSave">' + ic('check') + ' บันทึกข้อมูลส่วนตัว</button></div>';
     var spTO = $('#spTitleO', b); if (spTO && TITLES.indexOf(m.title) < 0) { spTO.value = m.title || ''; $('#spTitleOW', b).classList.remove('hidden'); }
@@ -234,7 +246,9 @@ var SETTINGS_UI = {
     };
     $('#spSave', b).onclick = function () {
       var title = $('#spTitle', b).value === 'อื่น ๆ' ? $('#spTitleO', b).value.trim() : $('#spTitle', b).value;
-      var fields = { title: title, firstName: $('#spFirst', b).value.trim(), lastName: $('#spLast', b).value.trim(), displayName: $('#spDisp', b).value.trim(), birthDate: $('#spBirth', b).value, gender: $('#spGender', b).value === 'อื่น ๆ' ? $('#spGenderO', b).value.trim() : $('#spGender', b).value, phone: $('#spPhone', b).value.trim(), address: $('#spAddr', b).value.trim(), bio: $('#spBio', b).value.trim() };
+      var em = $('#spEmail', b).value.trim();
+      if (!/^[^\s@<>()",;:]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(em)) { setErr('spEmail', 'กรุณากรอกอีเมลที่ถูกต้อง เพื่อใช้รับรหัสผ่านชั้นที่ 2'); return; }
+      var fields = { email: em, title: title, firstName: $('#spFirst', b).value.trim(), lastName: $('#spLast', b).value.trim(), displayName: $('#spDisp', b).value.trim(), birthDate: $('#spBirth', b).value, gender: $('#spGender', b).value === 'อื่น ๆ' ? $('#spGenderO', b).value.trim() : $('#spGender', b).value, phone: $('#spPhone', b).value.trim(), address: $('#spAddr', b).value.trim(), bio: $('#spBio', b).value.trim() };
       if (!fields.firstName || !fields.lastName || !fields.displayName || !fields.title) { toast('กรุณากรอกข้อมูลที่จำเป็นให้ครบ', 'คำนำหน้าชื่อ ชื่อจริง นามสกุล และชื่อที่แสดง', 'warn'); return; }
       confirmBox('ยืนยันการบันทึก', 'ระบบจะบันทึกข้อมูลส่วนตัวที่แก้ไข').then(function (ok) { if (!ok) return; withLoading('กำลังบันทึก', api('updateProfile', { fields: fields })).then(function (r) { afterMember(r); toast(r.msg, '', 'ok'); }).catch(function (e) { toast('บันทึกไม่สำเร็จ', e.msg, 'bad'); }); });
     };
@@ -331,13 +345,13 @@ var SETTINGS_UI = {
   },
   manage: function (b, close) {
     b.innerHTML = '<div class="menu-list">' +
-      '<button class="menu-item" id="mBackup"><span class="mi">' + ic('download') + '</span><span class="grow"><span class="mt">สำรองข้อมูลส่วนตัว</span><br><span class="ms">รายการโปรด ประวัติ เวลา โน้ต และการตั้งค่า (ไฟล์ JSON)</span></span></button>' +
-      '<button class="menu-item" id="mExport"><span class="mi">' + ic('file') + '</span><span class="grow"><span class="mt">ดาวน์โหลดข้อมูลสมาชิก</span><br><span class="ms">ข้อมูลบัญชีและประวัติการเข้าสู่ระบบ</span></span></button>' +
+      '<button class="menu-item" id="mBackup"><span class="mi">' + ic('download') + '</span><span class="grow"><span class="mt">สำรองข้อมูลส่วนตัว</span><br><span class="ms">ข้อมูลทั้งหมดของท่าน พร้อมหมายเหตุกฎหมายคุ้มครองข้อมูลส่วนบุคคล (ไฟล์ PDF)</span></span></button>' +
+      '<button class="menu-item" id="mExport"><span class="mi">' + ic('file') + '</span><span class="grow"><span class="mt">ดาวน์โหลดข้อมูลสมาชิก</span><br><span class="ms">ข้อมูลบัญชี ประวัติการเข้าสู่ระบบ และกฎหมายที่เกี่ยวข้อง (ไฟล์ PDF)</span></span></button>' +
       '<button class="menu-item" id="mDeact"><span class="mi">' + ic('power') + '</span><span class="grow"><span class="mt">ปิดใช้งานบัญชีชั่วคราว</span><br><span class="ms">เปิดใช้งานได้อีกครั้งเมื่อเข้าสู่ระบบ</span></span></button>' +
       '<button class="menu-item danger" id="mDel"><span class="mi">' + ic('trash') + '</span><span class="grow"><span class="mt">ลบบัญชีถาวร</span><br><span class="ms">ต้องยืนยันตัวตนด้วยรหัสผ่านทั้งสองชั้น</span></span></button>' +
       '<button class="menu-item danger" id="mOut"><span class="mi">' + ic('logout') + '</span><span class="grow"><span class="mt">ออกจากระบบ</span></span></button></div>' +
-      '<p class="tiny muted" style="margin-top:14px">เวอร์ชัน ' + esc(APP_VERSION) + ' · <button class="btn sm ghost" id="mDebug">' + ic('bug') + ' โหมดดีบั๊ก</button></p><div id="dbgBox"></div>';
-    $('#mBackup', b).onclick = function () { if (!gate('backup')) return; confirmBox('สำรองข้อมูลส่วนตัว', 'ระบบจะดาวน์โหลดไฟล์สำรองข้อมูลลงในอุปกรณ์นี้').then(function (ok) { if (ok && downloadText('thai-law-library-backup-' + dayKey() + '.json', JSON.stringify({ exportedAt: new Date().toISOString(), memberId: S.member.memberId, data: S.ud }, null, 2))) toast('สำรองข้อมูลเรียบร้อยแล้ว', '', 'ok'); }); };
+      '<p class="tiny muted" style="margin-top:14px">เวอร์ชัน ' + esc(APP_VERSION) + (S.member && S.member.role === 'admin' ? ' · <button class="btn sm ghost" id="mDebug">' + ic('bug') + ' โหมดดีบั๊ก</button>' : '') + '</p><div id="dbgBox"></div>';
+    $('#mBackup', b).onclick = function () { if (!gate('backup')) return; confirmBox('สำรองข้อมูลส่วนตัว', 'ระบบจะบันทึกข้อมูลล่าสุดของท่าน แล้วสร้างเอกสาร PDF ทางการ (ข้อมูลส่วนตัว รายการโปรด ประวัติ เวลาใช้งาน สมุดบันทึก และการตั้งค่า) ดาวน์โหลดลงในอุปกรณ์นี้').then(function (ok) { if (!ok) return; api('saveUserData', { data: S.ud, baseRev: S.rev }, { noRetry: true }).then(function (r) { S.rev = r.rev; store.set(udKey() + '.rev', S.rev); }).catch(function () {}).then(function () { officialPdf('backupPdf', 'กำลังสร้างเอกสารสำรองข้อมูล'); }); }); };
     $('#mExport', b).onclick = exportMyData;
     $('#mDeact', b).onclick = function () {
       modal({ title: 'ปิดใช้งานบัญชีชั่วคราว', icon: 'power', tone: 'o', html: '<p class="muted" style="margin-bottom:10px">ระหว่างปิดใช้งาน ข้อมูลทั้งหมดของท่านจะถูกเก็บรักษาไว้ครบถ้วน และสามารถเปิดใช้งานได้อีกครั้งเมื่อเข้าสู่ระบบ</p>' + pwField('dePass', 'ยืนยันด้วยรหัสผ่านส่วนตัว', {}), ok: 'ปิดใช้งานบัญชี', danger: true,
@@ -345,7 +359,7 @@ var SETTINGS_UI = {
     };
     $('#mDel', b).onclick = deleteAccountFlow;
     $('#mOut', b).onclick = function () { close(); doLogout(); };
-    $('#mDebug', b).onclick = function () {
+    if ($('#mDebug', b)) $('#mDebug', b).onclick = function () {
       var box = $('#dbgBox', b);
       box.innerHTML = '<div class="panel flat" style="margin-top:8px"><div class="row" style="margin-bottom:8px"><b class="grow">Live Log</b><button class="btn sm" id="dbgPing">' + ic('activity') + ' Health check</button></div><div class="debug-log" id="debugLog"></div><div class="tiny muted" style="margin-top:6px">ออนไลน์: ' + (S.online ? 'ใช่' : 'ไม่') + ' · โหมดปลอดภัย: ' + (SAFE_MODE ? 'เปิด' : 'ปิด') + ' · แพ็กเกจ: ' + planKey() + ' · ฐานข้อมูลเวอร์ชัน: ' + esc(S.catVer) + '</div>' + (SAFE_MODE ? '<button class="btn sm" id="dbgSafe" style="margin-top:8px">ปิดโหมดปลอดภัย</button>' : '') + '</div>';
       dlog('debug', 'debug mode opened');
@@ -355,9 +369,9 @@ var SETTINGS_UI = {
   }
 };
 function exportMyData() {
-  confirmBox('ขอสำเนาข้อมูลบัญชี', 'ระบบจะรวบรวมข้อมูลบัญชี ข้อมูลการใช้งาน และประวัติการเข้าสู่ระบบ แล้วดาวน์โหลดเป็นไฟล์ลงในอุปกรณ์นี้').then(function (ok) {
+  confirmBox('ขอสำเนาข้อมูลบัญชี', 'ระบบจะรวบรวมข้อมูลบัญชี ประวัติการเข้าสู่ระบบ และหมายเหตุกฎหมายคุ้มครองข้อมูลส่วนบุคคล แล้วดาวน์โหลดเป็นเอกสาร PDF ลงในอุปกรณ์นี้').then(function (ok) {
     if (!ok) return;
-    withLoading('กำลังรวบรวมข้อมูล', api('exportData', {})).then(function (r) { if (downloadText('thai-law-library-member-' + S.member.memberId + '.json', JSON.stringify(r.data, null, 2))) toast('ดาวน์โหลดข้อมูลสมาชิกแล้ว', '', 'ok'); }).catch(function (e) { toast('ไม่สำเร็จ', e.msg, 'bad'); });
+    officialPdf('memberPdf', 'กำลังสร้างเอกสารข้อมูลสมาชิก');
   });
 }
 function deleteAccountFlow() {

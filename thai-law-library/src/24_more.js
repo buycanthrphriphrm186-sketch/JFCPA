@@ -25,89 +25,115 @@ function sanitize(html) {
 }
 
 /* =======================================================================
-   VIEW: AI (หน้าแยกเฉพาะ — ใช้งานแบบเดียวกับแอปผู้ช่วย)
+   VIEW: AI — 2 รูปแบบสลับกันทุกครั้งที่เข้าสู่ระบบ (แบบ Bolt และแบบ Prompt Input)
+   ประวัติบทสนทนาใช้ร่วมกันทั้งสองแบบ + ปุ่มขยาย/ย่อ (ขยาย = ซ่อนแถบด้านบนและแถบเมนูด้านล่าง)
    ======================================================================= */
+var AI_SUGGEST = ['อธิบายมาตรา 420 ประมวลกฎหมายแพ่งและพาณิชย์ ให้เข้าใจง่าย', 'สรุปองค์ประกอบความผิดฐานลักทรัพย์', 'ความแตกต่างระหว่างโมฆะกับโมฆียะ', 'สรุปหลักการคุ้มครองข้อมูลส่วนบุคคล (PDPA)', 'สร้างแบบทดสอบความรู้กฎหมายแพ่ง 5 ข้อ', 'ข่าวกฎหมายไทยที่ประกาศใช้ล่าสุด'];
+function aiLayout() { return (Number(store.get('loginCount', 0)) % 2) ? 'prompt' : 'bolt'; }
+function setAiFocus(on_) { document.body.classList.toggle('ai-focus', !!on_); var b = document.getElementById('aiExpand'); if (b) { b.innerHTML = ic(on_ ? 'minimize' : 'maximize'); b.setAttribute('aria-label', on_ ? 'ย่อหน้าต่าง (แสดงเมนู)' : 'ขยายเต็มจอ (ซ่อนเมนู)'); b.title = b.getAttribute('aria-label'); } }
 VIEWS.ai = function (el) {
-  var ud = S.ud, st = S.ui.aiv || (S.ui.aiv = { chat: '', tab: 'chat', search: true });
+  var ud = S.ud, st = S.ui.aiv || (S.ui.aiv = { chat: '', search: true });
   if (!can('ai')) {
     el.innerHTML = '<div class="view-head"><div><h2>' + tr('ai') + '</h2></div></div><div class="panel"><div class="empty warn"><div class="eic">' + ic('ai') + '</div><h3>ผู้ช่วย AI ไม่รวมอยู่ในแพ็กเกจปัจจุบัน</h3><p>ผู้ช่วย AI เปิดให้ใช้งานในช่วงทดลองใช้ 7 วัน และในแพ็กเกจมาตรฐานรายเดือนขึ้นไป ท่านสามารถดูรายละเอียดและสมัครแพ็กเกจได้ที่หน้าแพ็กเกจและราคา</p><button class="btn o" id="aiPlan">' + ic('card') + ' ดูแพ็กเกจและราคา</button></div></div>';
     $('#aiPlan', el).onclick = function () { nav('pricing'); };
     return;
   }
-  var isAdmin = S.member.role === 'admin';
-  el.innerHTML = '<div class="view-head"><div><h2>' + tr('ai') + '</h2><p class="sub">ถามได้ทุกเรื่อง ทั้งกฎหมาย ประวัติศาสตร์ เหตุการณ์ปัจจุบัน และความรู้รอบตัว</p></div><div class="row wrapr" style="gap:8px"><div class="seg" id="aiTabs"><button data-t="chat" class="' + (st.tab === 'chat' ? 'on' : '') + '">' + ic('ai') + ' แชต</button><button data-t="mail" class="' + (st.tab === 'mail' ? 'on' : '') + '">' + ic('mail') + ' สรุปอีเมล</button></div><button class="btn sm" id="aiHist">' + ic('history') + ' บทสนทนา</button><button class="btn sm k" id="aiNew">' + ic('plus') + ' เริ่มใหม่</button></div></div><div id="aiBody"></div>';
+  var L = aiLayout();
   function chat() { return ud.aiChats.filter(function (c) { return c.id === st.chat; })[0]; }
-  function drawChat() {
-    var c = chat();
-    $('#aiBody', el).innerHTML = '<div class="ai-shell"><aside class="ai-side" id="aiSide"></aside><section class="ai-main"><div class="ai-log" id="aiLog"></div>' +
-      '<div class="ai-input"><div class="hscroll" id="aiSug">' + ['อธิบายมาตรา 420 ประมวลกฎหมายแพ่งและพาณิชย์ ให้เข้าใจง่าย', 'สรุปองค์ประกอบความผิดฐานลักทรัพย์', 'ความแตกต่างระหว่างโมฆะกับโมฆียะ', 'สรุปเหตุการณ์สำคัญของสงครามโลกครั้งที่ 2', 'สร้างแบบทดสอบความรู้กฎหมายแพ่ง 5 ข้อ', 'ข่าวกฎหมายไทยที่ประกาศใช้ล่าสุด'].map(function (q) { return '<button class="chip" data-sq="' + esc(q) + '">' + ic('sparkle') + esc(q) + '</button>'; }).join('') + '</div>' +
-      '<div class="ai-box"><textarea id="aiIn" rows="1" placeholder="พิมพ์คำถามของท่าน" maxlength="6000"></textarea><button class="icon-btn" id="aiSend" aria-label="ส่ง" style="background:var(--black);color:var(--black-ink);border-radius:50%">' + ic('send') + '</button></div>' +
-      '<div class="row wrapr tiny muted" style="gap:10px"><label class="check" style="align-items:center"><input type="checkbox" id="aiWeb"' + (st.search ? ' checked' : '') + '><span>ค้นหาข้อมูลล่าสุดจากเว็บ</span></label><span class="grow">คำตอบเป็นเครื่องมือช่วยค้นคว้า มิใช่คำปรึกษาทางกฎหมายจากผู้ประกอบวิชาชีพ</span><span id="aiQuota"></span></div></div></section></div>';
-    side(); log();
-    var inp = $('#aiIn', el);
-    if (S.ui.aiPrefill) { inp.value = S.ui.aiPrefill; S.ui.aiPrefill = ''; }
-    inp.addEventListener('input', function () { inp.style.height = 'auto'; inp.style.height = Math.min(inp.scrollHeight, 200) + 'px'; });
-    inp.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); send(); } });
-    $('#aiSend', el).onclick = send;
-    $('#aiWeb', el).onchange = function () { st.search = this.checked; store.set('ui', S.ui); };
-    on($('#aiSug', el), 'click', '[data-sq]', function (e, b) { inp.value = b.getAttribute('data-sq'); send(); });
-    setTimeout(function () { inp.focus(); }, 100);
+  el.innerHTML = '<div class="ai2 ai-' + L + '">' +
+    '<div class="ai2-top"><button class="btn sm" id="aiHist">' + ic('history') + '<span>บทสนทนา</span></button><span class="spacer"></span><button class="btn sm k" id="aiNew">' + ic('plus') + '<span>เริ่มใหม่</span></button><button class="icon-btn" id="aiExpand"></button></div>' +
+    '<div class="ai2-stage" id="aiStage"></div>' +
+    '<div class="ai2-dock" id="aiDock"></div></div>';
+  setAiFocus(document.body.classList.contains('ai-focus'));
+  function inputHtml() {
+    if (L === 'bolt') return '<div class="bolt-box"><textarea id="aiIn" rows="3" maxlength="6000" placeholder="พิมพ์คำถาม เช่น ขอคำอธิบายมาตรา หรือสรุปประเด็นกฎหมาย"></textarea>' +
+      '<div class="bolt-bar"><label class="bolt-tog"><input type="checkbox" id="aiWeb"' + (st.search ? ' checked' : '') + '><span>' + ic('globe') + ' ค้นข้อมูลล่าสุดจากเว็บ</span></label><span class="spacer"></span><span class="tiny muted" id="aiQuota"></span><button class="bolt-send" id="aiSend" aria-label="ส่งคำถาม">' + ic('arrowR') + '</button></div></div>';
+    return '<div class="pi-box"><button class="pi-plus" id="aiTools" aria-label="ตัวเลือกเพิ่มเติม" aria-expanded="false">' + ic('plus') + '</button>' +
+      '<textarea id="aiIn" rows="1" maxlength="6000" placeholder="ถามอะไรก็ได้"></textarea><button class="pi-send" id="aiSend" aria-label="ส่งคำถาม">' + ic('send') + '</button>' +
+      '<div class="pi-pop hidden" id="aiPop"><label class="check"><input type="checkbox" id="aiWeb"' + (st.search ? ' checked' : '') + '><span>' + ic('globe') + ' ค้นข้อมูลล่าสุดจากเว็บ</span></label><button class="menu-item" data-sq2="สรุปเนื้อหาที่ฉันวางต่อไปนี้ให้กระชับ:\n">' + ic('file') + ' สรุปเนื้อหา</button><button class="menu-item" data-sq2="วิเคราะห์องค์ประกอบความผิดจากข้อเท็จจริงต่อไปนี้:\n">' + ic('scale') + ' วิเคราะห์ข้อเท็จจริง</button></div></div>' +
+      '<div class="tiny muted pi-note"><span>คำตอบเป็นเครื่องมือช่วยค้นคว้า มิใช่คำปรึกษาทางกฎหมาย</span><span id="aiQuota"></span></div>';
   }
-  function side() {
-    var box = $('#aiSide', el); if (!box) return;
-    box.innerHTML = '<div class="muted small" style="margin:4px 6px 8px">บทสนทนาก่อนหน้า</div>' + (ud.aiChats.length ? ud.aiChats.map(function (c) { return '<div class="row" style="gap:4px"><button class="menu-item" data-c="' + esc(c.id) + '" style="min-height:44px;padding:8px 10px;' + (c.id === st.chat ? 'background:var(--sky-50)' : '') + '"><span class="grow ellipsis small">' + esc(c.title) + '</span></button><button class="icon-btn" data-dc="' + esc(c.id) + '" aria-label="ลบ" style="width:36px;height:36px;color:var(--bad)">' + ic('trash') + '</button></div>'; }).join('') : '<p class="muted small" style="padding:6px">ยังไม่มีบทสนทนา</p>');
+  function hero() {
+    var name = esc(S.member.displayName || '');
+    if (L === 'bolt') return '<div class="ai-hero"><img class="ai-logo" src="' + LOGO + '" alt="THAI LAW LIBRARY"><h2>มีอะไรให้ช่วยค้นคว้าวันนี้ คุณ' + name + '</h2><p class="muted">ถาม ค้นคว้า อธิบายบทบัญญัติ และสรุปประเด็นกฎหมายได้ในที่เดียว</p><div class="bolt-in">' + inputHtml() + '</div><div class="bolt-sug">' + AI_SUGGEST.map(function (q) { return '<button class="chip" data-sq="' + esc(q) + '">' + esc(q) + '</button>'; }).join('') + '</div></div>';
+    return '<div class="ai-hero"><img class="ai-logo" src="' + LOGO + '" alt="THAI LAW LIBRARY"><h2>สวัสดี คุณ' + name + '</h2><div class="pi-in">' + inputHtml() + '</div><div class="pi-sug">' + AI_SUGGEST.slice(0, 4).map(function (q) { return '<button class="pi-sq" data-sq="' + esc(q) + '">' + ic('sparkle') + '<span>' + esc(q) + '</span>' + ic('arrowR') + '</button>'; }).join('') + '</div></div>';
   }
-  function log() {
-    var c = chat(), box = $('#aiLog', el); if (!box) return;
-    if (!c || !c.msgs.length) { box.innerHTML = '<div class="empty" style="margin:auto"><img src="' + LOGO + '" alt="" style="width:72px;height:72px;border-radius:50%;background:#fff"><h3>สวัสดีครับ ' + esc(S.member.displayName || '') + '</h3><p>ผู้ช่วย AI ของคลังกฎหมายไทยพร้อมช่วยค้นคว้า อธิบายบทบัญญัติ สรุปเนื้อหา เปรียบเทียบมาตรา วิเคราะห์องค์ประกอบความผิดเบื้องต้น และสร้างแบบทดสอบเพื่อทบทวนบทเรียน</p></div>'; return; }
-    box.innerHTML = c.msgs.map(function (m, i) {
-      if (m.role === 'user') return '<div class="msg user"><div class="av">' + avatarHtml(34) + '</div><div class="bub">' + esc(m.text).replace(/\n/g, '<br>') + '</div></div>';
-      return '<div class="msg"><div class="av"><img src="' + LOGO + '" alt=""></div><div class="bub">' + (m.pending ? '<span class="typing"><i></i><i></i><i></i></span>' : md(m.text)) +
+  function draw() {
+    var c = chat(), stage = $('#aiStage', el), dock = $('#aiDock', el);
+    if (!c || !c.msgs.length) { stage.innerHTML = hero(); dock.innerHTML = ''; dock.classList.add('hidden'); }
+    else {
+      dock.classList.remove('hidden');
+      stage.innerHTML = '<div class="ai2-log" id="aiLog"></div>';
+      dock.innerHTML = inputHtml();
+      log();
+    }
+    bindInput();
+  }
+  function log(revealIdx) {
+    var c = chat(), box = $('#aiLog', el); if (!box || !c) return;
+    box.innerHTML = '<div class="ai2-brand"><img src="' + LOGO + '" alt=""></div>' + c.msgs.map(function (m, i) {
+      if (m.role === 'user') return '<div class="msg user"><div class="bub">' + esc(m.text).replace(/\n/g, '<br>') + '</div></div>';
+      return '<div class="msg"><div class="av"><img src="' + LOGO + '" alt=""></div><div class="bub" data-i="' + i + '">' + (m.pending ? '<span class="typing"><i></i><i></i><i></i></span><span class="tiny muted"> กำลังค้นคว้าและเรียบเรียงคำตอบ</span>' : md(m.text)) +
         (m.sources && m.sources.length ? '<div class="src">' + m.sources.map(function (s) { return '<a href="' + esc(s.url) + '" target="_blank" rel="noopener">' + ic('link') + ' ' + esc(s.title) + '</a>'; }).join('') + '</div>' : '') +
         (m.pending ? '' : '<div class="row" style="gap:4px;margin-top:6px"><button class="btn sm ghost" data-cp="' + i + '">' + ic('copy') + ' คัดลอก</button><button class="btn sm ghost" data-sn="' + i + '">' + ic('note') + ' บันทึกลงสมุด</button></div>') + '</div></div>';
     }).join('');
-    box.scrollTop = box.scrollHeight;
+    if (revealIdx !== undefined) {
+      var bub = box.querySelector('.bub[data-i="' + revealIdx + '"]');
+      if (bub && !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) {
+        var kids = Array.prototype.slice.call(bub.children); kids.forEach(function (k) { k.style.opacity = 0; });
+        kids.forEach(function (k, j) { setTimeout(function () { k.style.transition = 'opacity .25s'; k.style.opacity = 1; }, Math.min(j * 45, 1200)); });
+      }
+    }
+    var sc = document.scrollingElement || document.documentElement;
+    if (document.body.classList.contains('ai-focus')) box.parentNode.scrollTop = box.parentNode.scrollHeight;
+    else window.scrollTo({ top: sc.scrollHeight, behavior: 'smooth' });
+  }
+  function bindInput() {
+    var inp = $('#aiIn', el); if (!inp) return;
+    if (S.ui.aiPrefill) { inp.value = S.ui.aiPrefill; S.ui.aiPrefill = ''; }
+    var grow = function () { inp.style.height = 'auto'; inp.style.height = Math.min(inp.scrollHeight, 220) + 'px'; };
+    inp.addEventListener('input', grow); grow();
+    inp.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); send(); } });
+    $('#aiSend', el).onclick = send;
+    var wb = $('#aiWeb', el); if (wb) wb.onchange = function () { st.search = this.checked; store.set('ui', S.ui); };
+    var tl = $('#aiTools', el); if (tl) tl.onclick = function () { var p = $('#aiPop', el), open_ = p.classList.toggle('hidden'); tl.setAttribute('aria-expanded', String(!open_)); };
+    setTimeout(function () { if (inp.isConnected && !('ontouchstart' in window)) inp.focus(); }, 100);
   }
   function send() {
     var inp = $('#aiIn', el), q = inp.value.trim(); if (!q) return;
     var c = chat();
-    if (!c) { c = { id: uid(), title: q.slice(0, 60), u: Date.now(), msgs: [] }; ud.aiChats.unshift(c); st.chat = c.id; }
+    if (!c) { c = { id: uid(), title: q.slice(0, 60), u: Date.now(), msgs: [] }; ud.aiChats.unshift(c); st.chat = c.id; store.set('ui', S.ui); }
     c.msgs.push({ role: 'user', text: q }); c.u = Date.now();
     var pend = { role: 'model', text: '', pending: true }; c.msgs.push(pend);
-    inp.value = ''; inp.style.height = 'auto'; side(); log();
+    draw();
     var ctx = S.ui.aiContext || ''; S.ui.aiContext = '';
-    api('aiChat', { messages: c.msgs.filter(function (m) { return !m.pending; }).map(function (m) { return { role: m.role, text: m.text }; }), search: st.search, context: ctx }, { timeout: 90000 }).then(function (r) {
+    api('aiChat', { messages: c.msgs.filter(function (m) { return !m.pending; }).map(function (m) { return { role: m.role, text: m.text }; }), search: st.search, context: ctx }, { timeout: 120000 }).then(function (r) {
       pend.pending = false; pend.text = r.text; pend.sources = r.sources || [];
       var qd = $('#aiQuota', el); if (qd) qd.textContent = 'ใช้ไปแล้ว ' + r.used + '/' + r.limit + ' ครั้งวันนี้';
     }).catch(function (e) {
       pend.pending = false; pend.text = '**ไม่สามารถตอบคำถามได้ในขณะนี้**\n\n' + (e.msg || 'กรุณาลองใหม่อีกครั้ง');
-    }).then(function () { c.msgs = c.msgs.slice(-40); c.u = Date.now(); saveUD(); log(); });
+    }).then(function () { c.msgs = c.msgs.slice(-40); c.u = Date.now(); saveUD(); if (el.isConnected) log(c.msgs.indexOf(pend)); });
   }
-  function drawMail() {
-    var box = $('#aiBody', el);
-    if (!isAdmin) { box.innerHTML = '<div class="panel"><div class="empty"><div class="eic">' + ic('mail') + '</div><h3>AI สรุปอีเมล (Gmail Thread Summarizer)</h3><p>ฟังก์ชันนี้ดึงอีเมลทุกฉบับในเธรดเดียวกันมาเรียงจากเก่าไปใหม่ ให้ AI สรุปภาพรวมและร่างคำตอบที่อ้างอิงทุกข้อความ เนื่องจากระบบเชื่อมต่อกับกล่องจดหมายของบัญชีผู้ดูแลระบบ จึงเปิดให้ใช้เฉพาะผู้ดูแลระบบ เพื่อคุ้มครองความเป็นส่วนตัวของอีเมล</p><p>สมาชิกสามารถคัดลอกเนื้อหาอีเมลมาวางในแท็บแชต แล้วขอให้ AI สรุปหรือร่างคำตอบได้ทันที</p><button class="btn k" id="toChat">' + ic('ai') + ' ไปที่แชต</button></div></div>'; $('#toChat', box).onclick = function () { st.tab = 'chat'; render(); }; return; }
-    box.innerHTML = '<div class="grid g2"><section class="panel"><div class="panel-title"><span class="ic">' + ic('mail') + '</span><h3>เลือกเธรดอีเมล</h3></div><div class="input">' + ic('search') + '<input id="gmQ" value="in:inbox" placeholder="คำค้นหาแบบ Gmail"></div><button class="btn sm" id="gmLoad" style="margin-top:8px">' + ic('refresh') + ' โหลดรายการ</button><div id="gmList" class="col" style="margin-top:10px;gap:6px"></div></section>' +
-      '<section class="panel"><div class="panel-title"><span class="ic o">' + ic('ai') + '</span><h3>สรุปและร่างคำตอบ</h3></div><div class="input"><input id="gmIns" placeholder="คำแนะนำเพิ่มเติม (ถ้ามี) เช่น ตอบรับนัดหมายอย่างสุภาพ"></div><div id="gmOut" class="msg" style="margin-top:12px"><div class="bub muted">เลือกเธรดอีเมลจากรายการด้านซ้าย</div></div></section></div>';
-    function loadList() {
-      $('#gmList', box).innerHTML = '<div class="skeleton" style="height:50px"></div>';
-      api('gmailThreads', { query: $('#gmQ', box).value }).then(function (r) { $('#gmList', box).innerHTML = r.items.map(function (t_) { return '<button class="entry" data-th="' + esc(t_.id) + '" style="width:100%;text-align:left"><span class="grow"><span class="et">' + esc(t_.subject || '(ไม่มีหัวเรื่อง)') + '</span><br><span class="es">' + esc(t_.from) + ' · ' + t_.count + ' ข้อความ · ' + fmtDateTime(t_.last) + '</span></span></button>'; }).join('') || '<p class="muted small">ไม่พบเธรด</p>'; }).catch(function (e) { $('#gmList', box).innerHTML = '<p class="muted small">' + esc(e.msg) + '</p>'; });
-    }
-    $('#gmLoad', box).onclick = loadList;
-    on(box, 'click', '[data-th]', function (e, b) {
-      var out = $('#gmOut', box); out.innerHTML = '<div class="bub"><span class="typing"><i></i><i></i><i></i></span></div>';
-      api('gmailSummarize', { threadId: b.getAttribute('data-th'), instruction: $('#gmIns', box).value }, { timeout: 90000 }).then(function (r) { out.innerHTML = '<div class="bub"><div class="tag">' + esc(r.subject) + ' · ' + r.count + ' ข้อความ</div>' + md(r.text) + '<button class="btn sm" id="gmCp" style="margin-top:8px">' + ic('copy') + ' คัดลอก</button></div>'; $('#gmCp', out).onclick = function () { copyText(r.text); }; }).catch(function (er) { out.innerHTML = '<div class="bub">' + esc(er.msg) + '</div>'; });
+  function histDrawer() {
+    drawer('left', function (d, close) {
+      function paint() {
+        d.innerHTML = '<div class="drawer-head"><img src="' + LOGO + '" alt="" style="width:40px;height:40px;border-radius:50%;background:#fff"><div class="grow"><b>บทสนทนาก่อนหน้า</b><div class="tiny muted">ใช้ร่วมกันทั้งสองรูปแบบหน้าผู้ช่วย AI</div></div><button class="icon-btn" data-x aria-label="ปิด">' + ic('x') + '</button></div><div class="drawer-body"><div class="menu-list">' +
+          (ud.aiChats.length ? ud.aiChats.map(function (c) { return '<div class="row" style="gap:4px"><button class="menu-item grow" data-c="' + esc(c.id) + '" style="' + (c.id === st.chat ? 'background:var(--sky-50)' : '') + '"><span class="mi">' + ic('ai') + '</span><span class="grow"><span class="mt ellipsis" style="display:block">' + esc(c.title) + '</span><span class="ms">' + fmtDateTime(c.u) + '</span></span></button><button class="icon-btn" data-dc="' + esc(c.id) + '" aria-label="ลบบทสนทนา" style="color:var(--bad)">' + ic('trash') + '</button></div>'; }).join('') : '<p class="muted small" style="padding:6px">ยังไม่มีบทสนทนา</p>') + '</div></div>';
+        d.querySelector('[data-x]').onclick = close;
+      }
+      paint();
+      on(d, 'click', '[data-c]', function (e, b) { st.chat = b.getAttribute('data-c'); store.set('ui', S.ui); close(); draw(); });
+      on(d, 'click', '[data-dc]', function (e, b) { var id = b.getAttribute('data-dc'); confirmBox('ลบบทสนทนา', 'ต้องการลบบทสนทนานี้หรือไม่', { danger: true, icon: 'trash' }).then(function (ok) { if (!ok) return; ud.aiChats = ud.aiChats.filter(function (c) { return c.id !== id; }); if (st.chat === id) { st.chat = ''; draw(); } saveUD(); paint(); }); });
     });
-    loadList();
   }
-  function render() { $$('#aiTabs button', el).forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-t') === st.tab); }); if (st.tab === 'mail') drawMail(); else drawChat(); }
-  on($('#aiTabs', el), 'click', '[data-t]', function (e, b) { st.tab = b.getAttribute('data-t'); store.set('ui', S.ui); render(); });
-  $('#aiNew', el).onclick = function () { st.chat = ''; st.tab = 'chat'; store.set('ui', S.ui); render(); };
-  $('#aiHist', el).onclick = function () { var s = $('#aiSide', el); if (s) s.classList.toggle('show'); };
-  on(el, 'click', '[data-c]', function (e, b) { st.chat = b.getAttribute('data-c'); store.set('ui', S.ui); side(); log(); });
-  on(el, 'click', '[data-dc]', function (e, b) { var id = b.getAttribute('data-dc'); confirmBox('ลบบทสนทนา', 'ต้องการลบบทสนทนานี้หรือไม่', { danger: true, icon: 'trash' }).then(function (ok) { if (!ok) return; ud.aiChats = ud.aiChats.filter(function (c) { return c.id !== id; }); if (st.chat === id) st.chat = ''; saveUD(); render(); }); });
+  $('#aiNew', el).onclick = function () { st.chat = ''; store.set('ui', S.ui); draw(); };
+  $('#aiHist', el).onclick = histDrawer;
+  $('#aiExpand', el).onclick = function () { setAiFocus(!document.body.classList.contains('ai-focus')); };
+  on(el, 'click', '[data-sq]', function (e, b) { var inp = $('#aiIn', el); inp.value = b.getAttribute('data-sq'); send(); });
+  on(el, 'click', '[data-sq2]', function (e, b) { var inp = $('#aiIn', el); inp.value = b.getAttribute('data-sq2'); $('#aiPop', el).classList.add('hidden'); inp.focus(); });
   on(el, 'click', '[data-cp]', function (e, b) { copyText(chat().msgs[+b.getAttribute('data-cp')].text); });
   on(el, 'click', '[data-sn]', function (e, b) { if (!gate('notes')) return; var m = chat().msgs[+b.getAttribute('data-sn')]; var n = { id: uid(), title: 'คำตอบ AI: ' + chat().title.slice(0, 40), html: sanitize(md(m.text)), c: Date.now(), u: Date.now() }; ud.notes.unshift(n); saveUD(); toast('บันทึกลงสมุดบันทึกแล้ว', n.title, 'ok', { action: 'เปิดสมุดบันทึก', onAction: function () { S.ui.note = n.id; nav('notes'); } }); });
-  render();
+  draw();
 };
 
 /* =======================================================================
@@ -213,8 +239,9 @@ var TIMELINES = {
 };
 VIEWS.tools = function (el) {
   var st = S.ui.tl || (S.ui.tl = { t: 'dict' });
-  var TL = [['dict', 'dict', 'พจนานุกรมศัพท์กฎหมาย', 'tools_basic'], ['abbr', 'abbr', 'รวมคำย่อทางกฎหมาย', 'tools_basic'], ['date', 'calendar', 'คำนวณวันและระยะเวลา', 'tools_basic'], ['period', 'calc', 'คำนวณกำหนดเวลาทางกฎหมาย', 'tools_all'], ['cite', 'quote', 'จัดรูปแบบการอ้างอิง', 'tools_all'], ['brief', 'brief', 'แบบฟอร์มสรุปคำพิพากษา', 'tools_all'], ['compare', 'compare', 'เปรียบเทียบบทบัญญัติ', 'compare'], ['timeline', 'route', 'ลำดับขั้นตอนทางกฎหมาย', 'tools_all'], ['viewer', 'viewer', 'เปิดอ่านเอกสาร', 'tools_all'], ['notes', 'note', 'สมุดบันทึกทางกฎหมาย', 'notes']];
-  el.innerHTML = '<div class="view-head"><div><h2>' + tr('tools') + '</h2><p class="sub">เครื่องมือที่ช่วยให้การศึกษาและการทำงานด้านกฎหมายสะดวกขึ้น</p></div></div><div class="hscroll" id="tlTabs">' + TL.map(function (x) { return '<button class="chip ' + (st.t === x[0] ? 'on' : '') + '" data-t="' + x[0] + '">' + ic(x[1]) + esc(x[2]) + '</button>'; }).join('') + '</div><div id="tlBody" style="margin-top:12px"></div>';
+  var TL = [['dict', 'dict', 'พจนานุกรมศัพท์กฎหมาย (ไทย/อังกฤษ)', 'tools_basic'], ['abbr', 'abbr', 'รวมคำย่อทางกฎหมาย', 'tools_basic'], ['date', 'calendar', 'คำนวณวันและระยะเวลา', 'tools_basic'], ['period', 'calc', 'คำนวณกำหนดเวลาทางกฎหมาย', 'tools_all'], ['cite', 'quote', 'จัดรูปแบบการอ้างอิง', 'tools_all'], ['brief', 'brief', 'แบบฟอร์มสรุปคำพิพากษา', 'tools_all'], ['compare', 'compare', 'เปรียบเทียบบทบัญญัติ', 'compare'], ['timeline', 'route', 'ลำดับขั้นตอนทางกฎหมาย', 'tools_all'], ['viewer', 'viewer', 'เปิดอ่านเอกสาร', 'tools_all']];
+  if (st.t === 'notes') st.t = 'dict';
+  el.innerHTML = '<div class="view-head"><div><h2>' + tr('tools') + '</h2><p class="sub">พจนานุกรม คำย่อ คำนวณระยะเวลา และอื่น ๆ</p></div></div><div class="hscroll" id="tlTabs">' + TL.map(function (x) { return '<button class="chip ' + (st.t === x[0] ? 'on' : '') + '" data-t="' + x[0] + '">' + ic(x[1]) + esc(x[2]) + '</button>'; }).join('') + '</div><div id="tlBody" style="margin-top:12px"></div>';
   function draw() {
     var def = TL.filter(function (x) { return x[0] === st.t; })[0];
     var b = $('#tlBody', el); b.className = 'enter';
@@ -405,8 +432,8 @@ VIEWS.help = function (el) {
     '<div class="grid g3" style="margin-bottom:16px"><button class="panel corner law-item" id="hpBug" style="display:flex"><span class="li-ic">' + ic('bug') + '</span><span class="grow"><span class="li-t">แจ้งปัญหาการใช้งาน</span><br><span class="li-s">ระบบแสดงผลผิดปกติ ใช้งานไม่ได้ หรือช้า</span></span></button>' +
       '<button class="panel corner law-item" id="hpLaw" style="display:flex"><span class="li-ic">' + ic('alert') + '</span><span class="grow"><span class="li-t">รายงานข้อมูลกฎหมายที่อาจผิดพลาด</span><br><span class="li-s">ตัวบท ชื่อมาตรา หรือคำอธิบายคลาดเคลื่อน</span></span></button>' +
       '<button class="panel corner law-item" id="hpPrice" style="display:flex"><span class="li-ic">' + ic('card') + '</span><span class="grow"><span class="li-t">แพ็กเกจและการชำระเงิน</span><br><span class="li-s">ดูรายละเอียดแพ็กเกจรายเดือนและรายปี</span></span></button></div>' +
-    '<section class="panel" style="margin-bottom:16px"><div class="panel-title"><span class="ic">' + ic('layers') + '</span><h3>แหล่งข้อมูลกฎหมายและสัญญาอนุญาต</h3></div><div class="prose"><p>ตัวบทกฎหมายไทยไม่มีลิขสิทธิ์ตามมาตรา 7 แห่งพระราชบัญญัติลิขสิทธิ์ พ.ศ. 2537 คลังกฎหมายไทยรวบรวมตัวบทจากชุดข้อมูลเปิดที่อนุญาตให้นำไปใช้ต่อได้ และระบุที่มาของกฎหมายทุกฉบับไว้ในหน้ากฎหมายและด้านหลังป้ายมาตรา</p></div><div class="col" style="gap:8px;margin-top:10px">' +
-      [['NitiBench-statute — VISTEC / VISAI', 'ตัวบทฉบับปรับปรุงรายมาตรา (เช่น ประมวลกฎหมายแพ่งและพาณิชย์ ประมวลรัษฎากร)', 'MIT', 'https://huggingface.co/datasets/VISAI-AI/nitibench-statute'], ['OCS Krisdika — Open Law Data Thailand', 'ข้อมูลต้นทางจากสำนักงานคณะกรรมการกฤษฎีกา (รัฐธรรมนูญ ประมวลกฎหมาย พระราชบัญญัติประกอบรัฐธรรมนูญ และอื่น ๆ)', 'CC-BY-4.0', 'https://huggingface.co/datasets/Surathai21/ocs-krisdika'], ['thailaw-v1.0 — PyThaiNLP', 'พระราชบัญญัติ พระราชกำหนด และประกาศคณะปฏิวัติ/คณะรักษาความสงบที่ไม่มีในแหล่งอื่น', 'CC0-1.0', 'https://huggingface.co/datasets/pythainlp/thailaw-v1.0'], ['กรมสนธิสัญญาและกฎหมาย กระทรวงการต่างประเทศ', 'รายชื่ออนุสัญญาและสนธิสัญญา (คำอธิบายภาษาไทยจัดทำโดยคลังกฎหมายไทย)', 'ข้อมูลสาธารณะของราชการ', 'https://treaties.mfa.go.th'], ['Wikimedia Commons และคลังภาพอื่น', 'ภาพประกอบที่เจ้าของอนุญาต พร้อมเครดิตใต้ภาพ', 'CC0 / CC BY / CC BY-SA / Public domain', 'https://commons.wikimedia.org']].map(function (x) { return '<a class="entry" href="' + x[3] + '" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><span class="grow"><span class="et">' + esc(x[0]) + ' <span class="tag">' + esc(x[2]) + '</span></span><br><span class="es">' + esc(x[1]) + '</span></span>' + ic('external') + '</a>'; }).join('') +
+    '<section class="panel" style="margin-bottom:16px"><div class="panel-title"><span class="ic">' + ic('layers') + '</span><h3>แหล่งข้อมูลกฎหมายและสัญญาอนุญาต</h3></div><div class="prose"><p>ตัวบทกฎหมายไทยไม่มีลิขสิทธิ์ตามมาตรา 7 แห่งพระราชบัญญัติลิขสิทธิ์ พ.ศ. 2537 คลังกฎหมายรวบรวมตัวบทจากชุดข้อมูลเปิดที่อนุญาตให้นำไปใช้ต่อได้ และระบุที่มาของกฎหมายทุกฉบับไว้ในหน้ากฎหมายและด้านหลังป้ายมาตรา</p></div><div class="col" style="gap:8px;margin-top:10px">' +
+      [['NitiBench-statute — VISTEC / VISAI', 'ตัวบทฉบับปรับปรุงรายมาตรา (เช่น ประมวลกฎหมายแพ่งและพาณิชย์ ประมวลรัษฎากร)', 'MIT', 'https://huggingface.co/datasets/VISAI-AI/nitibench-statute'], ['OCS Krisdika — Open Law Data Thailand', 'ข้อมูลต้นทางจากสำนักงานคณะกรรมการกฤษฎีกา (รัฐธรรมนูญ ประมวลกฎหมาย พระราชบัญญัติประกอบรัฐธรรมนูญ และอื่น ๆ)', 'CC-BY-4.0', 'https://huggingface.co/datasets/Surathai21/ocs-krisdika'], ['thailaw-v1.0 — PyThaiNLP', 'พระราชบัญญัติ พระราชกำหนด และประกาศคณะปฏิวัติ/คณะรักษาความสงบที่ไม่มีในแหล่งอื่น', 'CC0-1.0', 'https://huggingface.co/datasets/pythainlp/thailaw-v1.0'], ['กรมสนธิสัญญาและกฎหมาย กระทรวงการต่างประเทศ', 'รายชื่ออนุสัญญาและสนธิสัญญา (คำอธิบายภาษาไทยจัดทำโดยคลังกฎหมาย)', 'ข้อมูลสาธารณะของราชการ', 'https://treaties.mfa.go.th'], ['Wikimedia Commons และคลังภาพอื่น', 'ภาพประกอบที่เจ้าของอนุญาต พร้อมเครดิตใต้ภาพ', 'CC0 / CC BY / CC BY-SA / Public domain', 'https://commons.wikimedia.org']].map(function (x) { return '<a class="entry" href="' + x[3] + '" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><span class="grow"><span class="et">' + esc(x[0]) + ' <span class="tag">' + esc(x[2]) + '</span></span><br><span class="es">' + esc(x[1]) + '</span></span>' + ic('external') + '</a>'; }).join('') +
       '</div><p class="tiny muted" style="margin-top:8px" id="hpImport"></p></section>' +
     '<section class="panel"><div class="panel-title"><span class="ic k">' + ic('mail') + '</span><h3>ติดต่อผู้ดูแลระบบ</h3></div><div class="prose"><p>' + esc(NO_PASS_TEXT) + '</p></div><div class="col" style="margin-top:12px">' + contactCards() + '</div></section>' +
     '<p class="tiny muted" style="text-align:center;margin-top:16px" id="hpVer">THAI LAW LIBRARY เวอร์ชัน ' + esc(APP_VERSION) + '</p>';
