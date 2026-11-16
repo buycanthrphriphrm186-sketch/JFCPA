@@ -174,3 +174,14 @@ function apiPublicStatsV5_() {
   if (s.foreign && s.foreign.JP) s.foreignDetail.JP = { laws: s.foreign.JP, sections: null };
   return s;
 }
+
+/* อัปเกรดระบบที่ติดตั้งไว้แล้ว (ข้อมูลเดิมทุกแถวคงอยู่ครบ): เพิ่มหัวคอลัมน์ใหม่ต่อท้าย ย้ายค่าตั้งค่า และติดตั้งตัวตั้งเวลา */
+function upgradeV5_() {
+  try { ensureHeaders_(); } catch (e) { logError_('upgrade.headers', e, ''); }
+  try { migrateV4_(); } catch (e) { logError_('upgrade.migrate', e, ''); }
+  try { installTriggers_(); } catch (e) { logError_('upgrade.triggers', e, ''); }
+  try { ScriptApp.newTrigger('formatWorkbook').timeBased().after(2 * 60 * 1000).create(); } catch (e) { logError_('upgrade.format', e, ''); }
+  CacheService.getScriptCache().removeAll(['cfg', 'pubstats', 'fman5', 'fcounts']);
+  PropertiesService.getScriptProperties().setProperty('INIT_DONE', CONFIG.VERSION);
+  audit_('', 'system.upgrade', 'อัปเกรดเป็นเวอร์ชัน ' + CONFIG.VERSION + ' (ข้อมูลสมาชิกเดิมคงอยู่ครบ)');
+}

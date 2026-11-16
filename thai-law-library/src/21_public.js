@@ -19,9 +19,12 @@ function splashStep(k, ok) {
   splashDone[k] = ok !== false;
   var li = document.querySelector('#splashSteps li[data-k="' + k + '"]'); if (li) li.classList.add(ok === false ? 'bad' : 'ok');
   var n = Object.keys(splashDone).length, pct = Math.round(n / 4 * 100);
-  splashPaint(pct, n >= 4 ? 'พร้อมให้บริการ' : (ok === false ? SPLASH_STEPS[k] + ' ไม่สำเร็จ ระบบใช้ข้อมูลสำรองแทน' : SPLASH_STEPS[k] + ' สำเร็จ'));
+  SPLASH_DATA_PCT = pct;
+  splashPaint(null, n >= 4 ? 'พร้อมให้บริการ' : (ok === false ? SPLASH_STEPS[k] + ' ไม่สำเร็จ ระบบใช้ข้อมูลสำรองแทน' : SPLASH_STEPS[k] + ' สำเร็จ'));
 }
+var SPLASH_DATA_PCT = 0;
 function splashPaint(pct, text) {
+  if (pct === null) { var st0 = document.getElementById('splashStatus'); if (st0 && text) st0.textContent = text; return; }
   var arc = document.getElementById('spArc'); if (arc) arc.setAttribute('stroke-dasharray', pct + ' 100');
   var p = document.getElementById('splashPct'); if (p) p.textContent = pct + '%';
   var bar = document.getElementById('splashBar'); if (bar) bar.setAttribute('aria-valuenow', pct);
@@ -36,7 +39,14 @@ function runSplash(minSec, ready, onDone) {
     splashPaint(100);
     setTimeout(function () { sp.classList.add('warp'); setTimeout(function () { sp.remove(); }, 900); onDone(); }, 280);
   }
-  if (skip) { setTimeout(function () { skip.classList.remove('hidden'); }, 4000); skip.onclick = end; }
+  /* หน้าโลโก้แสดงครบตามเวลาที่กำหนด (ไม่มีปุ่มข้าม) — วงกลมเดินตามเวลาจริงและความคืบหน้าของการเชื่อมต่อ */
+  if (skip) skip.remove();
+  var tick = setInterval(function () {
+    if (ended) { clearInterval(tick); return; }
+    var tp = (Date.now() - t0) / (minSec * 1000) * 100;
+    var cap = SPLASH_DATA_PCT >= 100 ? 99 : Math.max(8, SPLASH_DATA_PCT * 0.9 + 6);
+    splashPaint(Math.max(4, Math.floor(Math.min(tp, cap))));
+  }, 250);
   var maxT = setTimeout(end, Math.max(minSec * 1000 + 10000, 20000));
   Promise.resolve(ready).catch(function () {}).then(function () {
     var wait = Math.max(0, minSec * 1000 - (Date.now() - t0));

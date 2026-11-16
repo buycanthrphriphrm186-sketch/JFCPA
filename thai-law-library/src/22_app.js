@@ -709,7 +709,10 @@ function openFocus(id, opt) {
   var s = SECS[id];
   if (!s) { delete IDS_TRIED[id]; if (!ensureIds([id], function () { if (SECS[id]) openFocus(id, opt); else toast('ไม่พบมาตรานี้ในฐานข้อมูล', '', 'warn'); })) toast('ไม่พบมาตรานี้ในฐานข้อมูล', '', 'warn'); return; }
   var keepTimer = focusEl && TIMERS._shown;
-  closeFocus();
+  /* เลื่อนไปมาตราถัดไป: สร้างป้ายใหม่ก่อน แล้วจึงนำป้ายเดิมออก (พื้นหลังยังล็อกอยู่ตลอด ไม่มีจังหวะหน้าจอว่าง) */
+  var oldFocus = opt.slide && focusEl ? focusEl : null;
+  if (oldFocus) { focusEl = null; stopClockLoop(); } else closeFocus();
+  try {
   logOpen(id);
   var l = LAWS[s.law] || {};
   var fav = !!S.ud.favorites[id];
@@ -724,9 +727,16 @@ function openFocus(id, opt) {
     '<div class="fnav"><button class="nav-arrow" data-f="close" aria-label="กลับไปหน้ารายการ">' + ic('arrowL') + '</button><span class="fnav-t">' + esc(lawShort(l)) + ' · มาตรา ' + esc(s.no) + '</span><button class="nav-arrow next" data-f="next" aria-label="มาตราถัดไป">' + ic('arrowR') + '</button></div>' +
   '</div></div>');
   document.body.appendChild(focusEl);
+  if (oldFocus) { oldFocus.remove(); oldFocus = null; }
   document.body.style.overflow = 'hidden';
   syncScrollLock();
   focusEl.scrollTop = 0;
+  } catch (err) {
+    reportError('focus.open', err);
+    if (oldFocus) { if (focusEl && focusEl !== oldFocus) focusEl.remove(); focusEl = oldFocus; } else if (focusEl) { focusEl.remove(); focusEl = null; syncScrollLock(); }
+    toast('ไม่สามารถเปิดป้ายมาตรานี้ได้', 'กรุณาลองอีกครั้ง', 'warn');
+    return;
+  }
   var card = focusEl.querySelector('.flip');
   on(focusEl, 'click', '[data-f]', function (e, b) {
     var f = b.getAttribute('data-f'); tap();
@@ -874,8 +884,9 @@ function stepBall(dt, minA) {
 }
 function drawClock(cv, minA, hrA, col) {
   var ctx = cv.getContext('2d'), W = cv.width, c = W / 2, R = W / 2 - 6;
-  var st = getComputedStyle(document.documentElement);
-  var ink = (st.getPropertyValue('--ink') || '#0E1116').trim(), face = (st.getPropertyValue('--surface') || '#fff').trim(), line = (st.getPropertyValue('--line-strong') || '#c7d3df').trim();
+  var C = CLOCK.colors;
+  if (!C || C.theme !== document.documentElement.getAttribute('data-theme')) { var st = getComputedStyle(document.documentElement); C = CLOCK.colors = { theme: document.documentElement.getAttribute('data-theme'), ink: (st.getPropertyValue('--ink') || '#0E1116').trim(), face: (st.getPropertyValue('--surface') || '#fff').trim(), line: (st.getPropertyValue('--line-strong') || '#c7d3df').trim() }; }
+  var ink = C.ink, face = C.face, line = C.line;
   ctx.clearRect(0, 0, W, W);
   ctx.beginPath(); ctx.arc(c, c, R, 0, Math.PI * 2); ctx.fillStyle = face; ctx.fill(); ctx.lineWidth = 6; ctx.strokeStyle = col; ctx.stroke();
   for (var i = 0; i < 60; i++) { var a = i / 60 * Math.PI * 2, big = i % 5 === 0; ctx.beginPath(); ctx.moveTo(c + Math.sin(a) * (R - (big ? 18 : 10)), c - Math.cos(a) * (R - (big ? 18 : 10))); ctx.lineTo(c + Math.sin(a) * (R - 5), c - Math.cos(a) * (R - 5)); ctx.lineWidth = big ? 3 : 1.2; ctx.strokeStyle = big ? ink : line; ctx.stroke(); }

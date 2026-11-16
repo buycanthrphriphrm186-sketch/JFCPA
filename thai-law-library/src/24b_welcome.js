@@ -57,9 +57,11 @@ function fillHeroVariant(root, v) {
 }
 /* แบบ morph: ภาพเรียงเป็นวงกลมหมุนช้า แล้วคลี่เป็นแนวโค้งเมื่อเลื่อนหน้าลง / แบบ smooth: ภาพหลักขยายเต็มกรอบเมื่อเลื่อน */
 function heroScrollLoop(hero, v) {
-  var cards = $$('.hv-card', hero), reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches, t0 = performance.now();
+  var cards = $$('.hv-card', hero), reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches, t0 = performance.now(), vis = true, running = true;
+  try { new IntersectionObserver(function (es) { vis = es[0].isIntersecting; if (vis && !running) { running = true; requestAnimationFrame(frame); } }).observe(hero); } catch (e) {}
   function frame(t) {
     if (!hero.isConnected) return;
+    if (!vis || document.hidden) { running = false; return; }
     var rect = hero.getBoundingClientRect(), H = rect.height || 1;
     var p = clamp(-rect.top / (H * 0.7), 0, 1);
     if (rect.bottom > -50 && rect.top < innerHeight + 50) {
@@ -67,9 +69,20 @@ function heroScrollLoop(hero, v) {
       if (v === 'morph') {
         var n = cards.length, rot = reduce ? 0 : (t - t0) / 26000 * Math.PI * 2, R = Math.min(W, H) * 0.36;
         var cw = clamp(W * 0.11, 64, 130);
+        var el_ = t - t0, intro = reduce ? 1 : clamp((el_ - 2500) / 900, 0, 1), lineK = reduce ? 1 : clamp((el_ - 400) / 900, 0, 1);
+        if (!hero._sc) hero._sc = cards.map(function () { return { x: (Math.random() - 0.5) * W * 1.4, y: (Math.random() - 0.5) * H * 1.2, r: (Math.random() - 0.5) * 180 }; });
         cards.forEach(function (c, i) {
           var a = i / n * Math.PI * 2 + rot;
           var x0 = cx + Math.cos(a) * R * 1.25, y0 = cy + Math.sin(a) * R * 0.9;
+          if (intro < 1) {
+            var sc = hero._sc[i], lx = cx + (i - (n - 1) / 2) * Math.min(cw * 0.75, W / n), ly = cy;
+            var sx = cx + sc.x, sy = cy + sc.y, px = sx + (lx - sx) * lineK, py = sy + (ly - sy) * lineK;
+            x0 = px + (x0 - px) * intro; y0 = py + (y0 - py) * intro;
+            c.style.width = cw + 'px'; c.style.height = cw * 1.3 + 'px';
+            c.style.transform = 'translate(' + (x0 - cw / 2) + 'px,' + (y0 - cw * 0.65) + 'px) rotate(' + (sc.r * (1 - lineK)) + 'deg)';
+            c.style.opacity = String(Math.min(1, lineK * 1.4));
+            return;
+          }
           var x1 = (i + 0.5) / n * W, y1 = H * 0.86 - Math.sin((i + 0.5) / n * Math.PI) * H * 0.16;
           var x = x0 + (x1 - x0) * p, y = y0 + (y1 - y0) * p, r = (1 - p) * (a * 57.3 % 360 > 180 ? -8 : 8);
           c.style.width = cw + 'px'; c.style.height = cw * 1.3 + 'px';
@@ -111,7 +124,12 @@ function explainerHtml() {
 }
 function startExplainer() {
   var cv = document.getElementById('explCv'); if (!cv) return;
-  var ctx = cv.getContext('2d'), W = cv.width, H = cv.height, t0 = performance.now(), cap = document.getElementById('explCap'), lastCap = -1;
+  var W = 1280, H = 720, t0 = performance.now(), cap = document.getElementById('explCap'), lastCap = -1;
+  /* ความละเอียดตามขนาดจอจริง (ไม่เกิน 1.5 เท่า) เพื่อให้ลื่นบนมือถือ */
+  function fitCanvas() { var w = Math.max(320, Math.min(1280, Math.round((cv.clientWidth || 640) * Math.min(window.devicePixelRatio || 1, 1.5)))); if (cv.width !== w) { cv.width = w; cv.height = Math.round(w * 9 / 16); } }
+  fitCanvas(); window.addEventListener('resize', debounce(fitCanvas, 200));
+  var ctx = cv.getContext('2d', { alpha: false }), visible = true, lastDraw = 0;
+  try { new IntersectionObserver(function (es) { visible = es[0].isIntersecting; }).observe(cv); } catch (e) {}
   var fr = document.getElementById('explFrame'), fs = document.getElementById('explFs');
   function fsSync() { var on_ = document.fullscreenElement === fr || fr.classList.contains('pseudo-fs'); fs.innerHTML = ic(on_ ? 'minimize' : 'maximize') + '<span>' + (on_ ? 'ออกจากเต็มจอ' : 'เต็มจอ') + '</span>'; fs.setAttribute('aria-label', on_ ? 'ออกจากโหมดเต็มจอ' : 'ดูแบบเต็มจอ'); }
   fs.onclick = function () {
@@ -183,11 +201,15 @@ function startExplainer() {
   }
   function frame(now) {
     if (!cv.isConnected) { EXPL.raf = 0; document.removeEventListener('fullscreenchange', fsSync); return; }
+    EXPL.raf = requestAnimationFrame(frame);
     var t = ((now - t0) / 1000) % EXPLAINER_LEN, f = t / EXPLAINER_LEN;
+    if (EXPL.onTime) EXPL.onTime(t);
+    if (!visible || document.hidden || now - lastDraw < 33) return;
+    lastDraw = now;
+    ctx.setTransform(cv.width / W, 0, 0, cv.height / H, 0, 0);
     if (t < 7) scSpace(t / 7); else if (t < 21) scOutside((t - 7) / 14, f); else scHall((t - 21) / (EXPLAINER_LEN - 21), f, (t - 21) / (EXPLAINER_LEN - 21));
     var ci = 0; for (var k = 0; k < EXPLAINER_LINES.length; k++) if (t >= EXPLAINER_LINES[k][0]) ci = k;
     if (ci !== lastCap && cap) { lastCap = ci; cap.textContent = EXPLAINER_LINES[ci][1]; }
-    EXPL.raf = requestAnimationFrame(frame);
   }
   if (!EXPL.logo) { EXPL.logo = new Image(); EXPL.logo.src = LOGO; }
   stopExplainer();
@@ -265,6 +287,73 @@ function hbars(rows, col) {
   var max = Math.max(1, Math.max.apply(null, rows.map(function (r) { return r[1]; })));
   return '<div class="hbars">' + rows.map(function (r) { return '<div class="hb" title="' + esc(r[0]) + ' ' + fmtN(r[1]) + '"><span class="hb-l">' + esc(r[0]) + '</span><span class="hb-t"><i style="width:' + Math.max(r[1] ? 2 : 0, r[1] / max * 100) + '%;background:' + col + '"></i></span><b class="hb-v">' + fmtN(r[1]) + '</b></div>'; }).join('') + '</div>';
 }
+
+
+/* ---------------- เสียงประกอบวิดีโอ: ดนตรีบรรเลงเบา ๆ + เสียงบรรยายภาษาไทย ----------------
+   เบราว์เซอร์อนุญาตให้เล่นเสียงหลังผู้ใช้แตะ/คลิก/กดแป้นครั้งแรกเท่านั้น จึงเริ่มเสียงทันทีที่มีการโต้ตอบครั้งแรก
+   ระดับเสียงลดลงอัตโนมัติตามสัดส่วนที่วิดีโอเลื่อนพ้นจอ และหยุดเมื่อเข้าสู่ระบบ */
+var EXA = { ctx: null, master: null, iv: null, vis: 1, started: false, lastLine: -1, voice: null };
+function explAudioStop() {
+  try { if (EXA.iv) clearInterval(EXA.iv); EXA.iv = null; if (window.speechSynthesis) speechSynthesis.cancel(); if (EXA.ctx) EXA.ctx.close(); } catch (e) {}
+  EXA.ctx = null; EXA.master = null; EXA.started = false; EXA.lastLine = -1; EXPL.onTime = null;
+  document.removeEventListener('pointerdown', explAudioUnlock, true); document.removeEventListener('keydown', explAudioUnlock, true); document.removeEventListener('touchstart', explAudioUnlock, true);
+}
+function explAudioUnlock() {
+  if (EXA.started || !document.getElementById('explCv')) return;
+  if (S.ud && S.ud.settings && S.ud.settings.sound === false) return;
+  try {
+    var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+    EXA.ctx = new AC(); EXA.master = EXA.ctx.createGain(); EXA.master.gain.value = 0; EXA.master.connect(EXA.ctx.destination);
+    EXA.started = true;
+    var badge = document.getElementById('explSnd'); if (badge) badge.classList.add('on');
+    var chords = [[261.63, 329.63, 392.0], [220.0, 261.63, 329.63], [174.61, 220.0, 261.63], [196.0, 246.94, 293.66]], step = 0;
+    function note(f, t, dur, vol, type) {
+      var o = EXA.ctx.createOscillator(), g = EXA.ctx.createGain();
+      o.type = type || 'sine'; o.frequency.value = f; o.connect(g); g.connect(EXA.master);
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 0.08); g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
+      o.start(t); o.stop(t + dur + 0.05);
+    }
+    function beat() {
+      if (!EXA.ctx) return;
+      var t = EXA.ctx.currentTime + 0.05, ch = chords[Math.floor(step / 8) % chords.length];
+      if (step % 8 === 0) ch.forEach(function (f) { note(f / 2, t, 3.6, 0.05, 'triangle'); });
+      note(ch[step % 3] * (step % 2 ? 2 : 1), t, 0.6, 0.035, 'sine');
+      step++;
+      var target = 0.9 * EXA.vis; EXA.master.gain.setTargetAtTime(target, EXA.ctx.currentTime, 0.4);
+      if (window.speechSynthesis) try { speechSynthesis.getVoices(); } catch (e) {}
+    }
+    beat(); EXA.iv = setInterval(beat, 450);
+    if (window.speechSynthesis) {
+      var pick = function () { var v = speechSynthesis.getVoices().filter(function (x) { return /^th/i.test(x.lang); }); EXA.voice = v[0] || null; };
+      pick(); speechSynthesis.onvoiceschanged = pick;
+    }
+    EXPL.onTime = function (t) {
+      var ci = 0; for (var k = 0; k < EXPLAINER_LINES.length; k++) if (t >= EXPLAINER_LINES[k][0]) ci = k;
+      if (ci === EXA.lastLine) return; EXA.lastLine = ci;
+      if (!window.speechSynthesis || !EXA.voice || EXA.vis < 0.35 || document.hidden) return;
+      try { speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(EXPLAINER_LINES[ci][1]); u.lang = 'th-TH'; u.voice = EXA.voice; u.rate = 1; u.volume = Math.min(1, EXA.vis); speechSynthesis.speak(u); } catch (e) {}
+    };
+  } catch (e) { EXA.started = false; }
+}
+function explAudioInit() {
+  explAudioStop();
+  var fr = document.getElementById('explFrame'); if (!fr) return;
+  if (!document.getElementById('explSnd')) fr.insertAdjacentHTML('beforeend', '<div class="expl-snd" id="explSnd" aria-live="polite">' + ic('volume') + '<span class="off">แตะที่ใดก็ได้เพื่อเปิดเสียง</span><span class="onl">มีเสียงประกอบ</span></div>');
+  try {
+    var th = []; for (var i = 0; i <= 20; i++) th.push(i / 20);
+    new IntersectionObserver(function (es) {
+      EXA.vis = es[0].intersectionRatio;
+      if (EXA.master && EXA.ctx) EXA.master.gain.setTargetAtTime(0.9 * EXA.vis, EXA.ctx.currentTime, 0.3);
+      if (EXA.vis < 0.2 && window.speechSynthesis) try { speechSynthesis.cancel(); } catch (e) {}
+    }, { threshold: th }).observe(fr);
+  } catch (e) {}
+  document.addEventListener('pointerdown', explAudioUnlock, true); document.addEventListener('keydown', explAudioUnlock, true); document.addEventListener('touchstart', explAudioUnlock, true);
+}
+(function () {
+  var s0 = startExplainer, s1 = stopExplainer;
+  startExplainer = function () { s0.apply(this, arguments); explAudioInit(); };
+  stopExplainer = function () { explAudioStop(); return s1.apply(this, arguments); };
+})();
 
 /* ---------------- ต่อเติมหน้าแรกเดิม (ไม่ลบส่วนใด) ---------------- */
 (function () {

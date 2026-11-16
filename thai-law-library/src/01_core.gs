@@ -28,7 +28,7 @@ var CONFIG = {
   // รหัสผ่านชั้นที่ 1 (จากผู้ดูแลระบบ) — setup() จะเก็บเป็นค่า Hash ใน Script Properties
   // ค่านี้อยู่ฝั่งเซิร์ฟเวอร์เท่านั้น ไม่เคยถูกส่งไปยังหน้าเว็บ
   DEFAULT_ADMIN_PASSWORD: 'THAI LAW LIBRARY 13224520260606200899',
-  VERSION: '3.0.0',
+  VERSION: '5.0.0',
   HASH_ROUNDS: 120,
   SESSION_DAYS: 180,
   TRIAL_DAYS: 7
@@ -257,10 +257,15 @@ function setup() {
 
 function ensureInit_() {
   var props = PropertiesService.getScriptProperties();
-  if (props.getProperty('INIT_DONE')) return;
+  var done = props.getProperty('INIT_DONE');
+  if (done === CONFIG.VERSION) return;
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(25000)) return;
-  try { if (!props.getProperty('INIT_DONE')) setup(); } finally { lock.releaseLock(); }
+  try {
+    done = props.getProperty('INIT_DONE');
+    if (!done) setup();
+    else if (done !== CONFIG.VERSION) upgradeV5_();
+  } finally { lock.releaseLock(); }
 }
 
 function installTriggers_() {

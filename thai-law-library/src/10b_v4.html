@@ -56,10 +56,12 @@ html.scroll-lock body{position:fixed;left:0;right:0;width:100%}
 .focus .face .pname{-webkit-line-clamp:unset;display:block;overflow:visible}
 .focus .face .tline{bottom:0}
 .focus .src-note{margin-top:10px;text-indent:0 !important;text-align:left !important}
-.stagec.slide-next{animation:slideNext .42s var(--ease) both}
-.stagec.slide-prev{animation:slidePrev .42s var(--ease) both}
-@keyframes slideNext{from{opacity:0;transform:translateX(64px)}to{opacity:1;transform:none}}
-@keyframes slidePrev{from{opacity:0;transform:translateX(-64px)}to{opacity:1;transform:none}}
+.stagec.slide-next{animation:slideNext .38s var(--ease)}
+.stagec.slide-prev{animation:slidePrev .38s var(--ease)}
+.focus{backdrop-filter:none !important;-webkit-backdrop-filter:none !important;background:var(--bg) !important}
+#spArc{transition:stroke-dasharray .25s linear}
+@keyframes slideNext{from{opacity:.15;transform:translateX(56px)}to{opacity:1;transform:none}}
+@keyframes slidePrev{from{opacity:.15;transform:translateX(-56px)}to{opacity:1;transform:none}}
 .fnav{display:flex;align-items:center;gap:12px;justify-content:space-between;margin-top:4px}
 .fnav-t{flex:1;text-align:center;font-weight:600;color:var(--muted);font-size:.9rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .nav-arrow{width:58px;height:58px;flex:none;border-radius:50%;border:0;background:var(--black);color:var(--black-ink);display:grid;place-items:center;box-shadow:var(--shadow-2);transition:transform .2s var(--spring)}
@@ -276,4 +278,23 @@ svg.area .dax{font-size:17px}
 .pay-box h4{display:flex;align-items:center;gap:8px;font-size:.95rem}
 .pay-qr{display:flex;flex-direction:column;align-items:center;gap:6px}
 .pay-qr svg{width:220px;height:220px;background:#fff;border-radius:12px}
+
+/* ---- v5: ตัวเลือกกลุ่มกฎหมาย ---- */
+.law-scope{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.scope-btn{display:flex;align-items:center;gap:10px;text-align:left;min-height:64px;padding:10px 14px;border-radius:16px;border:1.5px solid var(--line-strong);background:var(--surface);color:var(--ink)}
+.scope-btn svg{flex:none;width:24px;height:24px;color:var(--sky-600)}
+.scope-btn span{display:flex;flex-direction:column;min-width:0}
+.scope-btn b{font-size:1rem;line-height:1.3}
+.scope-btn small{font-size:.75rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.scope-btn.on{background:var(--black);color:var(--black-ink);border-color:var(--black)}
+.scope-btn.on svg,.scope-btn.on small{color:var(--black-ink)}
+#catChips.hidden{display:none}
+.chip .cnt{font-size:.75em;opacity:.75;margin-left:2px}
+.ctable td:nth-child(n+2),.ctable th:nth-child(n+2){text-align:right;font-variant-numeric:tabular-nums}
+.ctable tr.tot td{font-weight:700;border-top:2px solid var(--line-strong)}
+@media (max-width:420px){.scope-btn{padding:8px 10px;gap:8px}.scope-btn b{font-size:.92rem}}
+
+.expl-snd{position:absolute;left:10px;top:10px;display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 12px;border-radius:999px;background:rgba(255,255,255,.92);color:#0E1116;font-size:.82rem;font-weight:700;box-shadow:var(--shadow-1);pointer-events:none}
+.expl-snd svg{width:16px;height:16px}
+.expl-snd .onl{display:none}.expl-snd.on .onl{display:inline}.expl-snd.on .off{display:none}
 </style>
