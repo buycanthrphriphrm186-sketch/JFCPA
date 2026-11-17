@@ -392,7 +392,7 @@ function otpFlow(r, remember) {
       '<button type="button" class="btn sm ghost" id="otpResend">' + ic('refresh') + ' ส่งรหัสใหม่</button></div>',
     onOpen: function (m) {
       var rs = $('#otpResend', m);
-      function tick() { if (cool > 0) { rs.disabled = true; rs.innerHTML = ic('refresh') + ' ส่งรหัสใหม่ได้ใน ' + cool + ' วินาที'; cool--; } else { rs.disabled = false; rs.innerHTML = ic('refresh') + ' ส่งรหัสใหม่'; clearInterval(iv); iv = null; } }
+      function tick() { if (cool > 0) { rs.disabled = true; rs.innerHTML = ic('refresh') + ' ส่งรหัสใหม่ได้ในอีก ' + Math.floor(cool / 60) + ':' + ('0' + cool % 60).slice(-2) + ' นาที'; cool--; } else { rs.disabled = false; rs.innerHTML = ic('refresh') + ' ส่งรหัสใหม่'; clearInterval(iv); iv = null; } }
       function startCool() { cool = 60; if (!iv) iv = setInterval(tick, 1000); tick(); }
       if (!needEmail) startCool();
       function send(email) {

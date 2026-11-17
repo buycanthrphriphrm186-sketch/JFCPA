@@ -91,7 +91,7 @@ VIEWS.ai = function (el) {
   function bindInput() {
     var inp = $('#aiIn', el); if (!inp) return;
     if (S.ui.aiPrefill) { inp.value = S.ui.aiPrefill; S.ui.aiPrefill = ''; }
-    var grow = function () { inp.style.height = 'auto'; inp.style.height = Math.min(inp.scrollHeight, 220) + 'px'; };
+    var grow = function () { inp.style.height = 'auto'; inp.style.height = Math.min(inp.scrollHeight, Math.round(window.innerHeight * 0.45)) + 'px'; };
     inp.addEventListener('input', grow); grow();
     inp.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); send(); } });
     $('#aiSend', el).onclick = send;

@@ -716,15 +716,16 @@ function openFocus(id, opt) {
   logOpen(id);
   var l = LAWS[s.law] || {};
   var fav = !!S.ud.favorites[id];
-  var dock = '<div class="tdock"></div>';
+  var dock = '';
   focusEl = h('<div class="focus ' + (opt.slide ? 'no-anim' : '') + '" role="dialog" aria-modal="true" aria-label="ป้ายมาตรา"><div class="stagec ' + (opt.slide ? 'slide-' + opt.slide : '') + '">' +
     '<div class="flip ' + (opt.back ? 'flipped' : '') + '" data-id="' + esc(id) + '"><div class="flip-in">' +
-      '<div class="face front"><div class="top"><span class="law-s">' + esc(l.title || '') + (s.head ? '<br><span class="hd">' + esc(s.head) + '</span>' : '') + '</span></div><div class="center"><span class="secno">มาตรา ' + esc(s.no) + '</span><div class="pname">' + esc(s.name) + '</div><div class="muted small">' + esc(s.tags || '') + '</div></div>' +
+      '<div class="face front"><div class="top"><span class="law-s">' + esc(l.title || '') + (s.head ? '<br><span class="hd">' + esc(s.head) + '</span>' : '') + '</span><button class="fx" data-f="close" aria-label="ปิดป้ายและกลับไปหน้ารายการ">' + ic('x') + '</button></div><div class="center"><span class="secno">มาตรา ' + esc(s.no) + '</span><div class="pname">' + esc(s.name) + '</div><div class="muted small">' + esc(s.tags || '') + '</div></div>' +
         '<div class="bar"><button class="cbtn" data-f="timer">' + ic('timer') + '<span>จับเวลา</span></button><button class="cbtn fav ' + (fav ? 'on' : '') + '" data-act="fav" data-label="บันทึก">' + ic(fav ? 'bookmarkOn' : 'bookmark') + '<span>บันทึก</span></button><button class="cbtn flipb" data-f="flip">' + ic('flip') + '<span>พลิก</span></button></div>' + dock + '<div class="tline hidden"><i></i></div></div>' +
-      '<div class="face back"><div class="top"><span class="law-s">' + esc(l.title || '') + ' · <b>มาตรา ' + esc(s.no) + '</b></span></div><div class="body"><h4>' + esc(s.name) + '</h4>' + lawHtml(s.text) + '<p class="tiny muted src-note">ที่มา: ' + esc(l.title || '') + (l.src ? ' — ' + esc(l.src) : '') + (l.status ? ' — ' + esc(l.status) : '') + ' — ตรวจสอบฉบับปัจจุบันกับสำนักงานคณะกรรมการกฤษฎีกาก่อนนำไปอ้างอิง</p></div>' +
+      '<div class="face back"><div class="top"><span class="law-s">' + esc(l.title || '') + ' · <b>มาตรา ' + esc(s.no) + '</b></span><button class="fx" data-f="close" aria-label="ปิดป้ายและกลับไปหน้ารายการ">' + ic('x') + '</button></div><div class="body"><h4>' + esc(s.name) + '</h4>' + lawHtml(s.text) + '<p class="tiny muted src-note">ที่มา: ' + esc(l.title || '') + (l.src ? ' — ' + esc(l.src) : '') + (l.status ? ' — ' + esc(l.status) : '') + ' — ตรวจสอบฉบับปัจจุบันกับสำนักงานคณะกรรมการกฤษฎีกาก่อนนำไปอ้างอิง</p></div>' +
         '<div class="bar"><button class="cbtn" data-f="copy" aria-label="คัดลอกตัวบท">' + ic('copy') + '</button><button class="cbtn" data-f="ai" aria-label="ถาม AI เกี่ยวกับมาตรานี้">' + ic('ai') + '</button><button class="cbtn" data-f="note" aria-label="เพิ่มหมายเหตุ">' + ic('edit') + '</button><button class="cbtn" data-f="pdf" aria-label="ดาวน์โหลด PDF">' + ic('download') + '</button><button class="cbtn" data-f="timer" aria-label="จับเวลา">' + ic('timer') + '</button><button class="cbtn flipb" data-f="flip">' + ic('flip') + '<span>พลิก</span></button></div>' + dock + '</div>' +
     '</div></div>' +
-    '<div class="fnav"><button class="nav-arrow" data-f="close" aria-label="กลับไปหน้ารายการ">' + ic('arrowL') + '</button><span class="fnav-t">' + esc(lawShort(l)) + ' · มาตรา ' + esc(s.no) + '</span><button class="nav-arrow next" data-f="next" aria-label="มาตราถัดไป">' + ic('arrowR') + '</button></div>' +
+    '<div class="tdock tdock-out"></div>' +
+    '<div class="fnav"><button class="nav-arrow" data-f="prev" aria-label="มาตราก่อนหน้า">' + ic('arrowL') + '</button><span class="fnav-t">' + esc(lawShort(l)) + ' · มาตรา ' + esc(s.no) + '</span><button class="nav-arrow next" data-f="next" aria-label="มาตราถัดไป">' + ic('arrowR') + '</button></div>' +
   '</div></div>');
   document.body.appendChild(focusEl);
   if (oldFocus) { oldFocus.remove(); oldFocus = null; }
@@ -740,9 +741,10 @@ function openFocus(id, opt) {
   var card = focusEl.querySelector('.flip');
   on(focusEl, 'click', '[data-f]', function (e, b) {
     var f = b.getAttribute('data-f'); tap();
-    if (f === 'flip') { SND.click(); card.classList.toggle('flipped'); focusEl.scrollTo({ top: 0, behavior: 'smooth' }); }
+    if (f === 'flip') { SND.click(); card.classList.toggle('flipped'); }
     else if (f === 'close') closeFocus();
     else if (f === 'next') goNext(1);
+    else if (f === 'prev') goNext(-1);
     else if (f === 'timer') { if (gate('timer')) { if (TIMERS._shown) hideTimer(); else timerPanel(id); } }
     else if (f === 'copy') copyText((l.title || '') + ' มาตรา ' + s.no + '\n' + s.text);
     else if (f === 'ai') { if (gate('ai')) { closeFocus(); S.ui.aiPrefill = 'อธิบาย' + (l.title || '') + ' มาตรา ' + s.no + ' (' + s.name + ') ให้เข้าใจง่าย พร้อมองค์ประกอบและตัวอย่าง'; S.ui.aiContext = (l.title || '') + ' มาตรา ' + s.no + '\n' + s.text; nav('ai'); } }
@@ -754,18 +756,19 @@ function openFocus(id, opt) {
     if (nid) { SND.click(); openFocus(nid, { slide: dir > 0 ? 'next' : 'prev', back: card.classList.contains('flipped'), timer: !!TIMERS._shown }); return; }
     var lw = LAWS[s.law];
     if (lw && lw.n && !LAW_LOADED[s.law]) { toast('กำลังโหลดมาตราถัดไป', lw.title, ''); ensureLaw(s.law).then(function (ok) { if (ok && focusEl && nextSecId(id, dir)) goNext(dir); }); return; }
-    toast(dir > 0 ? 'นี่คือมาตราสุดท้ายของกฎหมายฉบับนี้' : 'นี่คือมาตราแรกของกฎหมายฉบับนี้', '', '');
+    if (dir > 0 && typeof lawFinished === 'function') lawFinished(s.law); else toast(dir > 0 ? 'นี่คือมาตราสุดท้ายของกฎหมายฉบับนี้' : 'นี่คือมาตราแรกของกฎหมายฉบับนี้', '', '');
   }
   on(focusEl, 'click', '[data-act="fav"]', function () { toggleFav(id); });
   focusEl.addEventListener('click', function (e) { if (e.target === focusEl) closeFocus(); });
   focusEl.tabIndex = -1; focusEl.focus({ preventScroll: true });
   focusEl.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' || e.key === 'ArrowLeft') { e.preventDefault(); closeFocus(); }
+    if (e.key === 'Escape') { e.preventDefault(); closeFocus(); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); goNext(-1); }
     else if (e.key === 'ArrowRight') { e.preventDefault(); goNext(1); }
   });
   var sx = null;
   focusEl.addEventListener('touchstart', function (e) { sx = e.touches.length === 1 ? [e.touches[0].clientX, e.touches[0].clientY] : null; }, { passive: true });
-  focusEl.addEventListener('touchend', function (e) { if (!sx) return; var dx = e.changedTouches[0].clientX - sx[0], dy = e.changedTouches[0].clientY - sx[1]; if (Math.abs(dx) > 80 && Math.abs(dx) > Math.abs(dy) * 1.8 && dx < 0) goNext(1); sx = null; });
+  focusEl.addEventListener('touchend', function (e) { if (!sx) return; var dx = e.changedTouches[0].clientX - sx[0], dy = e.changedTouches[0].clientY - sx[1]; if (Math.abs(dx) > 80 && Math.abs(dx) > Math.abs(dy) * 1.8) goNext(dx < 0 ? 1 : -1); sx = null; });
   if (opt.timer || keepTimer) timerPanel(id);
   syncTimerBadges();
 }

@@ -3516,7 +3516,7 @@ function apiDekaGet_(p) {
   if (!r || String(r.docid) !== docid) return fail_('MISMATCH', 'แหล่งข้อมูลปรับปรุงรายการแล้ว กรุณาโหลดหน้าใหม่');
   var laws = []; try { laws = (typeof r.laws === 'string' ? JSON.parse(r.laws.replace(/'/g, '"')) : r.laws) || []; } catch (e) { laws = []; }
   var out = { docid: docid, label: r.label, caseNo: r.case_no, year: r.year, type: r.doc_type, shortText: r.short_text || '', longText: r.long_text || '',
-    laws: laws.map(function (x) { return (x.law_abbr || x.law_name || '') + ' ' + (x.display || ('ม. ' + x.section)); }), judges: String(r.judges || '').replace(/[\[\]']/g, ''),
+    laws: laws.map(function (x) { return ((x.law_abbr || x.law_name || '') + ' ' + (x.display || (x.section ? 'ม. ' + x.section : ''))).trim(); }), judges: String(r.judges || '').replace(/[\[\]']/g, ''),
     lowerCourts: String(r.lower_courts || '').replace(/[\[\]']/g, ''), source: r.source || '', department: r.department || '', remark: r.remark || '' };
   cachePutBig_(key, out, 21600);
   return out;

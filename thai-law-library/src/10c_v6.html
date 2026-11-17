@@ -1,0 +1,80 @@
+<style>
+/* ======================= v6: ปรับเฉพาะจุดตามคำสั่ง ======================= */
+/* ล็อกพื้นหลังโดยไม่ย้ายตำแหน่งหน้า (แก้หน้าจอขาว/เด้งขึ้นลงเมื่อพิมพ์ในป๊อปอัปแนวนอน) */
+html.scroll-lock,html.scroll-lock body{overflow:hidden !important}
+html.scroll-lock body{position:static !important;top:auto !important;width:auto}
+.modal-wrap{height:100%;height:100dvh;overscroll-behavior:contain}
+.focus,.fv-reader{height:100%;height:100dvh;overscroll-behavior:contain}
+.modal{will-change:auto}
+/* แถบโลโก้: ชื่อ “คลังกฎหมาย” อยู่กึ่งกลางแนวตั้งด้านขวาของโลโก้ */
+.app-head .brand>span{display:flex;flex-direction:column;justify-content:center;transform:translateY(-1px)}
+.app-head .brand>span br{display:none}
+.app-head .brand .t2{display:block}
+@media (min-width:521px){.app-head .brand .t1{display:block}}
+/* เสียงกดปุ่มถูกนำออก: ซ่อนตัวเลือกเสียงในการตั้งค่า */
+.row:has(> label > #gSound),.row:has(#gSound){display:none !important}
+/* ผู้ช่วย AI: ไม่มีปุ่มบวก ช่องพิมพ์ยืดตามข้อความ */
+.pi-plus,.pi-pop{display:none !important}
+.pi-box textarea,.bolt-box textarea{max-height:45vh;overflow-y:auto}
+/* เข้าสู่ระบบ: ไม่มีปุ่มบัญชีภายนอก */
+.auth-card .or{display:none}
+/* ป้ายสถานะกฎหมาย */
+.st-badge{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 8px;border-radius:999px;vertical-align:.1em;white-space:nowrap}
+.st-badge.ok{background:#E3F5E8;color:#16733A;border:1px solid #B9E3C6}
+.st-badge.bad{background:#FDE7E5;color:#B3261E;border:1px solid #F5C2BD}
+.st-badge.obs{background:var(--sky-50);color:var(--sky-700);border:1px solid var(--line-strong)}
+:root[data-theme="dark"] .st-badge.ok{background:#123322;color:#8FE0A9;border-color:#1E5236}
+:root[data-theme="dark"] .st-badge.bad{background:#3A1412;color:#FFB4AB;border-color:#5C201C}
+@media (prefers-color-scheme: dark){:root[data-theme="system"] .st-badge.ok{background:#123322;color:#8FE0A9;border-color:#1E5236}:root[data-theme="system"] .st-badge.bad{background:#3A1412;color:#FFB4AB;border-color:#5C201C}}
+/* ป้ายขยาย: ปุ่มปิดมุมขวาบน + ตัวจับเวลาอยู่ใต้ป้าย */
+.face .top{position:relative}
+.face .fx{margin-left:auto;width:38px;height:38px;flex:none;border-radius:50%;border:1.5px solid var(--line-strong);background:var(--surface);color:var(--ink);display:grid;place-items:center}
+.face .fx:active{transform:scale(.9)}
+.tdock-out{margin:0}
+.tdock-out .timer-panel{background:var(--surface);border-color:var(--line-strong)}
+/* หัวหน้าเนื้อหา: ปุ่มค้นหาแบบละเอียด + พิมพ์ PDF */
+.view-head .vh-actions,.view-head:has(#lawPrint){gap:8px}
+#lawPrint{margin-left:6px}
+/* หน้าต่างเลือกพิมพ์ */
+.pp-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.pp-list{display:flex;flex-direction:column;gap:2px}
+.pp-g,.pp-i{display:flex;align-items:flex-start;gap:10px;padding:8px 6px;border-radius:10px;cursor:pointer}
+.pp-g{margin-top:6px;background:var(--sky-50)}
+.pp-i{padding-left:22px}
+.pp-g:hover,.pp-i:hover{background:var(--sky-50)}
+.pp-g input,.pp-i input{position:absolute;opacity:0;width:1px;height:1px}
+.cbx{width:22px;height:22px;flex:none;border-radius:6px;border:2px solid var(--line-strong);background:var(--surface);display:grid;place-items:center;margin-top:1px}
+.cbx::after{content:"";width:6px;height:11px;border:solid #fff;border-width:0 3px 3px 0;transform:rotate(45deg) translate(-1px,-1px);opacity:0}
+input:checked+.cbx{background:var(--sky-600);border-color:var(--sky-600)}
+input:checked+.cbx::after{opacity:1}
+input:focus-visible+.cbx{box-shadow:0 0 0 3px var(--sky-200)}
+.fv-print{margin-left:auto;flex:none}
+/* หน้าถูกบล็อก */
+.blocked-page{min-height:100vh;display:grid;place-items:center;padding:24px;text-align:center}
+.blocked-page img{width:96px;height:96px;border-radius:50%;background:#fff;box-shadow:var(--shadow-2)}
+.blocked-page h1{margin:16px 0 8px;font-size:1.5rem}
+/* รีเฟรชข้อมูล */
+.sync-btn{width:40px;height:40px;flex:none}
+.sync-btn.spin-on svg{animation:spin .9s linear infinite}
+#fdChips .sync-btn{margin-right:4px}
+/* แดชบอร์ด: 4 กรอบ (2 คู่) */
+.dash-kpis.k4{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (min-width:900px){.dash-kpis.k4{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.ctable-wrap{max-height:none}
+.ctable tr.grp td{background:var(--sky-50);font-weight:700;color:var(--sky-700)}
+.dk-big{font-size:1.8rem;font-weight:700;margin-bottom:10px;font-variant-numeric:tabular-nums}
+.dk-big small{font-size:.9rem;color:var(--muted);font-weight:500}
+.st-pick{gap:10px;align-items:flex-end;margin-bottom:10px}
+.st-pick .field{min-width:140px;flex:1 1 140px}
+/* ภาพประกอบ: แนวตั้ง 9 ภาพ แนวนอน 8 ภาพ */
+@media (orientation: landscape){.media-strip figure.m9{display:none}}
+@media (orientation: portrait) and (min-width:600px){.media-strip{grid-template-columns:repeat(3,minmax(0,1fr))}}
+/* ฎีกา */
+.dk-form .grid{gap:10px}
+.dk-laws{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.dk-laws .chip{min-height:30px;font-size:.82rem}
+/* อนุสัญญา */
+.tw-switch{margin:4px 0 10px}
+/* แถบเมนูล่าง 7 ปุ่ม */
+@media (max-width:420px){.tab{padding:0 7px}}
+</style>

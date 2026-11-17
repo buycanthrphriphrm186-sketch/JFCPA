@@ -313,7 +313,7 @@ function modal(o) {
       finish(true);
     };
     if (o.onOpen) o.onOpen(m, api_);
-    setTimeout(function () { var f = m.querySelector('input,textarea,select'); if (f && o.autofocus !== false) f.focus(); }, 60);
+    setTimeout(function () { var f = m.querySelector('input,textarea,select'); if (f && o.autofocus !== false) { try { f.focus({ preventScroll: true }); } catch (e) { f.focus(); } } }, 60);
   });
 }
 function confirmBox(title, text, opt) { opt = opt || {}; return modal({ title: title, text: text, icon: opt.icon || 'help', tone: opt.tone, ok: opt.ok || 'ยืนยัน', cancel: opt.cancel || 'ยกเลิก', danger: opt.danger }); }
