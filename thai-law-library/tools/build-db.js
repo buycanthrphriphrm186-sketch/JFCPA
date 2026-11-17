@@ -9,6 +9,7 @@ vm.runInContext(fs.readFileSync(SRC, 'utf8') + ';this.L={cleanLawText_,parseSect
 const { cleanLawText_, parseSections_, lawCategory_, thaiNum_, LAW_SEED, SECTION_SEED } = ctx.L;
 
 const Z = s => String(s || '').replace(/[​‌‍﻿]/g, '').replace(/\s+/g, ' ').trim();
+const ZL = s => String(s || '').replace(/[​‌‍﻿]/g, '').replace(/\r/g, '').replace(/[ \t\u00a0]+/g, ' ').replace(/ *\n+ */g, '\n').trim(); /* คงการขึ้นบรรทัด (วรรค/อนุมาตรา) */
 const key = t => thaiNum_(Z(t)).replace(/\(ยกเลิก\)/g, '').replace(/\s+/g, '').replace(/[“”"]/g, '');
 const sha = s => crypto.createHash('sha256').update(s).digest('hex');
 const HEADRE = /^(ภาค|บรรพ|ลักษณะ|หมวด|ส่วนที่|บทเฉพาะกาล|บทกำหนดโทษ)/;
@@ -80,7 +81,7 @@ async function lines(f, fn) { const rl = readline.createInterface({ input: fs.cr
     const seen = {};
     order.forEach(id => {
       const o = secMap.get(id); const full = o.parts.join(' ');
-      const m = full.match(/^มาตรา\s*([0-9๐-๙]+(?:\/[0-9๐-๙]+)?)((?:\s*(?:ทวิ|ตรี|จัตวา|เบญจ|ฉ|สัตต|อัฏฐ|นว|ทศ)(?=\s))?)\s*(.*)$/);
+      const m = full.match(/^มาตรา\s*([0-9๐-๙]+(?:\/[0-9๐-๙]+)?)((?:\s*(?:ทวิ|ตรี|จัตวา|เบญจ|ฉ|สัตต|อัฏฐ|นว|ทศ)(?=\s))?)\s*([\s\S]*)$/);
       if (!m) return;
       let no = thaiNum_(m[1]) + (m[2] ? ' ' + m[2].trim() : '');
       if (seen[no]) no = no + '#' + (++seen[no]); else seen[no] = 1;
@@ -101,11 +102,24 @@ async function lines(f, fn) { const rl = readline.createInterface({ input: fs.cr
     const title = Z(r.title), cat = lawCategory_(title); if (!cat) return;
     const k = key(title);
     if (!niti.has(k)) niti.set(k, { title, cat, secs: [] });
-    let t = Z(r.text);
+    let t = ZL(r.text);
     const pre = t.indexOf('มาตรา');
     t = t.slice(pre >= 0 ? pre : 0).replace(/^มาตรา\s*[0-9๐-๙]+(?:\/[0-9๐-๙]+)?(?:\s*(?:ทวิ|ตรี|จัตวา|เบญจ|ฉ|สัตต|อัฏฐ|นว|ทศ)(?=\s))?\s*/, '');
     niti.get(k).secs.push({ no: thaiNum_(String(r.no)).trim(), text: cleanLawText_(t).trim() });
   });
+  /* โครงสร้างวรรค: ใช้การแบ่งวรรคของกฤษฎีกา (OCS) เมื่อข้อความตรงกัน มิฉะนั้นคงการขึ้นบรรทัดเฉพาะหน้าอนุมาตรา (กันการแบ่งวรรคผิดจากการตัดบรรทัด PDF) */
+  const NZ = t => thaiNum_(String(t || '')).replace(/[\s“”"'‘’]/g, '');
+  let usedOcs = 0, keptLines = 0;
+  for (const [k, v] of niti) {
+    const o = ocsBest.get(k), om = {};
+    if (o) o.secs.forEach(x => { om[x.no] = x.text; });
+    v.secs.forEach(sc => {
+      const ot = om[sc.no];
+      if (k === key('ประมวลกฎหมายแพ่งและพาณิชย์')) keptLines++;
+      else sc.text = sc.text.replace(/\n(?!\s*\(?\s*[0-9๐-๙]{1,3}\s*\))/g, ' ');
+    });
+  }
+  console.log('paragraphs from OCS', usedOcs, 'civil-code lines kept', keptLines);
   for (const [k, v] of niti) {
     const heads = ocsHeads.get(k) || {};
     laws.set(k, { title: v.title, cat: v.cat, source: 'NitiBench-statute (VISTEC/VISAI)', license: 'MIT', url: 'https://huggingface.co/datasets/VISAI-AI/nitibench-statute', status: 'ตัวบทฉบับปรับปรุง (รวมการแก้ไขเพิ่มเติม)', secs: v.secs.filter(s => s.text).map(s => ({ no: s.no, head: heads[s.no] || '', text: s.text })) });
@@ -132,7 +146,7 @@ async function lines(f, fn) { const rl = readline.createInterface({ input: fs.cr
 
   // ---------- finalize ----------
   fs.mkdirSync(OUT, { recursive: true });
-  for (const f of fs.readdirSync(OUT)) fs.unlinkSync(OUT + '/' + f);
+  for (const f of fs.readdirSync(OUT)) if (/^(s\d+\.json\.gz|index\.json\.gz|manifest\.json|SOURCES\.md)$/.test(f)) fs.unlinkSync(OUT + '/' + f);
   const mism = [];
   const index = [], shards = []; let cur = [], curSize = 0, totalSecs = 0;
   const catCount = {};

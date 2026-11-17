@@ -152,6 +152,8 @@ function api(action, payload, token) {
       raiseIncident_({ type: 'XSS/Injection attempt', severity: 'HIGH', memberId: who ? who.memberId : '', username: who ? who.username : String(payload.username || ''), detail: 'พบรูปแบบข้อมูลอันตรายในคำสั่ง ' + action + ': ' + threat, action: 'ปฏิเสธคำขอและบันทึกเหตุการณ์' });
       return fail_('REJECTED', 'ข้อมูลที่ส่งมามีรูปแบบที่ระบบไม่อนุญาต ระบบได้ปฏิเสธคำขอนี้และบันทึกเหตุการณ์ไว้แล้ว');
     }
+    var blk = typeof blockCheck_ === 'function' ? blockCheck_(action, payload, token) : null;
+    if (blk) return blk;
     var ctx = { cfg: cfg, token: token, member: null };
     if (route.auth) {
       var m = sessionMember_(token);
