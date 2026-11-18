@@ -1,14 +1,14 @@
 {
- "version": "2026-11-18T07:07:24.631Z",
- "laws": 4304,
- "sections": 119645,
+ "version": "2026-11-18T17:55:26.208Z",
+ "laws": 4315,
+ "sections": 120491,
  "shards": 20,
  "categories": {
   "ปร./ปว./คปค./คสช.": 640,
   "ประมวลกฎหมาย": 8,
   "พระราชบัญญัติ/พระราชกำหนด": 3620,
   "พระราชบัญญัติประกอบรัฐธรรมนูญ": 26,
-  "รัฐธรรมนูญ": 10
+  "รัฐธรรมนูญ": 21
  },
  "sources": [
   {
@@ -30,6 +30,6 @@
    "url": "https://huggingface.co/datasets/pythainlp/thailaw-v1.0"
   }
  ],
- "wholeText": 662,
- "sectioned": 3642
+ "wholeText": 663,
+ "sectioned": 3652
 }

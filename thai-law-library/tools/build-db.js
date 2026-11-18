@@ -308,6 +308,21 @@ async function lines(f, fn) { const rl = readline.createInterface({ input: fs.cr
   });
   console.log('thailaw added', added, 'total laws', laws.size);
 
+  // ---------- รัฐธรรมนูญฉบับที่ไม่มีในชุดข้อมูลกฤษฎีกา: ถอดความจากวิกิซอร์ซ (ต้นฉบับราชกิจจานุเบกษา, สาธารณสมบัติ) ----------
+  try {
+    const ws = JSON.parse(fs.readFileSync(__dirname + '/data_constitutions_ws.json', 'utf8')); let addWs = 0;
+    for (const c of ws) {
+      const k = key(c.title); if (laws.has(k)) continue;
+      const nums = c.secs.map(x => x[0]).filter(x => x !== 'คำปรารภ'), dup = nums.length !== new Set(nums).size;
+      const secs = dup ? [{ no: 'ฉบับเต็ม', head: 'ตัวบทฉบับเต็ม', text: c.secs.map(x => (x[0] === 'คำปรารภ' ? '' : 'มาตรา ' + thaiNum_(x[0]).replace(/[0-9]/g, d => '๐๑๒๓๔๕๖๗๘๙'[d]) + ' ') + x[2]).join('\n') }]
+        : c.secs.map(x => ({ no: x[0], head: x[1] || '', text: x[2] })).filter(x => x.text);
+      laws.set(k, { title: c.title, cat: 'รัฐธรรมนูญ', source: 'วิกิซอร์ซ (th.wikisource.org) — ถอดความจากราชกิจจานุเบกษา', license: 'สาธารณสมบัติ (ไม่มีลิขสิทธิ์ตามมาตรา 7 แห่งพระราชบัญญัติลิขสิทธิ์ พ.ศ. 2537)',
+        url: 'https://th.wikisource.org/wiki/' + encodeURIComponent(c.title.replace(/ /g, '_')), status: 'ยกเลิกแล้ว', secs });
+      addWs++;
+    }
+    console.log('constitutions from wikisource added', addWs);
+  } catch (e) { console.log('wikisource constitutions skipped', e.message); }
+
   // ---------- ประมวลกฎหมายหลัก: ปรับตัวบทตามพระราชบัญญัติแก้ไขเพิ่มเติมฉบับที่ออกหลังฉบับที่ชุดข้อมูลรวมไว้ ----------
   applyAmendments(laws);
 

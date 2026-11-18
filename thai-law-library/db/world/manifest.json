@@ -2281,9 +2281,89 @@
 "lang": "",
 "withArticles": 1083,
 "wholeText": 0
+},
+"TW": {
+"laws": 14966,
+"sections": 307040,
+"repealed": 3806,
+"inForce": 11160,
+"main": 35,
+"dataset": "endomorphosis/ipfs_taiwan_laws",
+"license": "Taiwan official texts from 全國法規資料庫 (Ministry of Justice). Laws, orders and official documents are excepted from copyright under 著作權法. Authentic 總統府公報 / 行政院公報 prevails. Not legal advice.",
+"lang": "zh-Hant",
+"withArticles": 14966,
+"wholeText": 0
+},
+"XK": {
+"laws": 1480,
+"sections": 52234,
+"repealed": 0,
+"inForce": 1480,
+"main": 7,
+"dataset": "endomorphosis/ipfs_kosovo_laws",
+"license": "Gazeta Zyrtare e Republikës së Kosovës (gzk.rks-gov.net). Official gazette text prevails. Not legal advice.",
+"lang": "sq",
+"withArticles": 1294,
+"wholeText": 186
+},
+"NG": {
+"laws": 394,
+"sections": 11662,
+"repealed": 0,
+"inForce": 394,
+"main": 29,
+"dataset": "endomorphosis/ipfs_nigeria_laws",
+"static": true,
+"shards": 12,
+"license": "Official texts of the Federal Republic of Nigeria as published by the Federal Ministry of Justice, the National Assembly, and (where used) other federal government hosts. The Official Gazette of the Federal Republic of Nigeria prevails over this research snapshot. Not legal advice. Not LawNigeria / ",
+"lang": "en",
+"withArticles": 0,
+"wholeText": 394
+},
+"BR": {
+"laws": 16875,
+"sections": 99687,
+"repealed": 1216,
+"inForce": 15659,
+"main": 1,
+"dataset": "endomorphosis/ipfs_brazil_laws",
+"static": true,
+"shards": 74,
+"license": "Official Brazilian legislative texts (União / Palácio do Planalto / LexML / Senado Dados Abertos). Official texts of normative acts are not objects of copyright (Lei 9.610/1998 art. 8º, IV). The authentic text is the Diário Oficial da União / Planalto compilation. Not legal advice. Not Jusbrasil.",
+"lang": "pt",
+"withArticles": 0,
+"wholeText": 16875
+},
+"PW": {
+"laws": 172,
+"sections": 471,
+"repealed": 0,
+"inForce": 172,
+"main": 0,
+"dataset": "endomorphosis/ipfs_palau_laws",
+"static": true,
+"shards": 3,
+"license": "Official Republic of Palau Public Laws (RPPL) and presidential legislations as published on palaugov.pw. The authentic official text prevails. Not legal advice.",
+"lang": "en",
+"withArticles": 0,
+"wholeText": 172
+},
+"US": {
+"laws": 3055,
+"sections": 65938,
+"repealed": 358,
+"inForce": 2697,
+"main": 9,
+"dataset": "dreamproit/uscode",
+"acfg": "current",
+"license": "United States Code — Office of the Law Revision Counsel (uscode.house.gov), public domain; currency 2026-07-12",
+"lang": "en",
+"withArticles": 0,
+"wholeText": 3055,
+"unit": "Title/Chapter"
 }
 },
-"built": "2026-11-17T16:58:13Z",
+"built": "2026-11-18T17:36:13Z",
 "list": [
 {
 "cc": "TH",
@@ -3844,6 +3924,22 @@
 "cont": "OC",
 "un": "member",
 "asean": false
+},
+{
+"cc": "TW",
+"th": "ไต้หวัน",
+"en": "Taiwan",
+"cont": "AS",
+"un": "partial",
+"asean": false
+},
+{
+"cc": "XK",
+"th": "คอซอวอ",
+"en": "Kosovo",
+"cont": "EU",
+"un": "partial",
+"asean": false
 }
 ],
 "continents": {
@@ -3854,5 +3950,5 @@
 "SA": "ทวีปอเมริกาใต้",
 "OC": "ออสเตรเลียและโอเชียเนีย"
 },
-"summarized": "2026-11-18T07:09:46Z"
+"summarized": "2026-11-18T17:55:36Z"
 }

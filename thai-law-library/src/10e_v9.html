@@ -1,0 +1,71 @@
+<style>
+/* ======================= v9: เพิ่ม/แก้ไขเฉพาะจุด ======================= */
+/* ธงชาติ: สัดส่วนเดิม 4:3 ไม่บิด */
+.flag{width:28px;height:21px;object-fit:cover;border-radius:3px;box-shadow:0 0 0 1px rgba(0,0,0,.12);vertical-align:middle;flex:none;background:#eee}
+.flag.sm{width:24px;height:18px;margin-right:6px}
+.fgn-code.has-flag{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:.7rem}
+/* ป้องกัน iOS ซูมหน้าเมื่อแตะช่องพิมพ์ (สาเหตุหน้าเด้ง) */
+@media (max-width:1024px){input,select,textarea{font-size:16px !important}}
+#aiIn{font-size:16px}
+.ai2{min-height:calc(100dvh - 210px)}
+.ai2-log{overflow-anchor:none}
+body.ai-focus .ai2{min-height:calc(100dvh - 24px)}
+/* ตัวเลือกย่อยและสถานะ */
+.sub9{margin-top:10px}
+.stat9{margin-top:10px;max-width:100%;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-behavior:smooth}
+.stat9::-webkit-scrollbar{display:none}
+.stat9 button{white-space:nowrap;flex:none}
+.stat9 .cnt,.sub9 .cnt{font-variant-numeric:tabular-nums}
+.clr9{margin:0}
+.vh-act9{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end;margin-left:auto}
+.vh-act9 #lawPrint{margin-left:0}
+/* ตัวกรองกฎหมายต่างประเทศ: เลื่อนแนวนอนลื่นไหลบนจอเล็ก ไม่ตกกรอบ */
+.seg.seg-scroll{display:flex;flex-wrap:nowrap;overflow-x:auto;max-width:100%;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;scroll-behavior:smooth}
+.seg.seg-scroll::-webkit-scrollbar{display:none}
+.seg.seg-scroll button{flex:none;white-space:nowrap;scroll-snap-align:start}
+/* อ่านอย่างเดียว: ข้อความตามต้นฉบับ ชิดซ้าย */
+.doc9{padding:18px}
+.doc9 .doc-h{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+.doc9 .doc-h h3{margin:0}
+.doc-sec{margin:0 0 14px}
+.doc-sec h4{margin:0 0 4px;font-size:1rem}
+.doc-text{white-space:pre-line;text-align:left;line-height:1.75;overflow-wrap:anywhere}
+/* แปลภาษา */
+.tr-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line);background:var(--surface)}
+.tr-bar.slim{padding:0;border:0;background:none}
+.tr-bar select{min-height:36px;border:1.5px solid var(--line-strong);border-radius:10px;padding:0 8px;background:var(--surface);color:var(--ink);max-width:100%}
+.tr-ic{color:var(--sky-600)}
+.trx{margin-top:8px;padding:8px 12px;border-left:3px solid var(--sky-500);background:var(--sky-50);border-radius:0 10px 10px 0}
+.trx-h{font-size:.8rem;font-weight:700;color:var(--sky-700);margin-bottom:4px;display:flex;gap:6px;align-items:center}
+.fv-art [data-tr]{display:none}
+.tw-tr{margin-top:4px;color:var(--sky-700)}
+/* ตาราง: ไม่ให้ตัวอักษรแตกบนแท็บเล็ตแนวนอน เลื่อนได้เมื่อแคบ */
+.ctable-wrap,.table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
+.ctable th,.ctable td,.lc-table th,.lc-table td{word-break:keep-all;overflow-wrap:normal;hyphens:none}
+.ctable td:not(:first-child),.ctable th:not(:first-child){white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}
+@media (min-width:641px){.lc-table{min-width:560px}.lc-table th{white-space:nowrap}}
+/* คำพิพากษา */
+.dk-dup{margin:10px 0;border-color:var(--orange)}
+/* พจนานุกรม / ขั้นตอน */
+.dict-it{padding:10px 0;border-bottom:1px solid var(--line)}
+.dict-it:last-child{border-bottom:0}
+.dict-b{white-space:pre-line;margin-top:4px;line-height:1.7}
+.ab9 td{vertical-align:top}
+.tl9{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.tl9 li{display:flex;gap:12px;align-items:flex-start}
+.tl9-n{flex:none;width:30px;height:30px;border-radius:50%;background:var(--sky-600);color:#fff;display:grid;place-items:center;font-weight:700}
+/* สไลด์แนะนำเว็บไซต์ (ภาพโปร่งแสง มองผ่านได้) */
+.guide9{background:linear-gradient(135deg,rgba(234,244,252,.72),rgba(255,255,255,.55));backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.gd-strip{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(220px,1fr);gap:12px;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+.gd-th{scroll-snap-align:start;border:1px solid rgba(31,95,153,.25);border-radius:14px;padding:0;overflow:hidden;background:rgba(255,255,255,.55);text-align:left;cursor:zoom-in;transition:transform .2s}
+.gd-th:hover{transform:translateY(-2px)}
+.gd-th img{display:block;width:100%;aspect-ratio:297/210;object-fit:cover;opacity:.92}
+.gd-cap{display:block;padding:8px 10px;font-size:.85rem;line-height:1.4}
+.gd-view{position:fixed;inset:0;z-index:2000;background:rgba(10,20,35,.82);display:flex;flex-direction:column;backdrop-filter:blur(4px)}
+.gd-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;color:#fff}
+.gd-bar .icon-btn{background:rgba(255,255,255,.15);color:#fff}
+.gd-stage{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 8px 16px;min-height:0}
+.gd-stage img{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;background:#fff;box-shadow:0 10px 40px rgba(0,0,0,.4)}
+.gd-stage .nav-arrow{flex:none}
+@media (max-width:640px){.gd-stage .nav-arrow{position:absolute;bottom:18px}.gd-prev{left:18px}.gd-next{right:18px}}
+</style>
