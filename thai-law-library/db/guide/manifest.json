@@ -2,95 +2,95 @@
  "pdf": "guide/thai-law-library-guide.pdf",
  "slides": [
   {
-   "file": "guide/s01.png",
+   "file": "guide/s01.jpg",
    "title": "คู่มือการใช้งานเว็บไซต์ “คลังกฎหมาย” (THAI LAW LIBRARY)"
   },
   {
-   "file": "guide/s02.png",
+   "file": "guide/s02.jpg",
    "title": "หน้าแรกของเว็บไซต์"
   },
   {
-   "file": "guide/s03.png",
+   "file": "guide/s03.jpg",
    "title": "จำนวนกฎหมายในฐานข้อมูล"
   },
   {
-   "file": "guide/s04.png",
+   "file": "guide/s04.jpg",
    "title": "สมัครสมาชิก ขั้นตอนที่ 1 — ข้อมูลประจำตัว"
   },
   {
-   "file": "guide/s05.png",
+   "file": "guide/s05.jpg",
    "title": "สมัครสมาชิก ขั้นตอนที่ 3 — ข้อมูลบัญชีผู้ใช้งาน"
   },
   {
-   "file": "guide/s06.png",
+   "file": "guide/s06.jpg",
    "title": "เข้าสู่ระบบด้วยรหัสผ่านสามชั้น"
   },
   {
-   "file": "guide/s07.png",
+   "file": "guide/s07.jpg",
    "title": "รหัสผ่านชั้นที่ 2 ทางอีเมล"
   },
   {
-   "file": "guide/s08.png",
+   "file": "guide/s08.jpg",
    "title": "หน้าหลักและเมนูการใช้งาน"
   },
   {
-   "file": "guide/s09.png",
+   "file": "guide/s09.jpg",
    "title": "กฎหมายประเทศไทย: เลือกหมวด ประเภท และสถานะ"
   },
   {
-   "file": "guide/s10.png",
+   "file": "guide/s10.jpg",
    "title": "ประมวลกฎหมายและป้ายพลิกมาตรา"
   },
   {
-   "file": "guide/s11.png",
+   "file": "guide/s11.jpg",
    "title": "ป้ายขยายและตัวจับเวลาสำหรับท่องจำ"
   },
   {
-   "file": "guide/s12.png",
+   "file": "guide/s12.jpg",
    "title": "อ่านกฎหมายแบบอ่านอย่างเดียว"
   },
   {
-   "file": "guide/s13.png",
+   "file": "guide/s13.jpg",
    "title": "การพิมพ์เอกสาร PDF"
   },
   {
-   "file": "guide/s14.png",
+   "file": "guide/s14.jpg",
    "title": "กฎหมายต่างประเทศ 197 ประเทศ"
   },
   {
-   "file": "guide/s15.png",
+   "file": "guide/s15.jpg",
    "title": "รายการกฎหมายของแต่ละประเทศ"
   },
   {
-   "file": "guide/s16.png",
+   "file": "guide/s16.jpg",
    "title": "อ่านตัวบทกฎหมายต่างประเทศและแปลภาษา"
   },
   {
-   "file": "guide/s17.png",
+   "file": "guide/s17.jpg",
    "title": "ค้นหาคำพิพากษาศาลฎีกา"
   },
   {
-   "file": "guide/s18.png",
+   "file": "guide/s18.jpg",
    "title": "อนุสัญญาและสนธิสัญญาทั่วโลก"
   },
   {
-   "file": "guide/s19.png",
+   "file": "guide/s19.jpg",
    "title": "ผู้ช่วย AI"
   },
   {
-   "file": "guide/s20.png",
+   "file": "guide/s20.jpg",
    "title": "เครื่องมือสำหรับนักกฎหมาย"
   },
   {
-   "file": "guide/s21.png",
+   "file": "guide/s21.jpg",
    "title": "บันทึก ประวัติ และเวลาใช้งาน"
   },
   {
-   "file": "guide/s22.png",
+   "file": "guide/s22.jpg",
    "title": "โปรไฟล์และการแจ้งเตือนทาง LINE"
   },
   {
-   "file": "guide/s23.png",
+   "file": "guide/s23.jpg",
    "title": "ความปลอดภัยและกรณีระบบขัดข้อง"
   }
  ]
