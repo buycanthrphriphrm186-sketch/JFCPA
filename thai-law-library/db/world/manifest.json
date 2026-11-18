@@ -8,7 +8,9 @@
 "main": 3,
 "dataset": "endomorphosis/ipfs_singapore_laws",
 "license": "Singapore Statutes Online (sso.agc.gov.sg) is an unofficial reproduction published by the Legislation Division of the Attorney-General's Chambers. The printed Gazette and AGC official text prevail. Research snapshot with provenance. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 600,
+"wholeText": 101
 },
 "BN": {
 "laws": 239,
@@ -18,7 +20,9 @@
 "main": 6,
 "dataset": "endomorphosis/ipfs_brunei_laws",
 "license": "Laws of Brunei / Attorney General's Chambers (agc.gov.bn). Authentic official text prevails. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 221,
+"wholeText": 18
 },
 "KR": {
 "laws": 5561,
@@ -28,7 +32,9 @@
 "main": 81,
 "dataset": "endomorphosis/ipfs_korea_laws",
 "license": "Official Republic of Korea legislative texts (헌법·법률·조약·명령·조례 및 규칙) are not protected by copyright (저작권법 제7조 제1호). Research snapshot of 국가법령정보센터 (법제처) HTML. Site chrome / database compilation may have separate terms. Not legal advice; 관보 and law.go.kr authentic text prevail.",
-"lang": "ko"
+"lang": "ko",
+"withArticles": 5313,
+"wholeText": 248
 },
 "JP": {
 "laws": 9571,
@@ -38,7 +44,9 @@
 "main": 13,
 "dataset": "e-Gov",
 "license": "e-Gov 法令データ (CC BY 4.0 互換)",
-"lang": "ja"
+"lang": "ja",
+"withArticles": 9571,
+"wholeText": 0
 },
 "LA": {
 "laws": 5176,
@@ -48,7 +56,9 @@
 "main": 28,
 "dataset": "endomorphosis/ipfs_laos_laws",
 "license": "Lao Official Gazette. Authentic official text prevails. Not legal advice.",
-"lang": "lo"
+"lang": "lo",
+"withArticles": 1672,
+"wholeText": 3504
 },
 "KH": {
 "laws": 264,
@@ -58,7 +68,9 @@
 "main": 2,
 "dataset": "endomorphosis/ipfs_cambodia_laws",
 "license": "Ministry of Justice of Cambodia (moj.gov.kh). Official documents. Authentic official text prevails. Not legal advice.",
-"lang": "km"
+"lang": "km",
+"withArticles": 258,
+"wholeText": 6
 },
 "MM": {
 "laws": 658,
@@ -68,7 +80,9 @@
 "main": 4,
 "dataset": "endomorphosis/ipfs_myanmar_laws",
 "license": "Laws of the Republic of the Union of Myanmar as published by the Ministry of Information (moi.gov.mm). Official gazette promulgation texts prevail. Not legal advice. Not commercial compilations.",
-"lang": "my"
+"lang": "my",
+"withArticles": 552,
+"wholeText": 106
 },
 "ID": {
 "laws": 2088,
@@ -78,7 +92,9 @@
 "main": 16,
 "dataset": "endomorphosis/ipfs_indonesia_laws",
 "license": "Official Indonesian legislative texts from JDIH BPK (peraturan.bpk.go.id), the Database Peraturan of Badan Pemeriksa Keuangan. Public-sector official texts; the authentic source is the State Gazette (Lembaran Negara / Tambahan Lembaran Negara). Not Pasal.id. Not legal advice.",
-"lang": "id"
+"lang": "id",
+"withArticles": 1989,
+"wholeText": 99
 },
 "VN": {
 "laws": 771,
@@ -88,7 +104,9 @@
 "main": 13,
 "dataset": "endomorphosis/ipfs_vietnam_laws",
 "license": "Official Socialist Republic of Vietnam legislative texts from CSDL quốc gia về pháp luật (vbpl.vn, Bộ Tư pháp / Chính phủ), Công báo điện tử (congbao.chinhphu.vn) and Cổng TTĐT Chính phủ (vanban.chinhphu.vn). Công báo / VBPL authentic text prevails. Not Thư viện pháp luật. Not legal advice.",
-"lang": "vi"
+"lang": "vi",
+"withArticles": 759,
+"wholeText": 12
 },
 "TL": {
 "laws": 287,
@@ -98,7 +116,9 @@
 "main": 5,
 "dataset": "endomorphosis/ipfs_timorleste_laws",
 "license": "Official texts of the Democratic Republic of Timor-Leste as published in the Jornal da República (mj.gov.tl/jornal), Ministry of Justice. The authentic publication prevails. Not legal advice.",
-"lang": "pt"
+"lang": "pt",
+"withArticles": 257,
+"wholeText": 30
 },
 "CN": {
 "laws": 312,
@@ -108,7 +128,9 @@
 "main": 3,
 "dataset": "endomorphosis/ipfs_china_laws",
 "license": "Research snapshot of official PRC publications. Copyright in official documents is governed by PRC law (including Copyright Law Art. 5 on laws, regulations, state-organ documents and official translations) and the NPC / gov.cn terms of use. This snapshot does not claim CC0. license: other. Not legal",
-"lang": "zh"
+"lang": "zh",
+"withArticles": 290,
+"wholeText": 22
 },
 "KP": {
 "laws": 111,
@@ -118,7 +140,9 @@
 "main": 4,
 "dataset": "endomorphosis/ipfs_northkorea_laws",
 "license": "public-domain",
-"lang": "en"
+"lang": "en",
+"withArticles": 83,
+"wholeText": 28
 },
 "MY": {
 "laws": 1499,
@@ -128,7 +152,9 @@
 "main": 10,
 "dataset": "endomorphosis/ipfs_malaysia_laws",
 "license": "Malaysian official texts from the Attorney-General's Chambers Federal Legislation Portal (lom.agc.gov.my). AGC portal terms / copyright AGC Malaysia. Online texts are not the printed Gazette for s.61 of the Interpretation Acts 1948 and 1967; the printed Gazette and authentic Laws of Malaysia reprint",
-"lang": "en"
+"lang": "en",
+"withArticles": 1360,
+"wholeText": 139
 },
 "PH": {
 "laws": 10870,
@@ -138,7 +164,9 @@
 "main": 531,
 "dataset": "endomorphosis/ipfs_philippines_laws",
 "license": "Official Philippine legislative texts (Republic Acts and Constitution) from the Official Gazette of the Republic of the Philippines and the Senate of the Philippines Legislative Reference Bureau issuances library. Official Gazette authentic text prevails. Not Lawphil. Not Chan Robles. Not legal advi",
-"lang": "en"
+"lang": "en",
+"withArticles": 10701,
+"wholeText": 169
 },
 "MN": {
 "laws": 773,
@@ -148,7 +176,9 @@
 "main": 0,
 "dataset": "endomorphosis/ipfs_mongolia_laws",
 "license": "Legalinfo.mn — Legal Information Integrated System of Mongolia (Ministry of Justice). Official texts prevail. Not legal advice.",
-"lang": "mn"
+"lang": "mn",
+"withArticles": 370,
+"wholeText": 403
 },
 "IN": {
 "laws": 1067,
@@ -158,7 +188,9 @@
 "main": 16,
 "dataset": "endomorphosis/ipfs_india_laws",
 "license": "Research snapshot of official India Code texts (Legislative Department, Ministry of Law and Justice). Reuse is governed by Government of India / India Code website terms (https://indiacode.gov.in/). This snapshot does not claim CC0. license: other. Not legal advice; the authentic gazette / India Cod",
-"lang": "en"
+"lang": "en",
+"withArticles": 1009,
+"wholeText": 58
 },
 "LK": {
 "laws": 8491,
@@ -168,7 +200,9 @@
 "main": 86,
 "dataset": "endomorphosis/ipfs_srilanka_laws",
 "license": "documents.gov.lk. Authentic official text prevails. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 1300,
+"wholeText": 7191
 },
 "PK": {
 "laws": 970,
@@ -178,7 +212,9 @@
 "main": 5,
 "dataset": "endomorphosis/ipfs_pakistan_laws",
 "license": "Official Pakistan Code texts (Ministry of Law and Justice, pakistancode.gov.pk). Authentic Gazette of Pakistan prevails. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 956,
+"wholeText": 14
 },
 "BD": {
 "laws": 1497,
@@ -188,7 +224,9 @@
 "main": 9,
 "dataset": "endomorphosis/ipfs_bangladesh_laws",
 "license": "Official Laws of Bangladesh texts (Legislative and Parliamentary Affairs Division, bdlaws.minlaw.gov.bd). Authentic Gazette of Bangladesh prevails. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 1413,
+"wholeText": 84
 },
 "NP": {
 "laws": 138,
@@ -198,7 +236,9 @@
 "main": 3,
 "dataset": "endomorphosis/ipfs_nepal_laws",
 "license": "Nepal Law Commission (lawcommission.gov.np). Official texts prevail. Not legal advice.",
-"lang": "ne"
+"lang": "ne",
+"withArticles": 129,
+"wholeText": 9
 },
 "IR": {
 "laws": 7398,
@@ -208,7 +248,9 @@
 "main": 0,
 "dataset": "endomorphosis/ipfs_iran_laws",
 "license": "Official laws via DOTIC (dotic.ir). Authentic official text prevails. Not legal advice.",
-"lang": "fa"
+"lang": "fa",
+"withArticles": 630,
+"wholeText": 6768
 },
 "AF": {
 "laws": 190,
@@ -218,7 +260,9 @@
 "main": 7,
 "dataset": "endomorphosis/ipfs_afghanistan_laws",
 "license": "Ministry of Justice of Afghanistan Official Gazette / laws.moj.gov.af. Authentic official text prevails. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 24,
+"wholeText": 166
 },
 "BT": {
 "laws": 161,
@@ -228,7 +272,9 @@
 "main": 5,
 "dataset": "endomorphosis/ipfs_bhutan_laws",
 "license": "Official texts of the Kingdom of Bhutan as published by the Office of the Attorney General (oag.gov.bt). The authentic official publication prevails. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 149,
+"wholeText": 12
 },
 "IQ": {
 "laws": 364,
@@ -238,7 +284,9 @@
 "main": 3,
 "dataset": "endomorphosis/ipfs_iraq_laws",
 "license": "Ministry of Justice of the Republic of Iraq (moj.gov.iq). Authentic official text prevails. Not legal advice.",
-"lang": "ar"
+"lang": "ar",
+"withArticles": 209,
+"wholeText": 155
 },
 "SY": {
 "laws": 265,
@@ -248,7 +296,9 @@
 "main": 0,
 "dataset": "endomorphosis/ipfs_syria_laws",
 "license": "Official Syrian legislation texts as published by the People's Assembly (parliament.gov.sy) and Ministry of Justice justice portal (jus.moj.gov.sy). Retrieved from Internet Archive snapshots of those official URLs only (live DNS unavailable from this collector host). Authentic official text prevails",
-"lang": "ar"
+"lang": "ar",
+"withArticles": 148,
+"wholeText": 117
 },
 "LB": {
 "laws": 369,
@@ -258,7 +308,9 @@
 "main": 3,
 "dataset": "endomorphosis/ipfs_lebanon_laws",
 "license": "Official Gazette of the Lebanese Republic / Presidency of the Council of Ministers (jo.pcm.gov.lb, pcm.gov.lb). Authentic gazette text prevails. Not legal advice.",
-"lang": "ar"
+"lang": "ar",
+"withArticles": 42,
+"wholeText": 327
 },
 "IL": {
 "laws": 993,
@@ -268,7 +320,9 @@
 "main": 0,
 "dataset": "endomorphosis/ipfs_israel_laws",
 "license": "Research snapshot of official State of Israel / Knesset legislative publications. Reuse is governed by Knesset / State of Israel terms. Reshumot (רשומות) prevails. license: other. Not legal advice.",
-"lang": "he"
+"lang": "he",
+"withArticles": 661,
+"wholeText": 332
 },
 "JO": {
 "laws": 1229,
@@ -278,7 +332,9 @@
 "main": 0,
 "dataset": "endomorphosis/ipfs_jordan_laws",
 "license": "Official texts of the Hashemite Kingdom of Jordan as published by the Legislation and Opinion Bureau (lob.gov.jo). The Official Gazette (الجريدة الرسمية) prevails over this research snapshot. Not legal advice.",
-"lang": "ar"
+"lang": "ar",
+"withArticles": 1149,
+"wholeText": 80
 },
 "SA": {
 "laws": 827,
@@ -288,7 +344,9 @@
 "main": 4,
 "dataset": "endomorphosis/ipfs_saudiarabia_laws",
 "license": "Research snapshot of official Saudi Bureau of Experts (هيئة الخبراء بمجلس الوزراء) law texts. Reuse is governed by BOE / Saudi government terms. license: other. Not legal advice; the official BOE / Umm Al-Qura text prevails.",
-"lang": "ar"
+"lang": "ar",
+"withArticles": 626,
+"wholeText": 201
 },
 "YE": {
 "laws": 1265,
@@ -298,7 +356,9 @@
 "main": 0,
 "dataset": "endomorphosis/ipfs_yemen_laws",
 "license": "Official Yemeni legislation texts from the Ministry of Justice (moj.gov.ye) and the National Information Center (yemen-nic.info). Authentic official text prevails. Not legal advice.",
-"lang": "ar"
+"lang": "ar",
+"withArticles": 1145,
+"wholeText": 120
 },
 "AE": {
 "laws": 396,
@@ -308,7 +368,9 @@
 "main": 7,
 "dataset": "endomorphosis/ipfs_uae_laws",
 "license": "Official UAE Legislation texts (uaelegislation.gov.ae / UAE Cabinet). Authentic Official Gazette prevails. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 311,
+"wholeText": 85
 },
 "BH": {
 "laws": 382,
@@ -318,7 +380,9 @@
 "main": 0,
 "dataset": "endomorphosis/ipfs_bahrain_laws",
 "license": "Official texts of the Kingdom of Bahrain as published by the Legislation and Legal Opinion Commission (lloc.gov.bh). The Official Gazette (الجريدة الرسمية) prevails over this research snapshot. Not legal advice.",
-"lang": "ar"
+"lang": "ar",
+"withArticles": 182,
+"wholeText": 200
 },
 "OM": {
 "laws": 1651,
@@ -328,7 +392,9 @@
 "main": 0,
 "dataset": "endomorphosis/ipfs_oman_laws",
 "license": "Official texts of the Sultanate of Oman as published by the Ministry of Justice and Legal Affairs (mjla.gov.om). The Official Gazette (الجريدة الرسمية) prevails over this research snapshot. Not legal advice. Not qanoon.om / commercial compilations.",
-"lang": "ar"
+"lang": "ar",
+"withArticles": 115,
+"wholeText": 1536
 },
 "KW": {
 "laws": 206,
@@ -338,7 +404,9 @@
 "main": 2,
 "dataset": "endomorphosis/ipfs_kuwait_laws",
 "license": "Research snapshot of official Kuwait gazette (الكويت اليوم / Ministry of Information) and e.gov.kw official publications. Reuse is governed by Ministry of Information / official gazette terms. license: other. Not legal advice.",
-"lang": "ar"
+"lang": "ar",
+"withArticles": 74,
+"wholeText": 132
 },
 "QA": {
 "laws": 2853,
@@ -348,7 +416,9 @@
 "main": 0,
 "dataset": "endomorphosis/ipfs_qatar_laws",
 "license": "Official Al-Meezan texts (almeezan.qa / State of Qatar). Authentic Official Gazette prevails. Not legal advice.",
-"lang": "ar"
+"lang": "ar",
+"withArticles": 2628,
+"wholeText": 225
 },
 "MV": {
 "laws": 246,
@@ -358,7 +428,9 @@
 "main": 0,
 "dataset": "endomorphosis/ipfs_maldives_laws",
 "license": "Official Gazette of the Republic of Maldives (gazette.gov.mv) and Attorney General legislation portal (mvlaw.gov.mv). The authentic gazette text prevails. Not legal advice.",
-"lang": "dv"
+"lang": "dv",
+"withArticles": 75,
+"wholeText": 171
 },
 "AM": {
 "laws": 342,
@@ -368,7 +440,9 @@
 "main": 4,
 "dataset": "endomorphosis/ipfs_armenia_laws",
 "license": "Official regulatory legal acts of the Republic of Armenia as published on ARLIS (arlis.am) by Pashtonakan teghekagir CJSC under the Ministry of Justice (Law on Regulatory Legal Acts, Art. 25). Official ARLIS text prevails. Not legal advice.",
-"lang": "hy"
+"lang": "hy",
+"withArticles": 96,
+"wholeText": 246
 },
 "UZ": {
 "laws": 335,
@@ -378,7 +452,9 @@
 "main": 6,
 "dataset": "endomorphosis/ipfs_uzbekistan_laws",
 "license": "Lex.uz — National Legal Information Database of Uzbekistan (Ministry of Justice). Official texts prevail. Not legal advice.",
-"lang": "uz"
+"lang": "uz",
+"withArticles": 62,
+"wholeText": 273
 },
 "TR": {
 "laws": 927,
@@ -388,7 +464,9 @@
 "main": 622,
 "dataset": "endomorphosis/ipfs_turkey_laws",
 "license": "Official legislative texts of the Republic of Türkiye published by the Mevzuat Bilgi Sistemi (mevzuat.gov.tr / Adalet Bakanlığı Bedesten). Official documents of state bodies are not copyright-protected under Turkish Law no. 5846 art. 31 (official texts). The authentic Resmî Gazete text prevails. Not",
-"lang": "tr"
+"lang": "tr",
+"withArticles": 922,
+"wholeText": 5
 },
 "KZ": {
 "laws": 389,
@@ -398,7 +476,9 @@
 "main": 49,
 "dataset": "endomorphosis/ipfs_kazakhstan_laws",
 "license": "Official texts of the Republic of Kazakhstan as published in ИПС «Әділет» (Institute of Legislation and Legal Information of the Ministry of Justice). The authentic official publication / Әділет text prevails over this research snapshot. Not legal advice. Not paragraf.kz / commercial zakon.kz.",
-"lang": "ru"
+"lang": "ru",
+"withArticles": 369,
+"wholeText": 20
 },
 "TM": {
 "laws": 423,
@@ -408,7 +488,9 @@
 "main": 28,
 "dataset": "endomorphosis/ipfs_turkmenistan_laws",
 "license": "Official texts of Turkmenistan as published on the Mejlis (Parliament) website mejlis.gov.tm (and optionally turkmenistan.gov.tm legislation section). Free public HTML only — Adalat paid DB (law.minjust.gov.tm) intentionally excluded. Authentic official publication prevails. Not legal advice. Thin v",
-"lang": "ru"
+"lang": "ru",
+"withArticles": 338,
+"wholeText": 85
 },
 "TJ": {
 "laws": 494,
@@ -418,7 +500,9 @@
 "main": 142,
 "dataset": "endomorphosis/ipfs_tajikistan_laws",
 "license": "Official texts of the Republic of Tajikistan as published by the National Center of Legislation under the President (ncz.tj / mmk.tj). The authentic official publication prevails. Not legal advice.",
-"lang": "tg"
+"lang": "tg",
+"withArticles": 75,
+"wholeText": 419
 },
 "KG": {
 "laws": 829,
@@ -428,7 +512,9 @@
 "main": 105,
 "dataset": "endomorphosis/ipfs_kyrgyzstan_laws",
 "license": "Official texts of the Kyrgyz Republic as published in the Centralized Databank of Legal Information (ЦБД) of the Ministry of Justice (cbd.minjust.gov.kg). The authentic official publication prevails. Not legal advice. Not Toktom commercial.",
-"lang": "ru"
+"lang": "ru",
+"withArticles": 764,
+"wholeText": 65
 },
 "CY": {
 "laws": 756,
@@ -438,7 +524,9 @@
 "main": 0,
 "dataset": "endomorphosis/ipfs_cyprus_laws",
 "license": "Official Gazette of the Republic of Cyprus, Government Printing Office (mof.gov.cy/gpo). cylaw.org is unofficial and is NOT used.",
-"lang": "el"
+"lang": "el",
+"withArticles": 587,
+"wholeText": 169
 },
 "PS": {
 "laws": 2904,
@@ -448,7 +536,9 @@
 "main": 0,
 "dataset": "endomorphosis/ipfs_palestine_laws",
 "license": "Official texts of the State of Palestine as published via the Electronic Official Gazette Reference (mjr.ogb.gov.ps / Official Gazette Bureau). Authentic gazette text prevails. Not legal advice. Not Muqtafi.",
-"lang": "ar"
+"lang": "ar",
+"withArticles": 1896,
+"wholeText": 1008
 },
 "AZ": {
 "laws": 9995,
@@ -458,7 +548,9 @@
 "main": 4,
 "dataset": "endomorphosis/ipfs_azerbaijan_laws",
 "license": "e-qanun.az. Authentic official text prevails. Not legal advice.",
-"lang": "az"
+"lang": "az",
+"withArticles": 1117,
+"wholeText": 8878
 },
 "IE": {
 "laws": 3953,
@@ -468,7 +560,9 @@
 "main": 36,
 "dataset": "endomorphosis/ipfs_ireland_laws",
 "license": "Oireachtas (Open Data) PSI Licence incorporating CC BY 4.0 International, as stated at https://www.irishstatutebook.ie/eli/open-data.html",
-"lang": "en"
+"lang": "en",
+"withArticles": 3918,
+"wholeText": 35
 },
 "PT": {
 "laws": 9942,
@@ -478,7 +572,9 @@
 "main": 29,
 "dataset": "endomorphosis/ipfs_portugal_laws",
 "license": "Diário da República (dre.pt) official gazette. Reuse per dre.pt legal notice.",
-"lang": "pt"
+"lang": "pt",
+"withArticles": 4613,
+"wholeText": 5329
 },
 "FR": {
 "laws": 114041,
@@ -488,7 +584,9 @@
 "main": 14293,
 "dataset": "endomorphosis/ipfs_france_laws",
 "license": "Licence Ouverte 2.0",
-"lang": "fr"
+"lang": "fr",
+"withArticles": 112691,
+"wholeText": 1350
 },
 "IT": {
 "laws": 111116,
@@ -498,7 +596,9 @@
 "main": 0,
 "dataset": "endomorphosis/ipfs_italy_laws",
 "license": "Normattiva OpenData (dati.normattiva.it). Official Italian legislation. Reuse per Normattiva OpenData terms. HTML from official dettaglio-atto API; Akoma Ntoso via caricaAKN when present.",
-"lang": "it"
+"lang": "it",
+"withArticles": 4678,
+"wholeText": 106438
 },
 "NL": {
 "laws": 18626,
@@ -508,7 +608,9 @@
 "main": 34,
 "dataset": "endomorphosis/ipfs_netherlands_laws",
 "license": "CC0-1.0 as stated by KOOP on data.overheid.nl dataset 'Basis Wetten Bestand' (https://data.overheid.nl/dataset/basis-wetten-bestand): Alle regelingen uit het basiswettenbestand zijn als open data beschikbaar in XML-formaat; license CC-0 (1.0). Database freely available (SRU explain restrictions).",
-"lang": "nl"
+"lang": "nl",
+"withArticles": 18626,
+"wholeText": 0
 },
 "DE": {
 "laws": 15527,
@@ -518,7 +620,9 @@
 "main": 24,
 "dataset": "endomorphosis/ipfs_germany_laws",
 "license": "Public domain (gemeinfrei): amtliche Werke i.S.d. § 5 Abs. 1 UrhG; Bundesministerium der Justiz / gesetze-im-internet.de",
-"lang": "de"
+"lang": "de",
+"withArticles": 13785,
+"wholeText": 1742
 },
 "LU": {
 "laws": 1354,
@@ -528,7 +632,9 @@
 "main": 44,
 "dataset": "endomorphosis/ipfs_luxembourg_laws",
 "license": "data.legilux.public.lu texts and metadata: Creative Commons Attribution 4.0 (CC BY 4.0) as stated at https://data.legilux.public.lu/home/intro",
-"lang": "fr"
+"lang": "fr",
+"withArticles": 1269,
+"wholeText": 85
 },
 "BE": {
 "laws": 9116,
@@ -538,7 +644,9 @@
 "main": 0,
 "dataset": "endomorphosis/ipfs_belgium_laws",
 "license": "Moniteur belge / Belgisch Staatsblad official publications. Justel consolidations are informational (not authentic). https://www.ejustice.just.fgov.be/eli/",
-"lang": "fr"
+"lang": "fr",
+"withArticles": 8555,
+"wholeText": 561
 },
 "MC": {
 "laws": 1162,
@@ -548,7 +656,9 @@
 "main": 400,
 "dataset": "endomorphosis/ipfs_monaco_laws",
 "license": "Principauté de Monaco: Legimonaco (legimonaco.mc) + Journal de Monaco (journaldemonaco.gouv.mc). Authentic official text prevails. Not legal advice.",
-"lang": "fr"
+"lang": "fr",
+"withArticles": 405,
+"wholeText": 757
 },
 "ES": {
 "laws": 12386,
@@ -558,7 +668,9 @@
 "main": 112,
 "dataset": "endomorphosis/ipfs_spain_laws",
 "license": "BOE open data reuse terms (licencia tipo AEBOE, Resolución 27 junio 2024); https://www.boe.es/informacion/aviso_legal/index.php ; reutilización comercial y no comercial con atribución ('Fuente de los datos: Agencia Estatal Boletín Oficial del Estado'); texto consolidado de carácter meramente informa",
-"lang": "es"
+"lang": "es",
+"withArticles": 12386,
+"wholeText": 0
 },
 "AT": {
 "laws": 21959,
@@ -568,7 +680,9 @@
 "main": 14,
 "dataset": "endomorphosis/ipfs_austria_laws",
 "license": "Austrian official legal texts are official works (amtliche Werke) and not protected by copyright (UrhG § 2 Abs. 1 Z 8 / § 7). RIS is Open Government Data (data.bka.gv.at / data.gv.at). Consolidations are informational.",
-"lang": "de"
+"lang": "de",
+"withArticles": 21956,
+"wholeText": 3
 },
 "CH": {
 "laws": 20080,
@@ -578,7 +692,9 @@
 "main": 123,
 "dataset": "endomorphosis/ipfs_switzerland_laws",
 "license": "unknown",
-"lang": "de"
+"lang": "de",
+"withArticles": 19532,
+"wholeText": 548
 },
 "VA": {
 "laws": 400,
@@ -588,7 +704,9 @@
 "main": 186,
 "dataset": "endomorphosis/ipfs_vatican_laws",
 "license": "Holy See (vatican.va) official text of the Code of Canon Law. Authentic Latin text prevails. Not legal advice.",
-"lang": "it"
+"lang": "it",
+"withArticles": 94,
+"wholeText": 306
 },
 "SM": {
 "laws": 4442,
@@ -598,7 +716,9 @@
 "main": 33,
 "dataset": "endomorphosis/ipfs_sanmarino_laws",
 "license": "Repubblica di San Marino — Bollettino Ufficiale (bollettinoufficiale.sm), Ufficio Segreteria Istituzionale. Testi ufficiali in italiano. Il testo autentico pubblicato nel Bollettino Ufficiale prevale. Non costituisce consulenza legale.",
-"lang": "it"
+"lang": "it",
+"withArticles": 1442,
+"wholeText": 3000
 },
 "LI": {
 "laws": 15800,
@@ -608,7 +728,9 @@
 "main": 43,
 "dataset": "endomorphosis/ipfs_liechtenstein_laws",
 "license": "Liechtensteinische Gesetzessammlung LILEX (gesetze.li, Government Legal Services). Authentic official text prevails. Not legal advice.",
-"lang": "de"
+"lang": "de",
+"withArticles": 9842,
+"wholeText": 5958
 },
 "AD": {
 "laws": 218299,
@@ -618,7 +740,9 @@
 "main": 554,
 "dataset": "endomorphosis/ipfs_andorra_laws",
 "license": "Butlletí Oficial del Principat d'Andorra (BOPA) — official gazette texts at https://www.bopa.ad/ and https://documents.bopa.ad/. Authentic official text prevails. Not legal advice.",
-"lang": "ca"
+"lang": "ca",
+"withArticles": 1173,
+"wholeText": 217126
 },
 "GB": {
 "laws": 156960,
@@ -628,7 +752,9 @@
 "main": 1673,
 "dataset": "endomorphosis/ipfs_uk_laws",
 "license": "Open Government Licence v3.0 (The National Archives / legislation.gov.uk). All content is available under the Open Government Licence v3.0 except where otherwise stated. See https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/ and https://www.legislation.gov.uk/. The official l",
-"lang": "en"
+"lang": "en",
+"withArticles": 100226,
+"wholeText": 56734
 },
 "MT": {
 "laws": 19675,
@@ -638,7 +764,9 @@
 "main": 385,
 "dataset": "endomorphosis/ipfs_malta_laws",
 "license": "Maltese legislation on legislation.mt is official; reuse of public sector information. ELI: https://legislation.mt/eli/ (EUR-Lex ELI register: Malta).",
-"lang": "en"
+"lang": "en",
+"withArticles": 13166,
+"wholeText": 6509
 },
 "NO": {
 "laws": 5868,
@@ -648,7 +776,9 @@
 "main": 0,
 "dataset": "endomorphosis/ipfs_norway_laws",
 "license": "Official Norwegian legislative texts (Lovdata / Norsk Lovtidend, Stiftelsen Lovdata on behalf of Justis- og beredskapsdepartementet). Public gjeldende-lover dataset under NLOD 2.0 (https://data.norge.no/nlod/no/2.0). Norsk Lovtidend prevails over consolidations. Not legal advice.",
-"lang": "nb"
+"lang": "nb",
+"withArticles": 5014,
+"wholeText": 854
 },
 "SE": {
 "laws": 9996,
@@ -658,7 +788,9 @@
 "main": 0,
 "dataset": "endomorphosis/ipfs_sweden_laws",
 "license": "Riksdagens öppna data: CC0 1.0 (public domain dedication) as stated at https://www.riksdagen.se/sv/dokument-och-lagar/riksdagens-oppna-data/ and https://www.riksdagen.se/sv/dokument-och-lagar/riksdagens-oppna-data/anvandarstod/villkor-for-anvandning/",
-"lang": "sv"
+"lang": "sv",
+"withArticles": 8279,
+"wholeText": 1717
 },
 "EE": {
 "laws": 3482,
@@ -668,7 +800,9 @@
 "main": 0,
 "dataset": "endomorphosis/ipfs_estonia_laws",
 "license": "Riigi Teataja texts are official public information (avalik teave). https://www.riigiteataja.ee/",
-"lang": "et"
+"lang": "et",
+"withArticles": 3178,
+"wholeText": 304
 },
 "DK": {
 "laws": 33334,
@@ -678,7 +812,9 @@
 "main": 0,
 "dataset": "endomorphosis/ipfs_denmark_laws",
 "license": "Retsinformation open data as stated at https://www.retsinformation.dk/api (Civilstyrelsen). Official statutes are public; reuse subject to the terms published on retsinformation.dk/api and eli/about.",
-"lang": "da"
+"lang": "da",
+"withArticles": 23471,
+"wholeText": 9863
 },
 "FI": {
 "laws": 106682,
@@ -688,7 +824,9 @@
 "main": 0,
 "dataset": "endomorphosis/ipfs_finland_laws",
 "license": "Finlex open data: reuse under the terms published at https://www.finlex.fi/en/open-data (Ministry of Justice open data service; Akoma Ntoso). Official statute texts are public.",
-"lang": "fi"
+"lang": "fi",
+"withArticles": 16441,
+"wholeText": 90241
 },
 "LT": {
 "laws": 7491,
@@ -698,7 +836,9 @@
 "main": 8,
 "dataset": "endomorphosis/ipfs_lithuania_laws",
 "license": "TAR / e-tar.lt official legal acts. Open-data slice often CC BY 4.0 on data.gov.lt when Spinta is up.",
-"lang": "lt"
+"lang": "lt",
+"withArticles": 746,
+"wholeText": 6745
 },
 "CZ": {
 "laws": 41340,
@@ -708,7 +848,9 @@
 "main": 0,
 "dataset": "endomorphosis/ipfs_czechia_laws",
 "license": "e-Sbírka open data: not copyrighted / not protected (NKOD terms). https://opendata.eselpoint.gov.cz/datove-sady-esbirka/",
-"lang": "cs"
+"lang": "cs",
+"withArticles": 2342,
+"wholeText": 38998
 },
 "HU": {
 "laws": 380,
@@ -718,7 +860,9 @@
 "main": 0,
 "dataset": "endomorphosis/ipfs_hungary_laws",
 "license": "Nemzeti Jogszabálytár official ELI (njt.jog.gov.hu). Official consolidations; reuse per NJT / jogszabálytár terms.",
-"lang": "hu"
+"lang": "hu",
+"withArticles": 315,
+"wholeText": 65
 },
 "SK": {
 "laws": 16842,
@@ -728,7 +872,9 @@
 "main": 0,
 "dataset": "endomorphosis/ipfs_slovakia_laws",
 "license": "Official Collection of Laws (Zbierka zákonov) via slov-lex.sk / static.slov-lex.sk; public administration texts.",
-"lang": "sk"
+"lang": "sk",
+"withArticles": 12052,
+"wholeText": 4790
 },
 "PL": {
 "laws": 39298,
@@ -738,7 +884,9 @@
 "main": 429,
 "dataset": "endomorphosis/ipfs_poland_laws",
 "license": "Official texts of generally binding law of the Republic of Poland are not subject to copyright (Art. 4 of the Act on Copyright and Related Rights). ELI API: https://api.sejm.gov.pl/eli — reuse of API data as published by Sejm.",
-"lang": "pl"
+"lang": "pl",
+"withArticles": 31148,
+"wholeText": 8150
 },
 "RS": {
 "laws": 7811,
@@ -748,7 +896,9 @@
 "main": 4,
 "dataset": "endomorphosis/ipfs_serbia_laws",
 "license": "PIS + parlament.gov.rs zakoni PDFs. Authentic gazette text prevails. Not legal advice.",
-"lang": "sr"
+"lang": "sr",
+"withArticles": 3295,
+"wholeText": 4516
 },
 "LV": {
 "laws": 85628,
@@ -758,7 +908,9 @@
 "main": 71,
 "dataset": "endomorphosis/ipfs_latvia_laws",
 "license": "Official consolidations of Latvijas Vēstnesis on likumi.lv; Law on Official Publications and Legal Information. Public reuse of official texts.",
-"lang": "lv"
+"lang": "lv",
+"withArticles": 63809,
+"wholeText": 21819
 },
 "ME": {
 "laws": 678,
@@ -768,7 +920,9 @@
 "main": 7,
 "dataset": "endomorphosis/ipfs_montenegro_laws",
 "license": "Official Gazette of Montenegro (Službeni list Crne Gore, sluzbenilist.me). Authentic gazette text prevails. Not legal advice.",
-"lang": "sr"
+"lang": "sr",
+"withArticles": 153,
+"wholeText": 525
 },
 "HR": {
 "laws": 30405,
@@ -778,7 +932,9 @@
 "main": 18,
 "dataset": "endomorphosis/ipfs_croatia_laws",
 "license": "Narodne novine official gazette. Crawlers welcome (sitemap + NN API). Max 3 queries/second as requested at https://narodne-novine.nn.hr/data_access.aspx",
-"lang": "hr"
+"lang": "hr",
+"withArticles": 21905,
+"wholeText": 8500
 },
 "GR": {
 "laws": 6988,
@@ -788,7 +944,9 @@
 "main": 0,
 "dataset": "endomorphosis/ipfs_greece_laws",
 "license": "National Printing Office (Εθνικό Τυπογραφείο) et.gr official gazette.",
-"lang": "el"
+"lang": "el",
+"withArticles": 3655,
+"wholeText": 3333
 },
 "AL": {
 "laws": 8337,
@@ -798,7 +956,9 @@
 "main": 9,
 "dataset": "endomorphosis/ipfs_albania_laws",
 "license": "QBZ/QPZ Fletorja Zyrtare. Authentic FZ text prevails. Not legal advice.",
-"lang": "sq"
+"lang": "sq",
+"withArticles": 4852,
+"wholeText": 3485
 },
 "MD": {
 "laws": 401,
@@ -808,7 +968,9 @@
 "main": 9,
 "dataset": "endomorphosis/ipfs_moldova_laws",
 "license": "Official State Register of Legal Acts of the Republic of Moldova (legis.md). Authentic register text prevails. Not legal advice.",
-"lang": "ro"
+"lang": "ro",
+"withArticles": 97,
+"wholeText": 304
 },
 "BG": {
 "laws": 1760,
@@ -818,7 +980,9 @@
 "main": 43,
 "dataset": "endomorphosis/ipfs_bulgaria_laws",
 "license": "State Gazette of the Republic of Bulgaria (dv.parliament.bg). Official texts; reuse per public-sector / gazette terms. Snapshots via Wayback Machine of official URLs only.",
-"lang": "bg"
+"lang": "bg",
+"withArticles": 1122,
+"wholeText": 638
 },
 "RO": {
 "laws": 82374,
@@ -828,7 +992,9 @@
 "main": 684,
 "dataset": "endomorphosis/ipfs_romania_laws",
 "license": "legislatie.just.ro official Portal Legislativ of the Ministry of Justice (SOAP FreeWebService).",
-"lang": "ro"
+"lang": "ro",
+"withArticles": 1071,
+"wholeText": 81303
 },
 "BY": {
 "laws": 1247,
@@ -838,7 +1004,9 @@
 "main": 24,
 "dataset": "endomorphosis/ipfs_belarus_laws",
 "license": "Национальный правовой Интернет-портал Республики Беларусь (pravo.by). Official texts prevail. Not legal advice.",
-"lang": "ru"
+"lang": "ru",
+"withArticles": 49,
+"wholeText": 1198
 },
 "EG": {
 "laws": 451,
@@ -848,7 +1016,9 @@
 "main": 0,
 "dataset": "endomorphosis/ipfs_egypt_laws",
 "license": "Official texts of the Arab Republic of Egypt as published by the Presidency, the Cabinet, and the General Organisation for Government Printing Offices (الهيئة العامة لشئون المطابع الأميرية — الجريدة الرسمية / الوقائع المصرية). The Official Gazette prevails over this research snapshot. Not legal advi",
-"lang": "ar"
+"lang": "ar",
+"withArticles": 314,
+"wholeText": 137
 },
 "UA": {
 "laws": 7586,
@@ -858,7 +1028,9 @@
 "main": 1035,
 "dataset": "endomorphosis/ipfs_ukraine_laws",
 "license": "Official texts of the Verkhovna Rada of Ukraine (zakon.rada.gov.ua / data.rada.gov.ua). Authentic official publication prevails. Not legal advice.",
-"lang": "uk"
+"lang": "uk",
+"withArticles": 1794,
+"wholeText": 5792
 },
 "LY": {
 "laws": 318,
@@ -868,7 +1040,9 @@
 "main": 4,
 "dataset": "endomorphosis/ipfs_libya_laws",
 "license": "Official Libyan Official Gazette (الجريدة الرسمية الليبية) via gazette.ly (Law 8/2011). Authentic gazette text prevails. Not legal advice.",
-"lang": "ar"
+"lang": "ar",
+"withArticles": 268,
+"wholeText": 50
 },
 "TN": {
 "laws": 9530,
@@ -878,7 +1052,9 @@
 "main": 71,
 "dataset": "endomorphosis/ipfs_tunisia_laws",
 "license": "Journal Officiel (IORT/JORT). Authentic Arabic text prevails. Not legal advice.",
-"lang": "ar"
+"lang": "ar",
+"withArticles": 3883,
+"wholeText": 5647
 },
 "IS": {
 "laws": 8440,
@@ -888,7 +1064,9 @@
 "main": 0,
 "dataset": "endomorphosis/ipfs_iceland_laws",
 "license": "Icelandic legislation as published by Althingi (althingi.is lagasafn). Official texts; reuse per Althingi public-sector terms. Not legal advice.",
-"lang": "is"
+"lang": "is",
+"withArticles": 6463,
+"wholeText": 1977
 },
 "MA": {
 "laws": 695,
@@ -898,7 +1076,9 @@
 "main": 3,
 "dataset": "endomorphosis/ipfs_morocco_laws",
 "license": "Official texts of the Kingdom of Morocco as published by the Secrétariat Général du Gouvernement (sgg.gov.ma) in the Bulletin Officiel (الجريدة الرسمية). The Bulletin Officiel prevails over this research snapshot. Not legal advice. Not Adala commercial compilations.",
-"lang": "ar"
+"lang": "ar",
+"withArticles": 294,
+"wholeText": 401
 },
 "RU": {
 "laws": 12390,
@@ -908,7 +1088,9 @@
 "main": 3229,
 "dataset": "endomorphosis/ipfs_russia_laws",
 "license": "Official documents of state bodies, including laws and other normative acts, are not objects of copyright (Civil Code of the Russian Federation art. 1259(6)). Texts from the Official Internet Portal of Legal Information (pravo.gov.ru / publication.pravo.gov.ru). Not legal advice; the official public",
-"lang": "ru"
+"lang": "ru",
+"withArticles": 8606,
+"wholeText": 3784
 },
 "SD": {
 "laws": 242,
@@ -918,7 +1100,9 @@
 "main": 1,
 "dataset": "endomorphosis/ipfs_sudan_laws",
 "license": "public-domain",
-"lang": "en"
+"lang": "en",
+"withArticles": 32,
+"wholeText": 210
 },
 "MK": {
 "laws": 11017,
@@ -928,7 +1112,9 @@
 "main": 1,
 "dataset": "endomorphosis/ipfs_northmacedonia_laws",
 "license": "Official Gazette of the Republic of North Macedonia (Sluzben vesnik, slvesnik.com.mk). Authentic gazette PDF prevails. Not legal advice.",
-"lang": "mk"
+"lang": "mk",
+"withArticles": 9583,
+"wholeText": 1434
 },
 "SS": {
 "laws": 128,
@@ -938,7 +1124,9 @@
 "main": 5,
 "dataset": "endomorphosis/ipfs_southsudan_laws",
 "license": "Ministry of Justice and Constitutional Affairs of South Sudan (mojca.gov.ss). Authentic official text prevails. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 0,
+"wholeText": 128
 },
 "ET": {
 "laws": 6479,
@@ -948,7 +1136,9 @@
 "main": 33,
 "dataset": "endomorphosis/ipfs_ethiopia_laws",
 "license": "Federal Negarit Gazette via justice.gov.et / hopr.gov.et. Authentic gazette text prevails. Not legal advice.",
-"lang": "am"
+"lang": "am",
+"withArticles": 1329,
+"wholeText": 5150
 },
 "DZ": {
 "laws": 1506,
@@ -958,7 +1148,9 @@
 "main": 7,
 "dataset": "endomorphosis/ipfs_algeria_laws",
 "license": "Journal Officiel de la République Algérienne Démocratique et Populaire (joradp.dz, Secrétariat Général du Gouvernement). JO authentic text prevails. Not legal advice.",
-"lang": "fr"
+"lang": "fr",
+"withArticles": 1361,
+"wholeText": 145
 },
 "DJ": {
 "laws": 400,
@@ -968,7 +1160,9 @@
 "main": 13,
 "dataset": "endomorphosis/ipfs_djibouti_laws",
 "license": "République de Djibouti — Journal Officiel électronique / eJO (journalofficiel.dj / SGG) / Présidence (presidence.dj). Authentic Journal Officiel / official text prevails. Not legal advice.",
-"lang": "fr"
+"lang": "fr",
+"withArticles": 212,
+"wholeText": 188
 },
 "MR": {
 "laws": 293,
@@ -978,7 +1172,9 @@
 "main": 0,
 "dataset": "endomorphosis/ipfs_mauritania_laws",
 "license": "Official Journal Officiel of the Islamic Republic of Mauritania via MSGG (msgg.gov.mr). JO authentic text prevails. Not legal advice.",
-"lang": "fr"
+"lang": "fr",
+"withArticles": 289,
+"wholeText": 4
 },
 "ER": {
 "laws": 127,
@@ -988,7 +1184,9 @@
 "main": 1,
 "dataset": "endomorphosis/ipfs_eritrea_laws",
 "license": "public-domain",
-"lang": "en"
+"lang": "en",
+"withArticles": 90,
+"wholeText": 37
 },
 "SO": {
 "laws": 143,
@@ -998,7 +1196,9 @@
 "main": 4,
 "dataset": "endomorphosis/ipfs_somalia_laws",
 "license": "public-domain",
-"lang": "en"
+"lang": "en",
+"withArticles": 26,
+"wholeText": 117
 },
 "KE": {
 "laws": 261,
@@ -1008,7 +1208,9 @@
 "main": 7,
 "dataset": "endomorphosis/ipfs_kenya_laws",
 "license": "Official legislative texts published by the National Council for Law Reporting (Kenya Law, new.kenyalaw.org / kenyalaw.org). Reuse is governed by Kenya Law terms of use. The Kenya Gazette / authentic official text prevails over this research snapshot. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 141,
+"wholeText": 120
 },
 "UG": {
 "laws": 269,
@@ -1018,7 +1220,9 @@
 "main": 20,
 "dataset": "endomorphosis/ipfs_uganda_laws",
 "license": "Republic of Uganda — Parliament (parliament.go.ug) / Judiciary (judiciary.go.ug) / Uganda Law Reform Commission (ulrc.go.ug) / Ministry of Gender or other *.go.ug gazette hosts. Authentic Official Gazette / Act text prevails. Not ULII as gazette source. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 164,
+"wholeText": 105
 },
 "RW": {
 "laws": 1926,
@@ -1028,7 +1232,9 @@
 "main": 2,
 "dataset": "endomorphosis/ipfs_rwanda_laws",
 "license": "Official Gazette of the Republic of Rwanda as published by the Ministry of Justice (minijust.gov.rw). Official texts; reuse per public-sector terms. Not legal advice.",
-"lang": "rw"
+"lang": "rw",
+"withArticles": 836,
+"wholeText": 1090
 },
 "BI": {
 "laws": 306,
@@ -1038,7 +1244,9 @@
 "main": 31,
 "dataset": "endomorphosis/ipfs_burundi_laws",
 "license": "public-domain",
-"lang": "fr"
+"lang": "fr",
+"withArticles": 53,
+"wholeText": 253
 },
 "TZ": {
 "laws": 615,
@@ -1048,7 +1256,9 @@
 "main": 6,
 "dataset": "endomorphosis/ipfs_tanzania_laws",
 "license": "Acts of the Parliament of the United Republic of Tanzania as published on parliament.go.tz / polis.bunge.go.tz / oagmis.oag.go.tz. Government Printer gazette text prevails. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 610,
+"wholeText": 5
 },
 "CD": {
 "laws": 201,
@@ -1058,7 +1268,9 @@
 "main": 30,
 "dataset": "endomorphosis/ipfs_drc_laws",
 "license": "Journal Officiel de la République Démocratique du Congo (journalofficiel.cd) / Présidence (presidence.cd) / Primature (primature.gouv.cd) / Sénat / Assemblée nationale / justice.gouv.cd / Cour constitutionnelle. Authentic JO / official text prevails. Not legal advice.",
-"lang": "fr"
+"lang": "fr",
+"withArticles": 133,
+"wholeText": 68
 },
 "CG": {
 "laws": 214,
@@ -1068,7 +1280,9 @@
 "main": 7,
 "dataset": "endomorphosis/ipfs_congobrazzaville_laws",
 "license": "République du Congo / Congo-Brazzaville — SGG (sgg.cg) / Primature (primature.gouv.cg) / Présidence (presidence.cg) / Assemblée nationale (assemblee-nationale.cg) / Finances / Gouvernement / Justice / Journal Officiel (*.cg / *.gouv.cg). Authentic Journal Officiel / official text prevails. Not legal",
-"lang": "fr"
+"lang": "fr",
+"withArticles": 147,
+"wholeText": 67
 },
 "GA": {
 "laws": 257,
@@ -1078,7 +1292,9 @@
 "main": 9,
 "dataset": "endomorphosis/ipfs_gabon_laws",
 "license": "République Gabonaise — SGG (sgg.ga) / Présidence (presidence.ga) / Assemblée nationale (assemblee.ga) / Primature / Finances / Justice / Gouvernement / Journal Officiel (*.ga / *.gouv.ga). Authentic Journal Officiel / official text prevails. Not legal advice. Not Congo-Brazzaville (cg) / DRC (cd) / ",
-"lang": "fr"
+"lang": "fr",
+"withArticles": 64,
+"wholeText": 193
 },
 "GQ": {
 "laws": 161,
@@ -1088,7 +1304,9 @@
 "main": 3,
 "dataset": "endomorphosis/ipfs_equatorialguinea_laws",
 "license": "República de Guinea Ecuatorial — BOE (boe.gob.gq) / Justicia / Función Pública / Hacienda / Trabajo / Exterior / Anticorrupción / Primatura / Página Oficial del Gobierno (gob.gq / guineaecuatorialpress.com) (*.gob.gq / *.gq). Authentic Boletín Oficial / official text prevails. Not legal advice. Not ",
-"lang": "es"
+"lang": "es",
+"withArticles": 42,
+"wholeText": 119
 },
 "CM": {
 "laws": 794,
@@ -1098,7 +1316,9 @@
 "main": 39,
 "dataset": "endomorphosis/ipfs_cameroon_laws",
 "license": "Présidence de la République du Cameroun (prc.cm) / Services du Premier Ministre (spm.gov.cm). Authentic official text prevails. Not legal advice.",
-"lang": "fr"
+"lang": "fr",
+"withArticles": 619,
+"wholeText": 175
 },
 "CF": {
 "laws": 277,
@@ -1108,7 +1328,9 @@
 "main": 11,
 "dataset": "endomorphosis/ipfs_car_laws",
 "license": "République Centrafricaine / RCA — Portail du Gouvernement (gouv.cf) / SGG / Journal Officiel / Primature / Justice / Finances / Mines / Présidence / Assemblée nationale (*.cf / *.gouv.cf / *.gov.cf). Authentic Journal Officiel / official text prevails. Not legal advice.",
-"lang": "fr"
+"lang": "fr",
+"withArticles": 71,
+"wholeText": 206
 },
 "TD": {
 "laws": 241,
@@ -1118,7 +1340,9 @@
 "main": 9,
 "dataset": "endomorphosis/ipfs_chad_laws",
 "license": "République du Tchad — Journal Officiel (journalofficiel.td / SGG) / Présidence (presidence.td) / Ministère des Finances (finances.gouv.td) / Primature / Justice / Assemblée nationale. Authentic Journal Officiel / official text prevails. Not legal advice.",
-"lang": "fr"
+"lang": "fr",
+"withArticles": 106,
+"wholeText": 135
 },
 "NE": {
 "laws": 458,
@@ -1128,7 +1352,9 @@
 "main": 11,
 "dataset": "endomorphosis/ipfs_niger_laws",
 "license": "République du Niger — Portail du Gouvernement (gouv.ne) / Ministère de la Justice (justice.gouv.ne) / Ministère des Finances (finances.gouv.ne) / Ministère de l'Intérieur (interieur.gouv.ne). Authentic Journal Officiel / official text prevails. Not legal advice.",
-"lang": "fr"
+"lang": "fr",
+"withArticles": 94,
+"wholeText": 364
 },
 "BJ": {
 "laws": 284,
@@ -1138,7 +1364,9 @@
 "main": 4,
 "dataset": "endomorphosis/ipfs_benin_laws",
 "license": "République du Bénin — Secrétariat général du Gouvernement (sgg.gouv.bj) / Portail du Gouvernement (gouv.bj) / Journal Officiel (journalofficiel.gouv.bj) / Ministère de la Justice (justice.gouv.bj) / Assemblée nationale. Authentic Journal Officiel / official text prevails. Not legal advice.",
-"lang": "fr"
+"lang": "fr",
+"withArticles": 77,
+"wholeText": 207
 },
 "TG": {
 "laws": 711,
@@ -1148,7 +1376,9 @@
 "main": 57,
 "dataset": "endomorphosis/ipfs_togo_laws",
 "license": "République Togolaise — Journal Officiel (jo.gouv.tg) / Ministère des Finances (finances.gouv.tg) / Ministère de la Justice (justice.gouv.tg) / SGG / Primature / Assemblée nationale. Authentic Journal Officiel / official text prevails. Not legal advice.",
-"lang": "fr"
+"lang": "fr",
+"withArticles": 675,
+"wholeText": 36
 },
 "GH": {
 "laws": 544,
@@ -1158,7 +1388,9 @@
 "main": 9,
 "dataset": "endomorphosis/ipfs_ghana_laws",
 "license": "Official texts of the Republic of Ghana as published by Parliament of Ghana and the Judicial Service. The Ghana Gazette (Ghana Publishing Company) authentic text prevails. Not legal advice. Not GhanaLII as source of record.",
-"lang": "en"
+"lang": "en",
+"withArticles": 422,
+"wholeText": 122
 },
 "CI": {
 "laws": 188,
@@ -1168,7 +1400,9 @@
 "main": 32,
 "dataset": "endomorphosis/ipfs_cotedivoire_laws",
 "license": "Secrétariat Général du Gouvernement (sgg.gouv.ci) / Assemblée nationale (assnat.ci). Authentic Journal Officiel / official text prevails. Not legal advice.",
-"lang": "fr"
+"lang": "fr",
+"withArticles": 43,
+"wholeText": 145
 },
 "BF": {
 "laws": 225,
@@ -1178,7 +1412,9 @@
 "main": 34,
 "dataset": "endomorphosis/ipfs_burkinafaso_laws",
 "license": "Journal Officiel du Burkina Faso (jobf.gov.bf / SGG-CM) / Assemblée nationale (assembleenationale.bf) / Ministère de la Justice (justice.gov.bf) / Primature / Gouvernement. Authentic Journal Officiel / official text prevails. Not legal advice.",
-"lang": "fr"
+"lang": "fr",
+"withArticles": 176,
+"wholeText": 49
 },
 "ML": {
 "laws": 263,
@@ -1188,7 +1424,9 @@
 "main": 31,
 "dataset": "endomorphosis/ipfs_mali_laws",
 "license": "Secrétariat Général du Gouvernement du Mali (sgg-mali.ml) — Journal Officiel de la République du Mali. Authentic JO / official text prevails. Not legal advice.",
-"lang": "fr"
+"lang": "fr",
+"withArticles": 194,
+"wholeText": 69
 },
 "GW": {
 "laws": 206,
@@ -1198,7 +1436,9 @@
 "main": 7,
 "dataset": "endomorphosis/ipfs_guineabissau_laws",
 "license": "República da Guiné-Bissau — Assembleia Nacional Popular (anp.gw / parlamento.gw) / Presidência (presidencia.gw) / MEF (mef.gw) / gov.gw / INE and other *.gw / *.gov.gw gazette hosts. Authentic Boletim Oficial / official text prevails. Not legal advice. Not Guinea (gn) / Equatorial Guinea (gq) / Cabo",
-"lang": "pt"
+"lang": "pt",
+"withArticles": 41,
+"wholeText": 165
 },
 "SI": {
 "laws": 236538,
@@ -1208,7 +1448,9 @@
 "main": 0,
 "dataset": "endomorphosis/ipfs_slovenia_laws",
 "license": "PISRS / Uradni list RS official consolidations. https://www.pisrs.si/",
-"lang": "sl"
+"lang": "sl",
+"withArticles": 106438,
+"wholeText": 130100
 },
 "GM": {
 "laws": 221,
@@ -1218,7 +1460,9 @@
 "main": 6,
 "dataset": "endomorphosis/ipfs_gambia_laws",
 "license": "Republic of The Gambia — National Assembly (assembly.gov.gm / nationalassembly.gov.gm) / Ministry of Justice (moj.gov.gm / justice.gov.gm) / Attorney General / Judiciary (judiciary.gov.gm) / State House / Office of the President / other *.gov.gm gazette hosts. Authentic Official Gazette / Act text p",
-"lang": "en"
+"lang": "en",
+"withArticles": 64,
+"wholeText": 157
 },
 "SN": {
 "laws": 422,
@@ -1228,7 +1472,9 @@
 "main": 38,
 "dataset": "endomorphosis/ipfs_senegal_laws",
 "license": "République du Sénégal — Secrétariat Exécutif du Conseil Présidentiel (sec.gouv.sn) / Ministère de la Justice (justice.gouv.sn) / Ministère des Finances (finances.gouv.sn / budget.gouv.sn) / Ministère du Numérique (numerique.gouv.sn) / Assemblée nationale (assemblee-nationale.sn). Authentic Journal O",
-"lang": "fr"
+"lang": "fr",
+"withArticles": 330,
+"wholeText": 92
 },
 "SL": {
 "laws": 256,
@@ -1238,7 +1484,9 @@
 "main": 5,
 "dataset": "endomorphosis/ipfs_sierraleone_laws",
 "license": "Republic of Sierra Leone — Parliament (parliament.gov.sl) / Judiciary (judiciary.gov.sl) / Attorney General & Ministry of Justice (moj.gov.sl / attorneygeneral.gov.sl) / State House / Cabinet / other *.gov.sl gazette hosts. Authentic Official Gazette / Act text prevails. Not SierraLII as LII source ",
-"lang": "en"
+"lang": "en",
+"withArticles": 160,
+"wholeText": 96
 },
 "GN": {
 "laws": 522,
@@ -1248,7 +1496,9 @@
 "main": 25,
 "dataset": "endomorphosis/ipfs_guinea_laws",
 "license": "public-domain",
-"lang": "fr"
+"lang": "fr",
+"withArticles": 84,
+"wholeText": 438
 },
 "CV": {
 "laws": 239,
@@ -1258,7 +1508,9 @@
 "main": 5,
 "dataset": "endomorphosis/ipfs_caboverde_laws",
 "license": "República de Cabo Verde — Imprensa Nacional / Boletim Oficial (boe.incv.cv / incv.cv) / Portal do Governo (governo.cv) / Assembleia Nacional (parlamento.cv) / Justiça (justica.gov.cv) / Finanças (mf.gov.cv) / gov.cv / BCV / INE / Tribunal Constitucional and other *.cv / *.gov.cv gazette hosts. Authe",
-"lang": "pt"
+"lang": "pt",
+"withArticles": 129,
+"wholeText": 110
 },
 "ST": {
 "laws": 246,
@@ -1268,7 +1520,9 @@
 "main": 13,
 "dataset": "endomorphosis/ipfs_saotome_laws",
 "license": "República Democrática de São Tomé e Príncipe — Portal do Governo (governo.st) / Assembleia Nacional (assembleia.st / parlamento.st) / Presidência (presidencia.st) / Justiça (justica.gov.st) / Finanças (financas.gov.st) / gov.st / BCSTP / INE / Tribunal Constitucional and other *.st / *.gov.st gazett",
-"lang": "pt"
+"lang": "pt",
+"withArticles": 68,
+"wholeText": 178
 },
 "LR": {
 "laws": 197,
@@ -1278,7 +1532,9 @@
 "main": 19,
 "dataset": "endomorphosis/ipfs_liberia_laws",
 "license": "Republic of Liberia — Senate (senate.gov.lr) / House (house.gov.lr) / Legislature / Ministry of Justice (moj.gov.lr) / Judiciary (judiciary.gov.lr) / Executive Mansion (emansion.gov.lr) / MICAT / other *.gov.lr gazette hosts. Authentic Official Gazette / Act text prevails. Not LiberLII as LII source",
-"lang": "en"
+"lang": "en",
+"withArticles": 124,
+"wholeText": 73
 },
 "ZM": {
 "laws": 5444,
@@ -1288,7 +1544,9 @@
 "main": 29,
 "dataset": "endomorphosis/ipfs_zambia_laws",
 "license": "Parliament of Zambia / ZambiaLII. Authentic official text prevails. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 1110,
+"wholeText": 4334
 },
 "AO": {
 "laws": 6137,
@@ -1298,7 +1556,9 @@
 "main": 28,
 "dataset": "endomorphosis/ipfs_angola_laws",
 "license": "Official Angola government publications (.gov.ao). Authentic text prevails. Not legal advice.",
-"lang": "pt"
+"lang": "pt",
+"withArticles": 2221,
+"wholeText": 3916
 },
 "MZ": {
 "laws": 293,
@@ -1308,7 +1568,9 @@
 "main": 8,
 "dataset": "endomorphosis/ipfs_mozambique_laws",
 "license": "Boletim da República / Imprensa Nacional de Moçambique (inm.gov.mz) and official republications on mireme.gov.mz, parlamento.mz, bancomoc.mz. Authentic gazette text prevails. Not legal advice.",
-"lang": "pt"
+"lang": "pt",
+"withArticles": 164,
+"wholeText": 129
 },
 "ZW": {
 "laws": 490,
@@ -1318,7 +1580,9 @@
 "main": 5,
 "dataset": "endomorphosis/ipfs_zimbabwe_laws",
 "license": "Parliament of Zimbabwe (parlzim.gov.zw) official Acts / statute PDFs. Authentic text prevails. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 465,
+"wholeText": 25
 },
 "BW": {
 "laws": 432,
@@ -1328,7 +1592,9 @@
 "main": 8,
 "dataset": "endomorphosis/ipfs_botswana_laws",
 "license": "Laws / Bills / Gazette instruments of Botswana as published on official government and statutory-agency portals (gov.bw, parliament.gov.bw, botswanaspeaks.gov.bw, burs.org.bw, elaws.gov.bw via Wayback, and related .gov.bw / statutory hosts). Authentic Government Printer / e-Laws text prevails. Not l",
-"lang": "en"
+"lang": "en",
+"withArticles": 142,
+"wholeText": 290
 },
 "ZA": {
 "laws": 821,
@@ -1338,7 +1604,9 @@
 "main": 7,
 "dataset": "endomorphosis/ipfs_southafrica_laws",
 "license": "Official texts published by the Government of the Republic of South Africa (GCIS / www.gov.za). Copyright in state publications is administered under South African law; the authentic Government Gazette / signed Act prevails. Not legal advice. This snapshot is not SAFLII.",
-"lang": "en"
+"lang": "en",
+"withArticles": 457,
+"wholeText": 364
 },
 "LS": {
 "laws": 222,
@@ -1348,7 +1616,9 @@
 "main": 3,
 "dataset": "endomorphosis/ipfs_lesotho_laws",
 "license": "Official publication of the government of Lesotho (www.homeaffairs.gov.ls); text retrieved from the Common Crawl archive (CC-MAIN-2026-39). The authentic official text prevails. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 94,
+"wholeText": 128
 },
 "NA": {
 "laws": 1606,
@@ -1358,7 +1628,9 @@
 "main": 9,
 "dataset": "endomorphosis/ipfs_namibia_laws",
 "license": "Laws / Bills / Gazette instruments of Namibia as published on official Parliament portals (parliament.na / laws.parliament.na) and Bank of Namibia (bon.com.na) statutory hosts. Authentic Government Gazette / Parliament text prevails. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 795,
+"wholeText": 811
 },
 "MG": {
 "laws": 283,
@@ -1368,7 +1640,9 @@
 "main": 10,
 "dataset": "endomorphosis/ipfs_madagascar_laws",
 "license": "République de Madagascar — DIRCNLEGIS / SGG (cnlegis.gov.mg) / Primature (primature.gov.mg / app.primature.gov.mg) / Trésor Public (tresorpublic.mg) / Assemblée nationale (assemblee-nationale.mg) / HCC (hcc.gov.mg) / MEF (mef.gov.mg) / CENI (ceni-madagascar.mg). Authentic Journal Officiel / official",
-"lang": "fr"
+"lang": "fr",
+"withArticles": 220,
+"wholeText": 63
 },
 "SZ": {
 "laws": 267,
@@ -1378,7 +1652,9 @@
 "main": 19,
 "dataset": "endomorphosis/ipfs_eswatini_laws",
 "license": "Official publication of the government of Eswatini (gov.sz); text retrieved from the Common Crawl archive (CC-MAIN-2026-39). The authentic official text prevails. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 102,
+"wholeText": 165
 },
 "MU": {
 "laws": 726,
@@ -1388,7 +1664,9 @@
 "main": 15,
 "dataset": "endomorphosis/ipfs_mauritius_laws",
 "license": "Republic of Mauritius — Attorney General's Office (attorneygeneral.govmu.org) / National Assembly (nationalassembly.govmu.org / mauritiusassembly.govmu.org) / Supreme Court (supremecourt.govmu.org) / Government Portal (govmu.org) / Official Gazette when published on *.govmu.org. Authentic Official G",
-"lang": "en"
+"lang": "en",
+"withArticles": 717,
+"wholeText": 9
 },
 "SC": {
 "laws": 172,
@@ -1398,7 +1676,9 @@
 "main": 10,
 "dataset": "endomorphosis/ipfs_seychelles_laws",
 "license": "Republic of Seychelles — Official Gazette (gazette.sc) / SRC (src.gov.sc) / Ministry of Finance (finance.gov.sc) / Health (health.gov.sc) / State House (statehouse.gov.sc) / Judiciary (judiciary.sc) / Electoral Commission (ecs.sc) / gov.sc / National Assembly when published. Authentic Official Gazet",
-"lang": "en"
+"lang": "en",
+"withArticles": 49,
+"wholeText": 123
 },
 "KM": {
 "laws": 298,
@@ -1408,7 +1688,9 @@
 "main": 19,
 "dataset": "endomorphosis/ipfs_comoros_laws",
 "license": "Union des Comores — Presidence (beit-salam.km) / Justice (justice.gouv.km) / Finances (finances.gouv.km). Authentic official text / Journal Officiel prevails. Not legal advice.",
-"lang": "fr"
+"lang": "fr",
+"withArticles": 195,
+"wholeText": 103
 },
 "MW": {
 "laws": 5355,
@@ -1418,7 +1700,9 @@
 "main": 7,
 "dataset": "endomorphosis/ipfs_malawi_laws",
 "license": "MalawiLII / Parliament of Malawi. Authentic official text prevails. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 573,
+"wholeText": 4782
 },
 "SV": {
 "laws": 340,
@@ -1428,7 +1712,9 @@
 "main": 8,
 "dataset": "endomorphosis/ipfs_elsalvador_laws",
 "license": "Asamblea Legislativa / Diario Oficial de El Salvador (asamblea.gob.sv / diariooficial.gob.sv / imprentanacional.gob.sv). Authentic official text prevails. Not legal advice.",
-"lang": "es"
+"lang": "es",
+"withArticles": 218,
+"wholeText": 122
 },
 "HN": {
 "laws": 209,
@@ -1438,7 +1724,9 @@
 "main": 0,
 "dataset": "endomorphosis/ipfs_honduras_laws",
 "license": "Diario Oficial La Gaceta / Republic of Honduras texts mirrored by Tribunal Superior de Cuentas (tsc.gob.hn/web/leyes). Authentic La Gaceta text prevails. Not legal advice.",
-"lang": "es"
+"lang": "es",
+"withArticles": 200,
+"wholeText": 9
 },
 "GT": {
 "laws": 2412,
@@ -1448,7 +1736,9 @@
 "main": 6,
 "dataset": "endomorphosis/ipfs_guatemala_laws",
 "license": "Congreso de la República de Guatemala (congreso.gob.gt). Official legislative texts. Authentic official text prevails. Not legal advice.",
-"lang": "es"
+"lang": "es",
+"withArticles": 2412,
+"wholeText": 0
 },
 "MX": {
 "laws": 560,
@@ -1458,7 +1748,9 @@
 "main": 46,
 "dataset": "endomorphosis/ipfs_mexico_laws",
 "license": "Mexican official legislative texts (Leyes Federales vigentes) published by the Cámara de Diputados and the Diario Oficial de la Federación. Public sector information / official texts; Cámara de Diputados LeyesBiblio consolidations. Authentic source is the DOF. Not legal advice.",
-"lang": "es"
+"lang": "es",
+"withArticles": 544,
+"wholeText": 16
 },
 "PA": {
 "laws": 425,
@@ -1468,7 +1760,9 @@
 "main": 0,
 "dataset": "endomorphosis/ipfs_panama_laws",
 "license": "Gaceta Oficial de la República de Panamá (gacetaoficial.gob.pa). Authentic gazette text prevails. Not legal advice.",
-"lang": "es"
+"lang": "es",
+"withArticles": 278,
+"wholeText": 147
 },
 "BZ": {
 "laws": 2158,
@@ -1478,7 +1772,9 @@
 "main": 45,
 "dataset": "endomorphosis/ipfs_belize_laws",
 "license": "Government of Belize — Attorney General's Ministry (agm.gov.bz) Revised Edition / Acts / Statutory Instruments; Press Office SI PDFs (pressoffice.gov.bz). Authentic official gazette/AGM text prevails. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 2150,
+"wholeText": 8
 },
 "CU": {
 "laws": 279,
@@ -1488,7 +1784,9 @@
 "main": 4,
 "dataset": "endomorphosis/ipfs_cuba_laws",
 "license": "Gaceta Oficial de la República de Cuba (gacetaoficial.gob.cu). Authentic gazette text prevails. Not legal advice.",
-"lang": "es"
+"lang": "es",
+"withArticles": 259,
+"wholeText": 20
 },
 "CR": {
 "laws": 4373,
@@ -1498,7 +1796,9 @@
 "main": 137,
 "dataset": "endomorphosis/ipfs_costarica_laws",
 "license": "Official Costa Rican legislative texts published by the Procuraduría General de la República (SINALEVI / Sistema Costarricense de Información Jurídica). La Gaceta authentic text prevails. Not legal advice.",
-"lang": "es"
+"lang": "es",
+"withArticles": 2556,
+"wholeText": 1817
 },
 "NI": {
 "laws": 349,
@@ -1508,7 +1808,9 @@
 "main": 1,
 "dataset": "endomorphosis/ipfs_nicaragua_laws",
 "license": "Legislación / Gaceta — Asamblea Nacional de Nicaragua (legislacion.asamblea.gob.ni). Authentic official text prevails. Not legal advice.",
-"lang": "es"
+"lang": "es",
+"withArticles": 302,
+"wholeText": 47
 },
 "HT": {
 "laws": 283,
@@ -1518,7 +1820,9 @@
 "main": 2,
 "dataset": "endomorphosis/ipfs_haiti_laws",
 "license": "République d'Haïti — Journal officiel « Le Moniteur » / Ministère de l'Économie et des Finances (mef.gouv.ht, budget.gouv.ht). Authentic Moniteur text prevails. Not legal advice.",
-"lang": "fr"
+"lang": "fr",
+"withArticles": 81,
+"wholeText": 202
 },
 "DO": {
 "laws": 8410,
@@ -1528,7 +1832,9 @@
 "main": 102,
 "dataset": "endomorphosis/ipfs_dominicanrepublic_laws",
 "license": "Consultoría Jurídica / Biblioteca del Congreso Nacional (DO). Authentic text prevails. Not legal advice.",
-"lang": "es"
+"lang": "es",
+"withArticles": 3550,
+"wholeText": 4860
 },
 "BS": {
 "laws": 301,
@@ -1538,7 +1844,9 @@
 "main": 2,
 "dataset": "endomorphosis/ipfs_bahamas_laws",
 "license": "Government of The Bahamas — Bahamas Legislation On-line (laws.bahamas.gov.bs) Principal / Amending / Subordinate legislation PDFs published as Official Gazette text. Authentic Official Gazette / eLaws text prevails. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 226,
+"wholeText": 75
 },
 "DM": {
 "laws": 190,
@@ -1548,7 +1856,9 @@
 "main": 7,
 "dataset": "endomorphosis/ipfs_dominica_laws",
 "license": "Government of the Commonwealth of Dominica — Official Gazette / Laws (printery.dominica.gov.dm Government Printery; dominica.gov.dm Revised Laws; House of Assembly). Authentic Official Gazette / Government Printer text prevails. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 172,
+"wholeText": 18
 },
 "TT": {
 "laws": 489,
@@ -1558,7 +1868,9 @@
 "main": 4,
 "dataset": "endomorphosis/ipfs_trinidad_laws",
 "license": "Parliament of the Republic of Trinidad and Tobago / Law Revision Commission (ttparliament.org, laws.gov.tt). Authentic official text prevails. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 272,
+"wholeText": 217
 },
 "GD": {
 "laws": 150,
@@ -1568,7 +1880,9 @@
 "main": 15,
 "dataset": "endomorphosis/ipfs_grenada_laws",
 "license": "Government of Grenada — laws.gov.gd / Official Gazette (gazettes.gov.gd; Government Printery; Ministry of Legal Affairs). Authentic Official Gazette / Government Printer text prevails. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 137,
+"wholeText": 13
 },
 "BB": {
 "laws": 163,
@@ -1578,7 +1892,9 @@
 "main": 0,
 "dataset": "endomorphosis/ipfs_barbados_laws",
 "license": "Government of Barbados — Official Gazette / Laws of Barbados (barbadosparliament.com; governmentprintery.gov.bb). Authentic Official Gazette / Government Printer text prevails. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 162,
+"wholeText": 1
 },
 "VC": {
 "laws": 458,
@@ -1588,7 +1904,9 @@
 "main": 1,
 "dataset": "endomorphosis/ipfs_saint_vincent_grenadines_laws",
 "license": "Government of Saint Vincent and the Grenadines — Official Gazette / Laws (legal.gov.vc Ministry of Legal Affairs and Justice; www.gov.vc; assembly.gov.vc House of Assembly). Authentic Official Gazette / Government Printer text prevails. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 41,
+"wholeText": 417
 },
 "JM": {
 "laws": 4382,
@@ -1598,7 +1916,9 @@
 "main": 20,
 "dataset": "endomorphosis/ipfs_jamaica_laws",
 "license": "Laws of Jamaica — Ministry of Justice / Parliament. Authentic text prevails. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 4382,
+"wholeText": 0
 },
 "LC": {
 "laws": 154,
@@ -1608,7 +1928,9 @@
 "main": 3,
 "dataset": "endomorphosis/ipfs_saint_lucia_laws",
 "license": "Government of Saint Lucia — Official Gazette / Laws of Saint Lucia (npc.govt.lc National Printing Corporation; finance.gov.lc; archive.stlucia.gov.lc). Authentic Official Gazette / Government Printer text prevails. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 151,
+"wholeText": 3
 },
 "KN": {
 "laws": 150,
@@ -1618,7 +1940,9 @@
 "main": 2,
 "dataset": "endomorphosis/ipfs_saint_kitts_nevis_laws",
 "license": "Government of Saint Christopher and Nevis — Law Commission (lawcommission.gov.kn); Ministry of Justice & Legal Affairs (legal.gov.kn); Official Gazette (gazette.gov.kn). Authentic Official Gazette / Government Printer / Law Commission text prevails. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 150,
+"wholeText": 0
 },
 "PE": {
 "laws": 1735,
@@ -1628,7 +1952,9 @@
 "main": 72,
 "dataset": "endomorphosis/ipfs_peru_laws",
 "license": "Official Peruvian legislative texts published in the Diario Oficial El Peruano and by the Congreso de la República / SPIJ (MINJUSDH). El Peruano authentic text prevails. Not legal advice.",
-"lang": "es"
+"lang": "es",
+"withArticles": 1567,
+"wholeText": 168
 },
 "AG": {
 "laws": 3265,
@@ -1638,7 +1964,9 @@
 "main": 69,
 "dataset": "endomorphosis/ipfs_antigua_barbuda_laws",
 "license": "Government of Antigua and Barbuda — laws.gov.ag / Official Gazette (gazette.laws.gov.ag; Ministry of Justice & Legal Affairs). Authentic Official Gazette / Government Printer text prevails. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 2789,
+"wholeText": 476
 },
 "CL": {
 "laws": 1184,
@@ -1648,7 +1976,9 @@
 "main": 92,
 "dataset": "endomorphosis/ipfs_chile_laws",
 "license": "Official Chilean legislative texts published by the Biblioteca del Congreso Nacional (Ley Chile / BCN). Reuse under BCN/Ley Chile terms. The BCN / Diario Oficial authentic text prevails. Not legal advice.",
-"lang": "es"
+"lang": "es",
+"withArticles": 888,
+"wholeText": 296
 },
 "VE": {
 "laws": 205,
@@ -1658,7 +1988,9 @@
 "main": 1,
 "dataset": "endomorphosis/ipfs_venezuela_laws",
 "license": "Gaceta Oficial de la República Bolivariana de Venezuela (gacetaoficial.gob.ve / Imprenta Nacional). Authentic gazette text prevails. Not legal advice.",
-"lang": "es"
+"lang": "es",
+"withArticles": 201,
+"wholeText": 4
 },
 "PY": {
 "laws": 427,
@@ -1668,7 +2000,9 @@
 "main": 14,
 "dataset": "endomorphosis/ipfs_paraguay_laws",
 "license": "Official texts of laws of the Republic of Paraguay as published by the Biblioteca y Archivo del Congreso Nacional (bacn.gov.py). Gaceta Oficial / authentic congressional text prevails. Not legal advice.",
-"lang": "es"
+"lang": "es",
+"withArticles": 392,
+"wholeText": 35
 },
 "CA": {
 "laws": 25692,
@@ -1678,7 +2012,9 @@
 "main": 176,
 "dataset": "endomorphosis/ipfs_canada_laws",
 "license": "Crown copyright (Canada). Reproduction of federal enactments and consolidations is permitted without charge or request for permission under the Reproduction of Federal Law Order (SI/97-5), provided due diligence is exercised in ensuring the accuracy of the materials reproduced and the reproduction i",
-"lang": "en"
+"lang": "en",
+"withArticles": 21107,
+"wholeText": 4585
 },
 "AR": {
 "laws": 8700,
@@ -1688,7 +2024,9 @@
 "main": 242,
 "dataset": "endomorphosis/ipfs_argentina_laws",
 "license": "Official Argentine legislative texts (state documents) published by InfoLEG (Ministerio de Justicia de la Nación) and the Boletín Oficial. Creative Commons Attribution 4.0 on the InfoLEG open-data catalog (datos.jus.gob.ar). The Boletín Oficial / InfoLEG authentic text prevails. Not legal advice.",
-"lang": "es"
+"lang": "es",
+"withArticles": 8660,
+"wholeText": 40
 },
 "UY": {
 "laws": 4410,
@@ -1698,7 +2036,9 @@
 "main": 91,
 "dataset": "endomorphosis/ipfs_uruguay_laws",
 "license": "Official Uruguayan legislative texts published by IMPO (Centro de Información Oficial). Reuse under IMPO / Datos Abiertos Uruguay terms. The Diario Oficial authentic text prevails. Not legal advice.",
-"lang": "es"
+"lang": "es",
+"withArticles": 2133,
+"wholeText": 2277
 },
 "EC": {
 "laws": 319,
@@ -1708,7 +2048,9 @@
 "main": 108,
 "dataset": "endomorphosis/ipfs_ecuador_laws",
 "license": "Official regulations published via gob.ec (Guía Oficial de Trámites y Servicios) with Registro Oficial metadata. Registro Oficial authentic text prevails. Not legal advice.",
-"lang": "es"
+"lang": "es",
+"withArticles": 281,
+"wholeText": 38
 },
 "CO": {
 "laws": 2708,
@@ -1718,7 +2060,9 @@
 "main": 12,
 "dataset": "endomorphosis/ipfs_colombia_laws",
 "license": "Official Colombian legislative texts. Secretaría del Senado hosts consolidations of the Constitución, leyes, códigos/estatutos and actos legislativos; the Diario Oficial authentic text prevails. Editorial notes of the compiler are not a substitute for the gazette. Not legal advice.",
-"lang": "es"
+"lang": "es",
+"withArticles": 2705,
+"wholeText": 3
 },
 "GY": {
 "laws": 206,
@@ -1728,7 +2072,9 @@
 "main": 2,
 "dataset": "endomorphosis/ipfs_guyana_laws",
 "license": "Parliament of Guyana / Official Gazette of Guyana (parliament.gov.gy). Authentic official gazette/parliament text prevails. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 198,
+"wholeText": 8
 },
 "PG": {
 "laws": 113,
@@ -1738,7 +2084,9 @@
 "main": 2,
 "dataset": "endomorphosis/ipfs_papuanewguinea_laws",
 "license": "National Parliament of Papua New Guinea (parliament.gov.pg). Authentic official text prevails. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 39,
+"wholeText": 74
 },
 "BO": {
 "laws": 8479,
@@ -1748,7 +2096,9 @@
 "main": 108,
 "dataset": "endomorphosis/ipfs_bolivia_laws",
 "license": "Gaceta Oficial de Bolivia. Authentic Gaceta text prevails. Not legal advice.",
-"lang": "es"
+"lang": "es",
+"withArticles": 4448,
+"wholeText": 4031
 },
 "SR": {
 "laws": 211,
@@ -1758,7 +2108,9 @@
 "main": 6,
 "dataset": "endomorphosis/ipfs_suriname_laws",
 "license": "De Nationale Assemblée / Staatsblad van de Republiek Suriname (dna.sr). Authentic Staatsblad text prevails. Not legal advice.",
-"lang": "nl"
+"lang": "nl",
+"withArticles": 159,
+"wholeText": 52
 },
 "FJ": {
 "laws": 433,
@@ -1768,7 +2120,9 @@
 "main": 6,
 "dataset": "endomorphosis/ipfs_fiji_laws",
 "license": "Laws of Fiji / Government of Fiji (laws.gov.fj). Authentic official text prevails. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 13,
+"wholeText": 420
 },
 "NZ": {
 "laws": 1668,
@@ -1778,7 +2132,9 @@
 "main": 4,
 "dataset": "endomorphosis/ipfs_newzealand_laws",
 "license": "Crown copyright. New Zealand legislation on legislation.govt.nz is published by the Parliamentary Counsel Office. Reuse is typically under Creative Commons Attribution 4.0 International (CC BY 4.0) as stated on the NZ Legislation website (https://www.legislation.govt.nz/). Attribute Parliamentary Co",
-"lang": "en"
+"lang": "en",
+"withArticles": 1667,
+"wholeText": 1
 },
 "SB": {
 "laws": 226,
@@ -1788,7 +2144,9 @@
 "main": 5,
 "dataset": "endomorphosis/ipfs_solomonislands_laws",
 "license": "Official Solomon Islands legislation as published by the Attorney-General's Chambers (attorneygenerals.gov.sb). The authentic official text prevails. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 226,
+"wholeText": 0
 },
 "TO": {
 "laws": 687,
@@ -1798,7 +2156,9 @@
 "main": 0,
 "dataset": "endomorphosis/ipfs_tonga_laws",
 "license": "Official Laws of Tonga / Government Gazettes as published by the Attorney General's Office (ago.gov.to). The authentic official text prevails. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 287,
+"wholeText": 400
 },
 "WS": {
 "laws": 267,
@@ -1808,7 +2168,9 @@
 "main": 2,
 "dataset": "endomorphosis/ipfs_samoa_laws",
 "license": "Official Consolidation of Laws of Samoa as published by the Office of the Attorney General (ag.gov.ws). The authentic official text prevails. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 267,
+"wholeText": 0
 },
 "KI": {
 "laws": 168,
@@ -1818,7 +2180,9 @@
 "main": 3,
 "dataset": "endomorphosis/ipfs_kiribati_laws",
 "license": "Official Kiribati Gazettes and Instruments as published by the Office of the President (president.gov.ki). The authentic official text prevails. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 137,
+"wholeText": 31
 },
 "VU": {
 "laws": 704,
@@ -1828,7 +2192,9 @@
 "main": 3,
 "dataset": "endomorphosis/ipfs_vanuatu_laws",
 "license": "Official Parliament of Vanuatu bill texts as published on parliament.gov.vu. The authentic official text prevails. Not legal advice. Bills corpus only — not consolidated Acts.",
-"lang": "en"
+"lang": "en",
+"withArticles": 95,
+"wholeText": 609
 },
 "TV": {
 "laws": 289,
@@ -1838,7 +2204,9 @@
 "main": 0,
 "dataset": "endomorphosis/ipfs_tuvalu_laws",
 "license": "Official Laws of Tuvalu as published on tuvalu-legislation.tv (Government / iLAWS). The authentic official text prevails. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 289,
+"wholeText": 0
 },
 "FM": {
 "laws": 468,
@@ -1848,7 +2216,9 @@
 "main": 0,
 "dataset": "endomorphosis/ipfs_fsm_laws",
 "license": "Official Public Laws of the Congress of the Federated States of Micronesia as published on cfsm.gov.fm. The authentic official text prevails. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 6,
+"wholeText": 462
 },
 "MH": {
 "laws": 884,
@@ -1858,7 +2228,9 @@
 "main": 1,
 "dataset": "endomorphosis/ipfs_marshallislands_laws",
 "license": "Official Acts of the Nitijela (Parliament of the Marshall Islands) as published on rmiparliament.org. The authentic official text prevails. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 423,
+"wholeText": 461
 },
 "NR": {
 "laws": 466,
@@ -1868,7 +2240,9 @@
 "main": 27,
 "dataset": "endomorphosis/ipfs_nauru_laws",
 "license": "Official Nauruan legislation as published on RONLAW (ronlaw.gov.nr), Department of Justice & Border Control. The authentic official text prevails. Not legal advice.",
-"lang": "en"
+"lang": "en",
+"withArticles": 466,
+"wholeText": 0
 },
 "AU": {
 "laws": 36214,
@@ -1878,7 +2252,9 @@
 "main": 430,
 "dataset": "endomorphosis/ipfs_australia_laws",
 "license": "Creative Commons Attribution 4.0 International (CC BY 4.0), as stated by the Federal Register of Legislation at https://www.legislation.gov.au/terms-of-use (exception: Commonwealth Coat of Arms and content otherwise noted). Attribute the Federal Register of Legislation, link to the CC BY 4.0 licence",
-"lang": "en"
+"lang": "en",
+"withArticles": 24075,
+"wholeText": 12139
 },
 "BA": {
 "laws": 138,
@@ -1889,7 +2265,9 @@
 "dataset": "endomorphosis/ipfs_bosnia_laws",
 "acfg": "default",
 "license": "Official texts (ดูรายละเอียดที่ชุดข้อมูลต้นทาง)",
-"lang": ""
+"lang": "",
+"withArticles": 138,
+"wholeText": 0
 },
 "GE": {
 "laws": 1083,
@@ -1900,7 +2278,9 @@
 "dataset": "endomorphosis/ipfs_georgia_laws",
 "acfg": "default",
 "license": "Official texts (ดูรายละเอียดที่ชุดข้อมูลต้นทาง)",
-"lang": ""
+"lang": "",
+"withArticles": 1083,
+"wholeText": 0
 }
 },
 "built": "2026-11-17T16:58:13Z",
@@ -3473,5 +3853,6 @@
 "NA": "ทวีปอเมริกาเหนือ (รวมอเมริกากลางและแคริบเบียน)",
 "SA": "ทวีปอเมริกาใต้",
 "OC": "ออสเตรเลียและโอเชียเนีย"
-}
+},
+"summarized": "2026-11-18T07:09:46Z"
 }

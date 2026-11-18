@@ -1,0 +1,31 @@
+<style>
+/* ======================= v8: เพิ่มเฉพาะจุด ======================= */
+/* หน้าเข้าสู่ระบบ: เบอร์โทรศัพท์แบบอ่านอย่างเดียว */
+.ph-lock .input.locked{background:var(--sky-50);border-style:dashed}
+.ph-lock .input.locked input{color:var(--ink);cursor:not-allowed;-webkit-user-select:none;user-select:none;letter-spacing:.02em}
+.ph-lock .hint{margin-top:4px}
+/* โปรไฟล์: การแจ้งเตือนทาง LINE */
+.ln-steps{margin:6px 0 4px;padding-left:20px;line-height:1.7}
+.ln-code{margin-top:12px;padding:12px;border:1.5px dashed var(--line-strong);border-radius:12px;background:var(--sky-50)}
+.ln-msg{font-size:1.25rem;font-weight:700;letter-spacing:.03em;margin:6px 0 10px;word-break:break-all;font-variant-numeric:tabular-nums}
+/* จำนวนกฎหมายตามข้อเท็จจริง */
+#lawCounts{margin:14px 0}
+.lc-table td:not(:first-child),.lc-table th:not(:first-child){text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.lc-table tfoot td{font-weight:700;border-top:2px solid var(--line-strong)}
+/* ตัวบท: อนุมาตราแยกบรรทัดเสมอ แม้ข้อความยาว (ตัดคำได้ ไม่ล้นจอ) */
+.law-text p{overflow-wrap:anywhere}
+.law-text p.note{font-size:.9em;color:var(--muted);border-left:3px solid var(--line-strong);padding-left:10px}
+/* ป้ายขยาย: มาตราที่ยาวมาก (เช่น บทนิยามหลายสิบอนุมาตรา) ไม่ให้ป้ายสูงเกินจอจนเห็นเป็นหน้าว่าง — เลื่อนอ่านภายในป้าย */
+.focus .back .body{max-height:calc(100vh - 200px);max-height:calc(100dvh - 200px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+@media (orientation:landscape) and (max-height:500px){.focus .back .body{max-height:calc(100dvh - 150px);min-height:140px}}
+/* ตารางจำนวนกฎหมาย: จอแคบแสดงเป็นบัตรซ้อนกัน ไม่ล้นจอ */
+@media (max-width:640px){
+  .lc-table thead{display:none}
+  .lc-table,.lc-table tbody,.lc-table tfoot,.lc-table tr,.lc-table td{display:block;width:100%}
+  .lc-table tr{padding:10px 0;border-bottom:1px solid var(--line)}
+  .lc-table td{display:flex;justify-content:space-between;gap:12px;padding:3px 0;border:0;text-align:right}
+  .lc-table td:first-child{font-weight:700;color:var(--sky-700);text-align:left}
+  .lc-table td[data-l]::before{content:attr(data-l);color:var(--muted);font-weight:500;text-align:left}
+  .lc-table tfoot td{border-top:0}
+}
+</style>
