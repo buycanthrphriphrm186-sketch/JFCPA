@@ -58,6 +58,8 @@ var HORO = (function () {
 
   function hash(s) { var h = 2166136261; for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
   function pick(arr, seed, salt) { return arr[hash(seed + '|' + salt) % arr.length]; }
+  /* เลือกสองประโยคที่ไม่ซ้ำกัน (เดิมอาจได้ประโยคเดียวกันซ้ำ) */
+  function pick2(a1, a2, seed, salt) { var x = pick(a1, seed, salt), pool = a2.filter(function (y) { return y !== x; }); if (!pool.length) pool = a1.filter(function (y) { return y !== x; }); return x + (pool.length ? ' ' + pick(pool, seed, salt + 'b') : ''); }
   function dayIdx(d, hour) { var w = d.getDay(); if (w === 3 && hour !== null && hour >= 18) return 7; return w; }
   function letterDay(ch) { for (var k in LETTERS) if (LETTERS[k].indexOf(ch) > -1) return +k; return -1; }
   function taksaOf(birth) { var start = TAKSA_ORDER.indexOf(birth), out = {}; for (var i = 0; i < 8; i++) out[TAKSA_ORDER[(start + i) % 8]] = i; return out; }   // day -> category index
@@ -137,8 +139,8 @@ var HORO = (function () {
     out += H((r.hour !== null ? '7' : '6') + '. จันทรคติ: ข้างขึ้นข้างแรม') + P('วันเกิดของท่านตรงกับ' + r.mo.side + ' ' + r.mo.n + ' ค่ำ (คำนวณจากตำแหน่งดวงจันทร์ทางดาราศาสตร์ อาจคลาดเคลื่อนได้ประมาณ 1 ค่ำจากปฏิทินจันทรคติไทย) ' + (r.mo.side === 'ข้างขึ้น' ? 'ความเชื่อไทยถือว่าข้างขึ้นเป็นช่วงแห่งการเติบโตและการเริ่มต้น ผู้เกิดข้างขึ้นมักมีพลังในการริเริ่มสิ่งใหม่' : 'ความเชื่อไทยถือว่าข้างแรมเป็นช่วงแห่งการทบทวนและการเก็บเกี่ยว ผู้เกิดข้างแรมมักมีความรอบคอบและเข้าใจผู้อื่นลึกซึ้ง') + ' ขณะนี้ดวงจันทร์อยู่ใน' + r.moonNow.side + ' ' + r.moonNow.n + ' ค่ำ');
     var sec = r.hour !== null ? 8 : 7;
     out += H(sec + '. คำแนะนำประจำวันนี้ (วัน' + esc(DAYS[r.todayDi].n) + ')') + P('ตามทักษาของผู้เกิดวัน' + esc(r.day.n) + ' วันนี้ตรงกับภูมิ “' + TAKSA[r.todayCat][0] + '” ซึ่งเกี่ยวกับ' + TAKSA[r.todayCat][1] + ' ' + (r.todayCat === 7 ? 'ตำราแนะนำให้ทำสิ่งต่าง ๆ ด้วยความไม่ประมาท และเลี่ยงการเริ่มเรื่องสำคัญหากไม่จำเป็น' : r.todayCat === 3 || r.todayCat === 2 || r.todayCat === 6 ? 'ถือเป็นวันที่ส่งเสริม เหมาะกับการติดต่อผู้ใหญ่ เจรจา หรือเริ่มต้นสิ่งที่ตั้งใจไว้' : 'เป็นวันที่เหมาะกับการทำงานตามแผนอย่างสม่ำเสมอ') + ' สีที่ส่งเสริมสำหรับวันนี้ตามความนิยมคือสี' + esc(r.lucky[0].color) + ' หรือสี' + esc(r.lucky[1].color));
-    out += H((sec + 1) + '. แนวโน้มช่วงนี้ (เดือน' + TH_MONTHS[now.getMonth()] + ' ' + (now.getFullYear() + 543) + ')') + Object.keys(AREA).map(function (a) { var lv = r.level(a); return '<div class="hr-area ' + lv + '"><b>' + AREA_NAME[a] + '</b><span class="lv">' + (lv === 'good' ? 'ส่งเสริม' : lv === 'mid' ? 'ทรงตัว' : 'ควรระวัง') + '</span><p>' + pick(AREA[a][lv], r.seed, a + now.getFullYear() + now.getMonth()) + ' ' + pick(AREA[a][lv === 'care' ? 'mid' : lv], r.seed, a + 'x' + now.getMonth()) + '</p></div>'; }).join('');
-    out += H((sec + 2) + '. ข้อคิดส่งท้าย') + P('ไม่ว่าดวงชะตาจะกล่าวไว้อย่างไร สิ่งที่กำหนดอนาคตของคุณ' + nm + ' อย่างแท้จริงคือความตั้งใจ ความเพียร และการกระทำของท่านเอง พระพุทธศาสนาสอนว่า “อตฺตา หิ อตฺตโน นาโถ” ตนแลเป็นที่พึ่งแห่งตน และหลักกาลามสูตรสอนให้พิจารณาด้วยปัญญา ไม่เชื่อเพียงเพราะเป็นตำราหรือเป็นสิ่งที่สืบต่อกันมา ขอให้ใช้คำทำนายนี้เป็นกำลังใจและเครื่องเตือนสติ แล้วลงมือทำสิ่งที่ดีที่สุดในทุกวัน ขอเป็นกำลังใจให้ท่านประสบความสำเร็จในการเรียน การงาน และชีวิตครอบครัว');
+    out += H((sec + 1) + '. แนวโน้มช่วงนี้ (เดือน' + TH_MONTHS[now.getMonth()] + ' ' + (now.getFullYear() + 543) + ')') + Object.keys(AREA).map(function (a) { var lv = r.level(a); return '<div class="hr-area ' + lv + '"><b>' + AREA_NAME[a] + '</b><span class="lv">' + (lv === 'good' ? 'ส่งเสริม' : lv === 'mid' ? 'ทรงตัว' : 'ควรระวัง') + '</span><p>' + pick2(AREA[a][lv], AREA[a][lv === 'care' ? 'mid' : lv], r.seed, a + now.getFullYear() + '-' + now.getMonth()) + '</p></div>'; }).join('');
+    out += H((sec + 2) + '. ข้อคิดส่งท้าย: หลักธรรมสำหรับคุณ' + nm) + horoClosing(r.fullName || 'ท่าน');
     return out;
   }
   return { compute: compute, report: report, DAYS: DAYS };
@@ -204,7 +206,6 @@ VIEWS.horo = function (el) {
   };
   $('#hrGo', el).onclick = go;
   on($('#hgTabs', el), 'click', '[data-hd]', function (e, b) { $$('#hgTabs .chip', el).forEach(function (x) { x.classList.toggle('on', x === b); }); var i = +b.getAttribute('data-hd'), d = HORO.DAYS[i]; var box = $('#hgBox', el); box.innerHTML = '<p><b>วัน' + esc(d.n) + '</b> · เทวดาประจำวัน: ' + esc(d.g) + ' · พระประจำวัน: ' + esc(d.p) + ' · สีประจำวัน: ' + esc(d.c) + ' · เลขประจำดาว: ' + d.num + '</p><div class="hg-img"></div>'; horoImage(i, $('.hg-img', box)); });
-  if (saved.name && saved.date) go();
 };
 /* ภาพจาก Wikimedia Commons เฉพาะภาพที่อนุญาตให้ใช้ (CC / สาธารณสมบัติ) พร้อมเครดิต */
 var HORO_Q = ['Buddha Thai Sunday posture', 'Buddha Thai Monday posture', 'Reclining Buddha Thailand', 'Buddha holding alms bowl Thailand', 'Buddha meditation posture Thailand', 'Buddha contemplating posture Thailand', 'Buddha Naga Thailand', 'Pa Lelai Buddha Thailand'];

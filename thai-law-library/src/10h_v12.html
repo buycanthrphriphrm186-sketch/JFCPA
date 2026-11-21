@@ -1,0 +1,47 @@
+<style>
+/* ======================= v12 ======================= */
+/* เลื่อนได้เฉพาะขึ้น–ลง ไม่เลื่อนซ้าย–ขวาทุกหน้า */
+html,body{overflow-x:hidden}
+@supports (overflow-x:clip){html,body{overflow-x:clip}}
+body{touch-action:pan-y pinch-zoom}
+/* ปุ่มนำทาง: มุมโค้งทุกอุปกรณ์ (แก้มุมเหลี่ยมบน Safari เมื่อเลื่อนสุดแถบ) */
+.tabbar .pill{isolation:isolate;-webkit-mask-image:-webkit-radial-gradient(white,black);mask-image:radial-gradient(white,black);transform:translateZ(0);overscroll-behavior-x:contain}
+.tabbar .ind,.tab{border-radius:999px}
+/* โหมดขยาย: ปุ่มเดียวที่แถบด้านบน · ซ่อนปุ่มนำทาง · เนื้อหาเต็มจอทั้งซ้ายและขวา */
+html body.focus11 .app-head{display:block !important}
+body.focus11 .tabbar,#focusExit,#chFocus{display:none !important}
+body.focus11 .main,body.focus11 .app-head .wrap{padding-left:16px !important;padding-right:16px !important}
+body.focus11 .main{padding-top:12px !important;padding-bottom:calc(24px + var(--safe-b,0px)) !important}
+body.focus11 .main .wrap{max-width:none !important;padding-top:0 !important;padding-left:0;padding-right:0}
+body.focus11 .app-head .wrap{max-width:none}
+#btnFocus.on{background:var(--sky-50);color:var(--sky-700)}
+/* แชท: เลื่อนทั้งหน้า (ภายนอก) ไม่มีกล่องเลื่อนด้านใน · ช่องพิมพ์ติดด้านล่างอย่างมั่นคง */
+.chat10{height:auto !important;min-height:0 !important;overflow:visible !important;border-radius:20px}
+.ch-log{overflow:visible !important;flex:none !important;min-height:40vh;overflow-x:hidden}
+.ch-form{position:sticky;bottom:calc(var(--tab-h,64px) + 22px + var(--safe-b,0px));z-index:6;border-radius:0 0 20px 20px;box-shadow:0 -10px 16px -6px var(--bg)}
+.ch-hint{border-radius:0 0 20px 20px}
+body.focus11 .ch-form{bottom:calc(10px + var(--safe-b,0px))}
+@media (orientation:landscape) and (min-width:900px) and (pointer:coarse){.ch-form{bottom:calc(10px + var(--safe-b,0px))}}
+@media (min-width:1024px) and (pointer:fine){.ch-form{bottom:12px}}
+.ch-plus{flex:none;width:44px;height:44px;border-radius:50%;border:1.5px solid var(--line-strong);background:var(--surface);color:var(--sky-700);display:grid;place-items:center}
+.ch-plus svg.i{width:22px;height:22px}
+.ch-msg{max-width:min(82%,640px);min-width:0}
+.ch-bub{max-width:100%;overflow:hidden}
+.ch-tx{overflow-wrap:anywhere;word-break:break-word}
+.ch-img{display:block;max-width:100%;max-height:340px;border-radius:12px;margin-bottom:4px;background:var(--line);object-fit:contain}
+.ch-file{display:flex;gap:8px;align-items:center;border:0;background:rgba(255,255,255,.18);color:inherit;border-radius:12px;padding:8px 10px;text-align:left;max-width:100%;font:inherit}
+.ch-msg.adm .ch-file{background:var(--bg)}
+.ch-file span{min-width:0;overflow-wrap:anywhere}
+.ch-st.rd{color:#1E7B34;font-weight:700}
+.ch-acts{display:inline-flex;gap:2px;margin-left:4px}
+.ch-a{border:0;background:none;color:var(--muted);padding:2px 4px;border-radius:8px;display:inline-grid;place-items:center}
+.ch-a svg.i{width:14px;height:14px}
+.ch-a:hover{background:var(--line)}
+.ch-edit{width:100%;min-height:120px;resize:none;overflow:hidden;border:1.5px solid var(--line-strong);border-radius:12px;padding:10px 12px;font:inherit;font-size:16px;line-height:1.6;background:var(--bg);color:var(--ink);box-sizing:border-box}
+/* ดูดวง: หลักธรรมส่งท้าย */
+.dh12{border-left:3px solid #C9A227;background:rgba(201,162,39,.08);border-radius:0 12px 12px 0;padding:10px 14px;margin:6px 0 10px}
+.dh-pali{font-weight:800;font-size:1.05rem;margin:0}
+.dh-th{margin:2px 0 0}
+/* อนุสัญญา: ปุ่มพิมพ์เฉพาะประเทศ */
+#twPrint{margin-top:8px}
+</style>
