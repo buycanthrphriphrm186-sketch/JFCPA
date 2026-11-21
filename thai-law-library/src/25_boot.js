@@ -85,6 +85,8 @@ function boot() {
 var _origOnLoggedIn = onLoggedIn;
 onLoggedIn = function (r, remember) { _origOnLoggedIn(r, remember); startHeartbeat(); setTimeout(loadTreaties, 1200); };
 
+/* v10: ใช้หน้าปิดปรับปรุงฉบับใหม่ (มีรายละเอียด + กลับมาใช้งานเองอัตโนมัติ) */
+if (typeof showMaintenance10 === 'function') showMaintenance = showMaintenance10;
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 </script>
 </body>
