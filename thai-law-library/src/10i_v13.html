@@ -1,0 +1,33 @@
+<style>
+/* ======================= v13 ======================= */
+/* ป๊อปอัป (รวมป๊อปอัปกติกาแชท): มุมมนทั้งด้านบนและด้านล่าง ไม่มีมุมเหลี่ยม */
+.modal-wrap>.modal{border-radius:var(--r-xl,22px)}
+.ct-card,.p11{border-radius:var(--r-xl,22px) !important;background:var(--surface)}
+.ct-head,.p11-head{border-radius:var(--r-xl,22px) var(--r-xl,22px) 0 0}
+.ct-actions,.p11-actions{border-radius:0 0 var(--r-xl,22px) var(--r-xl,22px);background:var(--surface)}
+/* แชท: ไม่มีพื้นขาวโผล่ใต้กรอบส่งข้อความ · ข้อความไม่ซ้อนกันในช่องพิมพ์ */
+.chat10{background:var(--surface)}
+.ch-log{background:var(--bg)}
+.ch-form{background:var(--surface) !important}
+/* ช่องพิมพ์ยึดกับหน้าจอ */
+.ch-form.ch-fixed{position:fixed !important;bottom:calc(var(--tab-h,64px) + 22px + var(--safe-b,0px));z-index:58;border:1px solid var(--line);border-radius:18px !important;box-shadow:0 -6px 18px rgba(14,17,22,.08)}
+body.focus11 .ch-form.ch-fixed{bottom:calc(10px + var(--safe-b,0px))}
+@media (orientation:landscape) and (min-width:900px) and (pointer:coarse){.ch-form.ch-fixed{bottom:calc(10px + var(--safe-b,0px))}}
+@media (min-width:1024px) and (pointer:fine){.ch-form.ch-fixed{bottom:12px}}
+.ch-pad{flex:none}
+.ch-form.ch-fixed::after{display:none}
+.ch-form::after{content:'';position:absolute;left:-1px;right:-1px;top:100%;height:calc(var(--tab-h,64px) + 40px + var(--safe-b,0px));background:var(--bg);pointer-events:none}
+.ch-hint{position:relative;z-index:7;background:var(--surface)}
+.ch-form textarea{min-height:44px;height:44px;line-height:1.5;padding:10px 12px;overflow-y:hidden;white-space:pre-wrap}
+.ch-form textarea::placeholder{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ch-log>.ch-msg,.ch-log>.ch-day{animation:none !important}
+/* ดูดวง: กรอบอธิบายโหราศาสตร์ */
+.horo-intro{margin-top:12px;line-height:1.75}
+.horo-intro h3{margin:0 0 8px;display:flex;gap:6px;align-items:center}
+.hi-it{border-left:3px solid var(--sky-300,#9CCBF0);padding:4px 0 4px 12px;margin:8px 0}
+.hi-it p{margin:2px 0 0;text-align:left}
+.hi-gal{margin-top:12px}
+#hrDow .chip.on{background:var(--sky-600);color:#fff;border-color:var(--sky-600)}
+.hr-imgs{margin-top:14px}
+.view-head #hrClear{flex:none}
+</style>

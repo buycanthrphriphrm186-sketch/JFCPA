@@ -95,9 +95,9 @@ var HORO = (function () {
     var bd = new Date(inp.date + 'T12:00:00'), hour = inp.time ? +inp.time.split(':')[0] : null, min = inp.time ? +inp.time.split(':')[1] : 0;
     if (isNaN(bd.getTime())) return null;
     var y = bd.getFullYear(), m = bd.getMonth() + 1, d = bd.getDate();
-    var di = dayIdx(bd, hour), day = DAYS[di], tk = taksaOf(di);
+    var di = (inp.dow !== undefined && inp.dow !== null && inp.dow !== '' && !isNaN(+inp.dow)) ? +inp.dow : dayIdx(bd, hour), day = DAYS[di], tk = taksaOf(di);
     var name = String(inp.name || '').trim(), sur = String(inp.surname || '').trim(), fullName = name + (inp.useSur && sur ? ' ' + sur : '');
-    var seed = fullName + '|' + inp.date + '|' + (inp.time || '');
+    var seed = fullName + '|' + inp.date + '|' + (inp.time || '') + '|' + di;
     var byCat = {}; TAKSA.forEach(function (t, i) { byCat[i] = []; });
     var kali = [];
     fullName.replace(/\s/g, '').split('').forEach(function (ch) { var ld = letterDay(ch); if (ld < 0) return; var cat = tk[ld]; byCat[cat].push(ch); if (cat === 7) kali.push(ch); });

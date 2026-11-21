@@ -272,36 +272,18 @@ function treatyRec(id) {
   }).observe(document.documentElement, { childList: true, subtree: true });
 })();
 
-/* ---------- 5) พิมพ์ PDF: ไม่ตัดข้อความขอบขวา · ย่อหน้าตามหลักภาษาไทย (2.5 ซม.) · ระยะบรรทัดพอดี · หัว/ท้ายกระดาษ 12 pt ---------- */
+/* ---------- 5) พิมพ์ PDF (v13): ใช้รูปแบบเดิมของเวอร์ชัน 11 ทุกอย่าง แก้เฉพาะข้อความถูกตัดที่ขอบขวาของกระดาษ ---------- */
 (function () {
   var basePrint = printHtml;
-  var css = '<style id="pdf12">html,body{width:auto !important;max-width:100% !important;overflow:visible !important}' +
-    'table.pg{table-layout:fixed !important;width:100% !important;max-width:100% !important}table.pg>tbody>tr>td,table.pg>thead>tr>td,table.pg>tfoot>tr>td{width:100% !important;max-width:100% !important;overflow:visible}' +
-    '*{max-width:100%;box-sizing:border-box;overflow-wrap:anywhere;word-wrap:break-word;word-break:normal}' +
-    'body{line-height:1.6 !important}p,.pre,div{line-height:1.6}' +
-    'p{margin:0 0 6pt !important;text-indent:2.5cm;text-align:left}' +
-    '@supports (text-justify:inter-character){p{text-align:justify;text-justify:inter-character}}' +
-    '.hd p,.rh *,.rf *,.fin h2,table.dt td p,table.dt th p,p.item,p.noind,.tr9{text-indent:0 !important}' +
-    'p.item{padding-left:2.5cm !important;text-indent:0 !important}p.item.sub{padding-left:3.5cm !important}' +
-    '.rh{display:flex !important;flex-wrap:wrap !important;justify-content:space-between;gap:2pt 12pt}.rh span{white-space:normal}' +
-    '.rh,.rh *,.rf,.rf *{font-size:12pt !important;line-height:1.35 !important;text-indent:0 !important}' +
-    'table.dt{table-layout:fixed;width:100%}table.dt td,table.dt th{overflow-wrap:anywhere;font-size:14pt}' +
-    '@page{@bottom-center{font-size:12pt}}</style>';
+  var css = '<style id="pdf13">table.pg{table-layout:fixed;width:100%}table.pg>thead>tr>td,table.pg>tbody>tr>td,table.pg>tfoot>tr>td{width:100%}' +
+    'p,.pre,.sec,td,th,span,div,h2,h3,h4{overflow-wrap:anywhere;word-wrap:break-word}img{max-width:100%}.rh{flex-wrap:wrap}table.dt{table-layout:fixed}</style>';
   printHtml = function (html) {
     html = String(html || '');
-    try {
-      var doc = new DOMParser().parseFromString(html, 'text/html');
-      /* ข้อความแบบหลายบรรทัด (.pre) แยกเป็นย่อหน้า เพื่อย่อหน้าบรรทัดแรกและตัดคำได้ถูกต้อง */
-      Array.prototype.slice.call(doc.querySelectorAll('.pre')).forEach(function (pre) {
-        var lines = String(pre.textContent || '').split(/\n+/).map(function (s) { return s.trim(); }).filter(String);
-        var wrap = doc.createElement('div'); wrap.className = 'pre12';
-        lines.forEach(function (ln) { var p = doc.createElement('p'); if (/^\(?\s*([0-9๐-๙]{1,3}|[ก-ฮ])\s*\)/.test(ln)) p.className = 'item'; p.textContent = ln; wrap.appendChild(p); });
-        pre.parentNode.replaceChild(wrap, pre);
-      });
-      if (!doc.getElementById('pdf12')) doc.head.insertAdjacentHTML('beforeend', css);
-      html = '<!doctype html>' + doc.documentElement.outerHTML;
-    } catch (e) { if (html.indexOf('id="pdf12"') < 0) html = html.replace('</head>', css + '</head>'); }
-    return basePrint(html);
+    if (html.indexOf('id="pdf13"') < 0) html = html.indexOf('</head>') > -1 ? html.replace('</head>', css + '</head>') : css + html;
+    var r = basePrint(html);
+    /* กรอบสำหรับพิมพ์กว้างเท่ากระดาษ A4 (เดิมกว้าง 1 พิกเซล ทำให้บางเบราว์เซอร์จัดบรรทัดผิดและตัดข้อความด้านขวา) */
+    try { var fr = [].slice.call(document.querySelectorAll('iframe[aria-hidden="true"]')).pop(); if (fr) fr.style.cssText = 'position:fixed;left:-10000px;top:0;width:210mm;height:297mm;border:0;opacity:0;pointer-events:none'; } catch (e) {}
+    return r;
   };
 })();
 
