@@ -41,7 +41,7 @@ function notifyRegistration_(f, member) {
   var text = title + '\n\n■ รายละเอียดข้อมูลผู้สมัคร\n' + rows.map(function (r) { return '• ' + r[0] + ': ' + r[1]; }).join('\n') +
     '\n\n■ ข้อมูลอ้างอิงระบบ\n• วันและเวลาที่สมัคร: ' + when + '\n• เว็บไซต์: ' + url;
   try {
-    if (MailApp.getRemainingDailyQuota() > 0) MailApp.sendEmail({ to: adminEmail_(), subject: title + ' (' + (f.username || member.memberId) + ')', name: 'คลังกฎหมาย THAI LAW LIBRARY', body: text,
+    if (MailApp.getRemainingDailyQuota() > 0) mailSend14_({ to: adminEmail_(), subject: title + ' (' + (f.username || member.memberId) + ')', name: 'คลังกฎหมาย THAI LAW LIBRARY', body: text,
       htmlBody: '<div style="font-family:\'TH Sarabun New\',Sarabun,Tahoma,sans-serif;font-size:16px;color:#0E1116;max-width:640px"><h2 style="margin:0 0 8px">' + esc_(title) + '</h2><h3 style="margin:14px 0 6px;color:#1F5F99">รายละเอียดข้อมูลผู้สมัคร</h3><table style="border-collapse:collapse;width:100%">' +
         rows.map(function (r) { return '<tr><th style="text-align:left;border:1px solid #c9ddf0;background:#EAF4FC;padding:6px 8px;width:38%">' + esc_(r[0]) + '</th><td style="border:1px solid #c9ddf0;padding:6px 8px">' + esc_(r[1]) + '</td></tr>'; }).join('') +
         '</table><h3 style="margin:14px 0 6px;color:#1F5F99">ข้อมูลอ้างอิงระบบ</h3><p>วันและเวลาที่สมัคร: ' + esc_(when) + '<br>เว็บไซต์: <a href="' + esc_(url) + '">' + esc_(url) + '</a></p></div>' });
@@ -75,7 +75,7 @@ ROUTES.register.fn = apiRegisterV6_;
 function sendOtpMail_(email, code, name) {
   if (MailApp.getRemainingDailyQuota() < 1) throw new Error('MAIL_QUOTA');
   var when = thDateTime_(new Date()), exp = thDateTime_(new Date(Date.now() + 10 * 60000));
-  MailApp.sendEmail({
+  mailSend14_({
     to: email, replyTo: OFFICIAL_EMAIL, name: 'คลังกฎหมาย THAI LAW LIBRARY',
     subject: 'รหัสยืนยัน ' + code + ' สำหรับเข้าสู่ระบบ คลังกฎหมาย (THAI LAW LIBRARY)',
     body: 'รหัสยืนยัน (รหัสผ่านชั้นที่ 2) ของท่านคือ ' + code + '\n\nเรียน ' + (name || 'สมาชิก') + '\nกรุณากรอกรหัส 6 หลักนี้ในช่อง “รหัส 6 หลักจากอีเมล” บนหน้าเข้าสู่ระบบ เพื่อยืนยันตัวตน\nขอรหัสเมื่อ: ' + when + '\nหมดอายุ: ' + exp + ' (10 นาที ใช้ได้ครั้งเดียว)\n\nหากท่านไม่ได้เป็นผู้ขอรหัสนี้ กรุณาอย่าเปิดเผยรหัสแก่ผู้ใด เปลี่ยนรหัสผ่านส่วนตัวทันที และแจ้ง ' + OFFICIAL_EMAIL + '\n\nYour THAI LAW LIBRARY verification code is ' + code,
@@ -536,7 +536,7 @@ function hourlyV6() {
 }
 function notifyAdmin_(title, lines) {
   if (MailApp.getRemainingDailyQuota() < 1) return;
-  MailApp.sendEmail({ to: adminEmail_(), name: 'คลังกฎหมาย THAI LAW LIBRARY', subject: 'คลังกฎหมาย: ' + title, body: title + '\n\n' + lines.map(function (l) { return '• ' + l; }).join('\n') + '\n\nเว็บไซต์: ' + siteUrl_() });
+  mailSend14_({ to: adminEmail_(), name: 'คลังกฎหมาย THAI LAW LIBRARY', subject: 'คลังกฎหมาย: ' + title, body: title + '\n\n' + lines.map(function (l) { return '• ' + l; }).join('\n') + '\n\nเว็บไซต์: ' + siteUrl_() });
 }
 function checkUpdates_() {
   var P = PropertiesService.getScriptProperties(), prev = json_(P.getProperty('V6_VERSIONS'), {}), now = {}, lines = [];

@@ -44,7 +44,7 @@ function otpCode_() {
 
 function sendOtpMail_(email, code, name) {
   if (MailApp.getRemainingDailyQuota() < 1) throw new Error('MAIL_QUOTA');
-  MailApp.sendEmail({
+  mailSend14_({
     to: email,
     subject: 'รหัสผ่านชั้นที่ 2 สำหรับเข้าสู่ระบบ THAI LAW LIBRARY (คลังกฎหมาย)',
     name: 'THAI LAW LIBRARY คลังกฎหมาย',

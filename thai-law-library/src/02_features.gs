@@ -213,7 +213,7 @@ function raiseIncident_(o) {
         try { rec.pdfUrl = appFolder_('Security Reports').createFile(pdf).getUrl(); } catch (e) { logError_('incident.saveDrive', e, ''); }
         var to = adminEmail_();
         if (to) {
-          MailApp.sendEmail({
+          mailSend14_({
             to: to,
             subject: '[' + rec.severity + '] THAI LAW LIBRARY – SECURITY INCIDENT ' + id,
             htmlBody: '<p>เรียน ผู้ดูแลระบบ</p><p>ระบบตรวจพบเหตุการณ์ด้านความปลอดภัย <b>' + esc_(rec.type) + '</b> ระดับ <b>' + rec.severity + '</b></p><p>บัญชีที่เกี่ยวข้อง: ' + esc_(rec.username || '-') + ' (' + esc_(rec.memberId || '-') + ')<br>IP: ' + esc_(rec.ip || '-') + '<br>รายละเอียด: ' + esc_(rec.detail) + '</p><p>รายละเอียดฉบับเต็มอยู่ในไฟล์ PDF ที่แนบมา (สถานะ: WAITING FOR AUTHORIZATION)</p>',
