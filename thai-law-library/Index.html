@@ -1099,6 +1099,131 @@ body.ai-focus .ai2{min-height:calc(100dvh - 24px)}
 /* จอแคบ: ชิดซ้าย ไม่ให้ช่องว่างระหว่างคำกว้างผิดปกติ */
 @media (max-width:640px){.sp-v,.ct-body{text-align:left}}
 </style>
+<style>
+/* ======================= v11 ======================= */
+/* ป๊อปอัปทุกชนิด: เลื่อนภายนอก (ทั้งหน้าต่างป๊อปอัป) เท่านั้น ไม่มีกล่องเลื่อนซ้อนด้านใน · ไม่เลื่อนซ้าย–ขวา */
+.modal-wrap{overflow-y:auto !important;overflow-x:hidden !important;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;scrollbar-gutter:stable}
+.modal-wrap>.modal{max-height:none !important;overflow:visible !important;max-width:min(100%,var(--m-max,560px));margin:auto}
+.modal-wrap .modal *:not(textarea):not(select):not(input):not(img):not(video):not(canvas){max-height:none !important}
+.modal-wrap .modal .modal-body,.modal-wrap .modal .ct-body,.modal-wrap .modal .pp-list{overflow-y:visible !important}
+.modal-wrap .modal,.modal-wrap .modal *{overflow-wrap:anywhere}
+.modal-wrap .modal table{max-width:100%}
+/* กติกาแชท (v10) ให้เลื่อนภายนอกเช่นกัน */
+.ct-card{max-height:none !important;overflow:visible !important;display:block}
+.ct-body{overflow:visible !important;flex:none}
+/* ป๊อปอัปมาตรฐาน v11 */
+.p11{--m-max:680px;position:relative;padding:0}
+.p11-x{position:absolute;top:10px;right:10px;z-index:2}
+.p11-head{display:flex;gap:12px;align-items:center;padding:18px 56px 12px 18px;border-bottom:1px solid var(--line)}
+.p11-head h3{margin:0;font-size:1.05rem;line-height:1.45}
+.p11-body{padding:14px 18px;line-height:1.75;text-align:left}
+.p11-body p{margin:0 0 10px}
+.p11-body section{margin-bottom:12px}
+.p11-body h4{margin:0 0 4px;font-size:.98rem;color:var(--sky-700)}
+.pp-rows{display:flex;flex-direction:column;gap:6px;margin:4px 0 12px}
+.pp-row{display:flex;flex-wrap:wrap;gap:4px 10px;padding:8px 12px;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
+.pp-row b{min-width:150px;color:var(--muted);font-size:.85rem}
+.p11-actions{display:flex;justify-content:space-between;gap:10px;padding:12px 18px calc(12px + var(--safe-b,0px));border-top:1px solid var(--line)}
+.p11-actions.center{justify-content:center}
+.p11-actions .btn{min-width:120px}
+/* ผู้ช่วย AI: ไม่ให้ข้อความลอดใต้กรอบพิมพ์ (พื้นทึบใต้กรอบถึงขอบจอ) */
+.ai2-dock{background:var(--bg) !important;box-shadow:0 -14px 14px -2px var(--bg)}
+.ai2-dock::after{content:'';position:absolute;left:-50vw;right:-50vw;top:100%;height:calc(var(--tab-h,64px) + 60px + var(--safe-b,0px));background:var(--bg);pointer-events:none}
+.ai2-dock::before{content:'';position:absolute;left:-50vw;right:-50vw;top:0;bottom:0;background:var(--bg);z-index:-1}
+.ai2-log{padding-bottom:24px}
+/* โหมดขยาย/โฟกัสเฉพาะเนื้อหา */
+body.focus11 .app-head,body.focus11 .tabbar{display:none !important}
+body.focus11 .main{padding-top:12px}
+.focus-exit{position:fixed;top:calc(10px + var(--safe-t,0px));right:12px;z-index:90;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:8px 14px;font-weight:700;box-shadow:var(--shadow-2)}
+.focus-exit svg.i{width:18px;height:18px}
+body.focus11 .chat10{height:calc(100dvh - 90px)}
+body.focus11 .main .wrap{padding-top:44px}
+#chFocus{flex:none}
+#chFocus span{margin-left:4px}
+@media (max-width:480px){#chFocus span{display:none}}
+/* ตัวเลขข้อความผู้ดูแลที่ปุ่มแชท (แนวตั้ง/แนวนอน) */
+.tab .chat-cnt{position:absolute;top:4px;right:2px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--orange,#E8590C);color:#fff;font-size:.7rem;font-weight:800;display:grid;place-items:center;line-height:1;box-shadow:0 0 0 2px var(--surface);z-index:2}
+.ch-msg.pend{opacity:.85}
+/* โหมดทดลองใช้งาน */
+body.guest .tab[data-tab="chat"],body.guest #tabMe{display:none !important}
+#btnMainSite{margin-left:6px;white-space:nowrap}
+@media (max-width:520px){#btnMainSite span{display:none}}
+/* ให้คะแนน */
+.rate11{max-width:760px;margin:0 auto}
+.r-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px}
+.r-head h2{margin:0;display:flex;gap:8px;align-items:center}
+.r-sum{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center}
+@media (max-width:560px){.r-sum{grid-template-columns:1fr}}
+.r-avg{display:flex;flex-direction:column;align-items:center;gap:4px}
+.r-avg b{font-size:2.2rem;line-height:1}
+.srow{display:inline-flex;gap:2px;vertical-align:middle}
+.srow .sr svg.i{width:16px;height:16px;color:var(--line-strong)}
+.srow .sr.on svg.i{color:#F5A524;fill:#F5A524}
+.r-dist{display:flex;flex-direction:column;gap:4px}
+.r-bar{display:grid;grid-template-columns:52px 1fr 40px;gap:8px;align-items:center;font-size:.85rem}
+.r-bar i{height:8px;border-radius:99px;background:var(--line);overflow:hidden}
+.r-bar em{display:block;height:100%;background:#F5A524;border-radius:99px}
+.r-form{margin-top:12px}
+.r-stars{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:8px 0}
+.r-star{display:flex;flex-direction:column;align-items:center;gap:2px;border:1.5px solid var(--line);background:var(--surface);border-radius:14px;padding:8px 10px;min-width:54px;font-weight:700;color:var(--muted)}
+.r-star svg.i{width:30px;height:30px}
+.r-star.on{border-color:#F5A524;color:#B7791F}
+.r-star.on svg.i{fill:#F5A524;color:#F5A524}
+.r-lab{text-align:center;font-weight:700;margin-bottom:10px}
+.r-form textarea{width:100%;min-height:90px;resize:none;overflow:hidden;border:1.5px solid var(--line-strong);border-radius:14px;padding:10px 12px;font:inherit;font-size:16px;line-height:1.6;background:var(--bg);color:var(--ink);box-sizing:border-box}
+.r-lh{margin:16px 2px 8px}
+.r-item{margin-bottom:8px}
+.r-item.mine{border-color:#F5A524}
+.r-ih{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+.r-text{margin-top:6px;white-space:normal;overflow-wrap:anywhere;line-height:1.65}
+/* แจ้งเตือน: ปุ่มรีเฟรช */
+.spin11 svg.i{animation:spin11 .8s linear infinite}
+@keyframes spin11{to{transform:rotate(360deg)}}
+/* อนุสัญญา: อ่านภายในเว็บไซต์ */
+.tw-item{cursor:pointer}
+.tw-open{margin-top:4px;font-size:.8rem;font-weight:700;color:var(--sky-700);display:flex;gap:4px;align-items:center}
+.tw-open svg.i{width:14px;height:14px}
+.tw-src{color:var(--muted)}
+.tr11{position:fixed;inset:0;z-index:110;background:var(--bg);overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+.tr11-in{max-width:900px;margin:0 auto;padding:0 12px calc(24px + var(--safe-b,0px))}
+.tr11-bar{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:8px;padding:10px 0;background:var(--bg);border-bottom:1px solid var(--line)}
+.tr11-bar b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tr11-body{padding-top:12px}
+.tr11-h h2{margin:8px 0 4px;line-height:1.4}
+.tr11-tr{margin:12px -18px;padding:8px 18px}
+.tr11-text p{margin:0 0 10px;line-height:1.8;text-align:justify;text-justify:inter-character;overflow-wrap:anywhere}
+@media (max-width:640px){.tr11-text p{text-align:left}}
+/* ดูดวง */
+.horo-form .hf-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:10px}
+.horo-form .input{min-width:0}
+.horo-form .input input{min-width:0;width:100%;box-sizing:border-box}
+.hf-chk{display:flex;gap:8px;align-items:center;margin:10px 0 12px}
+.horo-gal{margin-top:12px}
+.hg-tabs{margin:8px 0}
+.hg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,200px),1fr));gap:10px}
+.hg-grid figure{margin:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--bg)}
+.hg-grid img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover}
+.hg-grid figcaption{padding:6px 8px;font-size:.78rem;line-height:1.45}
+.hg-grid figcaption span{color:var(--muted)}
+.hg-note{margin-top:6px}
+.horo-out{margin-top:12px;line-height:1.8}
+.horo-out h2{margin:0 0 4px}
+.horo-out h3{margin:16px 0 6px;color:var(--sky-700)}
+.horo-out p{text-align:left;overflow-wrap:anywhere}
+.hr-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:8px;margin:10px 0}
+.hr-facts div{border:1px solid var(--line);border-radius:12px;padding:8px 12px;background:var(--bg);display:flex;flex-direction:column}
+.hr-facts b{font-size:.8rem;color:var(--muted)}
+.hr-tk{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:8px;margin:8px 0}
+.hr-tk div{border:1px solid var(--line);border-radius:12px;padding:8px 10px;display:flex;flex-direction:column;gap:2px}
+.hr-tk div.good{border-color:#1E8E3E}
+.hr-tk div.bad{border-color:var(--bad,#B42318)}
+.hr-tk small{color:var(--muted);line-height:1.4}
+.hr-area{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:8px 0}
+.hr-area .lv{margin-left:8px;font-size:.78rem;font-weight:800;padding:2px 8px;border-radius:99px;background:var(--sky-50);color:var(--sky-700)}
+.hr-area.good .lv{background:#E7F6EC;color:#1E7B34}
+.hr-area.care .lv{background:#FDECEC;color:#B42318}
+.hr-area p{margin:6px 0 0}
+</style>
 <body>
 <div id="readbar" class="progress-read" aria-hidden="true"></div>
 <!-- Splash: โลโก้ต้นฉบับ (ไม่ได้สร้างใหม่) + วงแหวนหมุน -->
@@ -7270,6 +7395,685 @@ window.addEventListener('online', function () { if (S.token) chatFlush(); });
   /* ถ้ามุมมองล่าสุดคือแชท ให้กลับไปหน้าหลักเมื่อเปิดเว็บใหม่ (ต้องยอมรับกติกาก่อน) */
   try { if (S.ui && S.ui.view === 'chat') S.ui.view = 'home'; } catch (e) {}
 })();
+</script>
+<script>
+/* ==========================================================================
+   v11: เพิ่มเติม/แก้ไขเฉพาะจุดตามคำสั่ง — ไม่ลบข้อมูลกฎหมายหรือระบบเดิม
+   ========================================================================== */
+
+/* ---------- 1) ไม่มีการทดลองใช้งานแบบจำกัดวันหรือแพ็กเกจ/การชำระเงิน: ลบป้ายและข้อความที่สื่อถึงสิ่งเหล่านี้ ---------- */
+var TRIAL_SENT_RE = /ระบบเปิดให้สมาชิกทดลองใช้งานครบทุกฟังก์ชันเป็นเวลา\s*7\s*วันนับแต่วันสมัครสมาชิก\s*/g;
+function cleanTrialText(s) { return String(s || '').replace(TRIAL_SENT_RE, ''); }
+(function () {
+  function strip(root) {
+    if (!root || !root.querySelectorAll) return;
+    $$('.tag', root).forEach(function (t) { if (/ทดลองใช้|หมดระยะทดลอง|แพ็กเกจ|ชำระเงิน/.test(t.textContent)) t.remove(); });
+    $$('p', root).forEach(function (p) { if (/สิทธิทดลองใช้งาน|ทดลองใช้ฟรี|ทดลองใช้งาน\s*เหลือ/.test(p.textContent) && p.textContent.length < 200) p.remove(); });
+    $$('.es,.et,.toast .tb,.toast p', root).forEach(function (x) { if (TRIAL_SENT_RE.test(x.textContent)) { TRIAL_SENT_RE.lastIndex = 0; x.textContent = cleanTrialText(x.textContent); } TRIAL_SENT_RE.lastIndex = 0; });
+    var ln = document.getElementById('lnPanel'); if (ln) ln.remove();   // ลบเฉพาะ “การแจ้งเตือนทาง LINE” ในหน้าโปรไฟล์
+  }
+  var q = false;
+  new MutationObserver(function () { if (q) return; q = true; requestAnimationFrame(function () { q = false; strip(document.body); }); }).observe(document.documentElement, { childList: true, subtree: true });
+  var baseAdd = addNotice;
+  addNotice = function (n, silent) { if (n) { n.body = cleanTrialText(n.body); if (!String(n.body).trim() && n.id === 'ann-A1') return; } return baseAdd(n, silent); };
+})();
+
+/* ---------- 2) ป้ายพลิก: รัฐธรรมนูญ / พ.ร.ป. / พ.ร.บ.-พ.ร.ก. / ปร.-ปว.-คปค.-คสช. กลับมาใช้แบบเดียวกับประมวลกฎหมาย ---------- */
+var FLIP_CATS = { 'ประมวลกฎหมาย': 1, 'รัฐธรรมนูญ': 1, 'พระราชบัญญัติประกอบรัฐธรรมนูญ': 1, 'พระราชบัญญัติ/พระราชกำหนด': 1, 'ปร./ปว./คปค./คสช.': 1 };
+(function () {
+  var rl = renderLaw, pt = printThaiLaw;
+  renderLaw = function (box, l) { if (l && FLIP_CATS[l.cat] && l.cat !== 'ประมวลกฎหมาย') { var x = Object.assign({}, l, { cat: 'ประมวลกฎหมาย' }); return rl(box, x); } return rl(box, l); };
+  printThaiLaw = function (l) { if (l && FLIP_CATS[l.cat] && l.cat !== 'ประมวลกฎหมาย') return pt(Object.assign({}, l, { cat: 'ประมวลกฎหมาย' })); return pt(l); };
+})();
+
+/* ---------- 3) กฎหมายลำดับรองและอื่น ๆ: ไม่แสดงป้าย “วรรค” / “อนุมาตรา” แสดงข้อความตามต้นฉบับ ---------- */
+fvArticle = function (a, idx) {
+  return '<article class="fv-art" data-ai="' + idx + '"><div class="fv-ah"><span class="secno">' + esc(a.no) + '</span><b>' + esc(a.cap) + '</b>' + (FV_CC === 'TH2' ? '' : '<button class="btn sm ghost" data-tr="' + idx + '">' + ic('globe') + ' แปลเป็นภาษาไทย</button>') + '</div>' +
+    a.paras.map(function (p) { return '<p>' + esc(p.s) + '</p>' + p.items.map(function (it) { return fvItemPlain(it, 0); }).join(''); }).join('') + '<div class="fv-trans"></div></article>';
+};
+
+/* ---------- 4) จำนวนประเทศให้ตรงกับฐานข้อมูลจริงทุกจุด ---------- */
+(function () {
+  function fix(root) {
+    var head = $$('.panel.flat .small b', root).filter(function (b) { return /กฎหมายต่างประเทศ\s*[\d,]+\s*ประเทศ/.test(b.textContent); })[0];
+    if (!head) return;
+    var n = +(head.textContent.match(/กฎหมายต่างประเทศ\s*([\d,]+)\s*ประเทศ/)[1].replace(/,/g, ''));
+    var t = head.closest('.panel').querySelector('.tiny.muted');
+    var txt = 'ฐานข้อมูลกฎหมายต่างประเทศ ' + fmtN(n) + ' ประเทศ' + (n === 196 ? ' = รัฐสมาชิกสหประชาชาติ 192 ประเทศ (ไม่รวมประเทศไทย) + รัฐผู้สังเกตการณ์ 2 ประเทศ (นครรัฐวาติกัน และปาเลสไตน์) + รัฐที่ได้รับการรับรองบางส่วน 2 ประเทศ (ไต้หวัน และคอซอวอ)' : '') + ' — ประเทศไทยแสดงแยกในหมวดกฎหมายประเทศไทย';
+    if (t && t.textContent !== txt) t.textContent = txt;
+  }
+  new MutationObserver(function () { var b = document.getElementById('ctBody') || document.getElementById('view'); if (b) fix(b); }).observe(document.documentElement, { childList: true, subtree: true });
+})();
+
+/* ---------- 5) โหมดพิเศษจากระบบหลังบ้าน: ปิดปรับปรุงเฉพาะส่วน / ทดลองใช้งาน / ให้คะแนน ---------- */
+var MODES = { sec: {}, guest: { active: false }, rating: { active: false }, seen: false };
+var SEC_NAMES = { content: 'เนื้อหากฎหมายทั้งหมด', thai: 'กฎหมายประเทศไทย', foreign: 'กฎหมายต่างประเทศ', deka: 'คำพิพากษาศาลฎีกา', treaties: 'อนุสัญญาและสนธิสัญญา', tools: 'เครื่องมือ', ai: 'ผู้ช่วย AI', chat: 'แชทกับผู้ดูแลระบบ', horo: 'ดูดวง', rating: 'ให้คะแนนความประทับใจ', notes: 'สมุดบันทึก', saved: 'รายการบันทึก', history: 'ประวัติการอ่าน', time: 'เวลาการใช้งาน' };
+function secName(k) { var p = String(k).split(':'); if (p[0] === 'thai' && p[1]) return 'กฎหมายประเทศไทย หมวด “' + p[1] + '”'; if (p[0] === 'foreign' && p[1]) { var c = (typeof WORLD !== 'undefined' && WORLD && WORLD.countries || []).filter(function (x) { return x.cc === p[1]; })[0]; return 'กฎหมายต่างประเทศ: ' + (c ? (c.th || c.name || p[1]) : p[1]); } return SEC_NAMES[k] || k; }
+function secLookup(keys) { for (var i = 0; i < keys.length; i++) if (MODES.sec[keys[i]]) return [keys[i], MODES.sec[keys[i]]]; return null; }
+function secPopup(key, d) {
+  if (document.querySelector('.sm11')) return Promise.resolve(false);
+  var row = function (l, v) { return v ? '<div class="pp-row"><b>' + esc(l) + '</b><span>' + esc(v) + '</span></div>' : ''; };
+  return popup11({ cls: 'sm11', icon: 'wrench', tone: 'o', title: d.title || 'ขออภัยในความไม่สะดวก', sub: 'ส่วน “' + secName(key) + '” อยู่ระหว่างการปรับปรุงเนื้อหา',
+    html: '<p>ขณะนี้ผู้ดูแลระบบกำลังดำเนินการปรับปรุงเนื้อหาในส่วน “' + esc(secName(key)) + '” เพื่อให้ข้อมูลกฎหมายมีความถูกต้อง ครบถ้วน และเป็นปัจจุบันตามแหล่งข้อมูลทางการ ระหว่างนี้จึงงดการเข้าถึงเนื้อหาในส่วนนี้เป็นการชั่วคราว ส่วนอื่นของเว็บไซต์ยังใช้งานได้ตามปกติ และข้อมูลบัญชี รายการบันทึก ประวัติการอ่าน และข้อมูลส่วนบุคคลของท่านยังคงได้รับการเก็บรักษาไว้ครบถ้วน</p>' +
+      '<div class="pp-rows">' + row('ส่วนที่ปรับปรุง', secName(key)) + row('สาเหตุ', d.reason) + row('เริ่มปรับปรุง', d.start) + row('คาดว่าจะเปิดให้บริการ', d.end) + row('ข้อกฎหมาย/ระเบียบที่เกี่ยวข้อง', d.law) + '</div>' +
+      '<p>การปรับปรุงเนื้อหาเป็นไปเพื่อให้ผู้ใช้งานได้รับข้อมูลที่ถูกต้องตามหลักการที่ว่ากฎหมายต้องประกาศให้ประชาชนทราบโดยทั่วกัน (กฎหมายมีผลใช้บังคับเมื่อประกาศในราชกิจจานุเบกษา) และหลักการคุ้มครองข้อมูลส่วนบุคคลตามพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 ซึ่งกำหนดให้ผู้ควบคุมข้อมูลดูแลข้อมูลให้ถูกต้อง เป็นปัจจุบัน และสมบูรณ์ ทั้งนี้ ข้อมูลในเว็บไซต์เป็นเพียงข้อมูลเพื่อการศึกษาค้นคว้า หากจำเป็นต้องใช้ตัวบทกฎหมายในระหว่างนี้ โปรดตรวจสอบจากราชกิจจานุเบกษา (ratchakitcha.soc.go.th) หรือสำนักงานคณะกรรมการกฤษฎีกา (krisdika.go.th)</p>' +
+      '<p>เมื่อการปรับปรุงแล้วเสร็จ ส่วนนี้จะเปิดให้ใช้งานได้ทันทีโดยอัตโนมัติ ท่านไม่จำเป็นต้องโหลดหน้าเว็บใหม่ ขออภัยในความไม่สะดวกมา ณ โอกาสนี้ หากมีข้อสงสัย สามารถติดต่อผู้ดูแลระบบได้ที่ thailawlibrary.official@gmail.com</p>',
+    ok: 'ตกลง', cancel: 'ยกเลิก' });
+}
+function secBlocked(keys) { var hit = secLookup(keys); if (hit) { secPopup(hit[0], hit[1]); return true; } return false; }
+/* นำทางไปยังส่วนที่ปิดปรับปรุง → แสดงป๊อปอัปแทน */
+(function () {
+  var baseNav = nav;
+  nav = function (view, opt) {
+    var keys = view === 'content' ? ['content'] : [view];
+    if (S.token && secBlocked(keys)) { $$('.tab[data-tab]').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-tab') === S.ui.view); }); return; }
+    return baseNav.apply(this, arguments);
+  };
+})();
+document.addEventListener('click', function (e) {
+  if (!S.token || !e.target.closest) return;
+  var t = e.target.closest('[data-cat],[data-scope],[data-fc],[data-fgp],[data-nat]'); if (!t) return;
+  var keys = ['content'];
+  if (t.hasAttribute('data-cat')) keys.push('thai', 'thai:' + t.getAttribute('data-cat'));
+  else if (t.hasAttribute('data-scope')) keys.push(t.getAttribute('data-scope') === 'fg' ? 'foreign' : 'thai');
+  else if (t.hasAttribute('data-fc')) keys.push('foreign', 'foreign:' + t.getAttribute('data-fc'));
+  else if (t.hasAttribute('data-fgp')) keys.push('foreign');
+  else if (t.hasAttribute('data-nat')) keys.push('thai');
+  if (secBlocked(keys)) { e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); }
+}, true);
+/* ผู้ดูแลเพิ่งปิดปรับปรุงส่วนที่ผู้ใช้เปิดอยู่ → แจ้งทันทีและออกจากส่วนนั้นโดยไม่ขึ้นหน้าขาว */
+function secCheckCurrent() {
+  if (!S.token || !S.ui) return;
+  var v = S.ui.view, st = S.ui.content || {};
+  var keys = [v];
+  if (v === 'content') { keys = ['content']; if (st.scope === 'fg' || st.foreign) { keys.push('foreign'); if (st.fc) keys.push('foreign:' + st.fc); } else { keys.push('thai'); if (st.cat) keys.push('thai:' + st.cat); } }
+  var hit = secLookup(keys); if (!hit) return;
+  if (document.querySelector('.sm11')) return;
+  if (hit[0] === v || hit[0] === 'content') { try { closeFocus(); } catch (e) {} nav('home', { noAnim: true }); }
+  else if (/^thai:/.test(hit[0])) { st.cat = ''; st.law = ''; store.set('ui', S.ui); try { closeFocus(); } catch (e) {} bgRefresh(true); }
+  else if (/^foreign:/.test(hit[0])) { st.fc = ''; store.set('ui', S.ui); try { $$('.fv-reader').forEach(function (x) { x.remove(); }); syncScrollLock(); } catch (e) {} bgRefresh(true); }
+  else { st.cat = ''; st.fc = ''; st.law = ''; store.set('ui', S.ui); try { closeFocus(); $$('.fv-reader').forEach(function (x) { x.remove(); }); syncScrollLock(); } catch (e) {} bgRefresh(true); }
+  secPopup(hit[0], hit[1]);
+}
+function applyModes(m) {
+  if (!m) return;
+  var prevG = MODES.guest.active, prevR = MODES.rating.active, prevSec = JSON.stringify(MODES.sec);
+  MODES.sec = m.sec || {}; MODES.guest = m.guest || { active: false }; MODES.rating = m.rating || { active: false }; MODES.seen = true;
+  if (JSON.stringify(MODES.sec) !== prevSec) secCheckCurrent();
+  if (MODES.rating.active !== prevR || !document.getElementById('btnRate') === !!MODES.rating.active) ratingUi();
+  if (isGuest() && !MODES.guest.active) guestEnd('สิ้นสุดช่วงทดลองใช้งาน', 'ผู้ดูแลระบบปิดโหมดทดลองใช้งานแล้ว กรุณาสมัครสมาชิกหรือเข้าสู่ระบบเพื่อใช้งานต่อ');
+  if (!S.token && MODES.guest.active && !prevG) guestOffer();
+}
+(function () {
+  var baseApi = api;
+  api = function (action, payload, opt) {
+    return baseApi(action, payload, opt).then(function (r) { if (r && r.modes && (action === 'ping' || action === 'pulse')) { try { applyModes(r.modes); } catch (e) {} } return r; });
+  };
+})();
+/* หน้าสาธารณะ (ยังไม่เข้าสู่ระบบ): ตรวจโหมดทดลองใช้งานทุก 5 วินาที */
+setInterval(function () { if (!S.token && !BLOCK_SHOWN && !MAINT.on && document.visibilityState === 'visible') api('ping', {}, { noRetry: true, timeout: 10000, silent: true }).catch(function () {}); }, 5000);
+
+/* ---------- ป๊อปอัปมาตรฐาน v11: เลื่อนภายนอกเท่านั้น (ทั้งหน้าป๊อปอัปเลื่อน ไม่มีกล่องเลื่อนซ้อนด้านใน) ---------- */
+function popup11(o) {
+  return new Promise(function (resolve) {
+    var scrim = openScrim(function () {});
+    var wrap = h('<div class="modal-wrap p11-wrap ' + (o.cls || '') + '" role="dialog" aria-modal="true"></div>');
+    wrap.innerHTML = '<div class="modal p11"><button class="icon-btn p11-x" data-x aria-label="ปิด">' + ic('x') + '</button>' +
+      '<div class="p11-head"><span class="mic ' + (o.tone || '') + '">' + ic(o.icon || 'info') + '</span><div><h3>' + esc(o.title) + '</h3>' + (o.sub ? '<div class="muted small">' + esc(o.sub) + '</div>' : '') + '</div></div>' +
+      '<div class="p11-body">' + o.html + '</div>' +
+      '<div class="p11-actions' + (o.center ? ' center' : '') + '">' + (o.cancel ? '<button class="btn" data-c>' + esc(o.cancel) + '</button>' : '') + '<button class="btn k" data-ok>' + ic('check') + ' ' + esc(o.ok || 'ตกลง') + '</button></div></div>';
+    document.getElementById('layer').appendChild(wrap);
+    var m = wrap.firstChild; requestAnimationFrame(function () { m.classList.add('on'); });
+    wrap.scrollTop = 0;
+    var fin = false;
+    function done(v) { if (fin) return; fin = true; m.classList.remove('on'); closeScrim(scrim); setTimeout(function () { wrap.remove(); syncScrollLock(); }, 250); resolve(v); }
+    wrap.querySelector('[data-x]').onclick = function () { done(false); };
+    var c = wrap.querySelector('[data-c]'); if (c) c.onclick = function () { done(false); };
+    wrap.querySelector('[data-ok]').onclick = function () { done(true); };
+    syncScrollLock();
+  });
+}
+
+/* ---------- 6) ทดลองใช้งานโดยไม่ต้องเข้าสู่ระบบ (เปิดได้เฉพาะผู้ดูแลระบบจากหลังบ้าน) ---------- */
+var GUEST_ID_FE = 'GUEST-TRIAL', GUEST_ASKED = false;
+function isGuest() { return !!(S.member && S.member.memberId === GUEST_ID_FE); }
+var GUEST_TERMS = [
+  ['วัตถุประสงค์ของการเปิดทดลองใช้งาน', 'ผู้ดูแลระบบเปิดให้บุคคลทั่วไปทดลองใช้งานเว็บไซต์ “คลังกฎหมาย” ได้โดยไม่ต้องสมัครสมาชิกหรือใส่รหัสผ่าน ภายในช่วงเวลาที่ผู้ดูแลระบบกำหนด เพื่อให้ผู้สนใจได้ทดลองค้นหาและอ่านตัวบทกฎหมายไทย กฎหมายต่างประเทศ คำพิพากษาศาลฎีกา และอนุสัญญาระหว่างประเทศ ก่อนตัดสินใจสมัครสมาชิก และเพื่อรับฟังความคิดเห็นในการพัฒนาระบบก่อนเปิดให้บริการจริง เมื่อสิ้นสุดช่วงเวลาที่กำหนด หรือเมื่อผู้ดูแลระบบปิดโหมดนี้ การทดลองใช้งานจะสิ้นสุดลงโดยอัตโนมัติทันที'],
+  ['ขอบเขตการใช้งาน', 'ผู้ทดลองใช้งานอ่าน ค้นหา และพิมพ์เนื้อหากฎหมายได้ แต่ไม่สามารถแก้ไขข้อมูลบัญชี ส่งแชทถึงผู้ดูแลระบบ หรือบันทึกข้อมูลส่วนตัวถาวรได้ เนื่องจากเป็นบัญชีกลางที่ไม่มีข้อมูลส่วนบุคคล รายการที่บันทึกระหว่างทดลองใช้งานจะเก็บไว้เฉพาะในอุปกรณ์ของท่านเท่านั้น'],
+  ['ข้อมูลที่ระบบบันทึก', 'เพื่อความปลอดภัยของระบบ เว็บไซต์บันทึกข้อมูลการเข้าใช้งานทางเทคนิค ได้แก่ วันเวลา ประเภทอุปกรณ์ ระบบปฏิบัติการ เบราว์เซอร์ และหมายเลขไอพีโดยประมาณ ตามความจำเป็นในการรักษาความมั่นคงปลอดภัยของระบบ ซึ่งเป็นฐานทางกฎหมายตามพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 มาตรา 24 (5) (ประโยชน์โดยชอบด้วยกฎหมาย) ข้อมูลดังกล่าวไม่เปิดเผยแก่บุคคลภายนอก เว้นแต่มีกฎหมายกำหนด ท่านมีสิทธิตามมาตรา 30 ถึงมาตรา 36 แห่งพระราชบัญญัติดังกล่าว'],
+  ['ข้อห้ามและความรับผิดทางกฎหมาย', 'ห้ามเข้าถึงระบบคอมพิวเตอร์หรือข้อมูลคอมพิวเตอร์ที่มีมาตรการป้องกันการเข้าถึงโดยมิชอบ (พระราชบัญญัติว่าด้วยการกระทำความผิดเกี่ยวกับคอมพิวเตอร์ พ.ศ. 2550 มาตรา 5 และมาตรา 7) ห้ามรบกวนหรือทำให้ระบบไม่สามารถทำงานตามปกติ (มาตรา 10) ห้ามนำเข้าสู่ระบบคอมพิวเตอร์ซึ่งข้อมูลอันเป็นเท็จในลักษณะที่น่าจะเกิดความเสียหาย (มาตรา 14) และห้ามคัดลอกเนื้อหาเพื่อแสวงหาประโยชน์ในเชิงพาณิชย์โดยละเมิดสิทธิของผู้อื่นตามพระราชบัญญัติลิขสิทธิ์ พ.ศ. 2537 ทั้งนี้ ตัวบทกฎหมาย คำพิพากษา และประกาศทางราชการ ไม่ถือเป็นงานอันมีลิขสิทธิ์ตามมาตรา 7 แห่งพระราชบัญญัติลิขสิทธิ์ พ.ศ. 2537'],
+  ['ความถูกต้องของข้อมูล', 'ข้อมูลกฎหมายในเว็บไซต์รวบรวมจากแหล่งข้อมูลทางการและชุดข้อมูลเปิด เพื่อการศึกษาและค้นคว้าเท่านั้น มิใช่คำปรึกษาทางกฎหมาย หากนำไปใช้ในการปฏิบัติงาน การดำเนินคดี หรือการสอบ โปรดตรวจสอบตัวบทฉบับล่าสุดกับราชกิจจานุเบกษาและสำนักงานคณะกรรมการกฤษฎีกา เนื่องจากกฎหมายมีผลใช้บังคับตามที่ประกาศในราชกิจจานุเบกษา'],
+  ['การสิ้นสุดและการใช้งานต่อ', 'เมื่อกด “ยอมรับ” ถือว่าท่านได้อ่านและยอมรับข้อกำหนดนี้ ท่านสามารถกลับไปยังหน้าเว็บไซต์หลักเพื่อสมัครสมาชิกหรือเข้าสู่ระบบได้ตลอดเวลาโดยกดปุ่ม “เข้าสู่หน้าเว็บไซต์หลัก” ที่มุมขวาบน ผู้ดูแลระบบสงวนสิทธิ์ในการปิดโหมดทดลองใช้งานได้ทุกเมื่อเพื่อความปลอดภัยของระบบ']
+];
+function guestOffer() {
+  if (GUEST_ASKED || S.token || BLOCK_SHOWN || MAINT.on || !MODES.guest.active || document.querySelector('.p11-wrap')) return;
+  GUEST_ASKED = true;
+  var g = MODES.guest;
+  popup11({ cls: 'gs11', icon: 'sparkle', title: g.title || 'เปิดทดลองใช้งานเว็บไซต์โดยไม่ต้องเข้าสู่ระบบ', sub: g.to ? 'เปิดให้ทดลองถึง ' + fmtDateTime(g.to) : 'ช่วงเวลาตามที่ผู้ดูแลระบบกำหนด', center: true, ok: 'ยอมรับ',
+    html: (g.message ? '<p>' + esc(g.message).replace(/\n/g, '<br>') + '</p>' : '') + GUEST_TERMS.map(function (t, i) { return '<section><h4>' + (i + 1) + '. ' + esc(t[0]) + '</h4><p>' + esc(t[1]) + '</p></section>'; }).join('') })
+    .then(function (ok) { if (ok) guestStart(); });
+}
+function guestStart() {
+  if (S.token) return;
+  withLoading('กำลังเปิดโหมดทดลองใช้งาน', clientInfo().catch(function () { return {}; }).then(function (info) { return api('guestStart', { info: info }); })).then(function (r) {
+    S.token = r.token; S.member = r.member; store.set('token', r.token); store.set('member', r.member); store.set('tempSession', true); try { sessionStorage.setItem('tll.temp', '1'); } catch (e) {}
+    loadLocalUD(); document.body.classList.add('guest');
+    renderApp(); nav('content', { noAnim: true }); startHeartbeat();
+    toast('เข้าสู่โหมดทดลองใช้งาน', 'อ่านและค้นหาเนื้อหากฎหมายได้ทันที', 'ok');
+  }).catch(function (e) { toast('ยังไม่สามารถทดลองใช้งานได้', (e && e.msg) || '', 'warn'); GUEST_ASKED = false; });
+}
+function guestEnd(t, b) {
+  if (!isGuest()) return;
+  try { api('logout', {}, { noRetry: true, silent: true }).catch(function () {}); } catch (e) {}
+  clearSession(); store.del('tempSession'); document.body.classList.remove('guest');
+  try { closeFocus(); $$('.fv-reader,.tr11').forEach(function (x) { x.remove(); }); var ly = document.getElementById('layer'); if (ly) ly.innerHTML = ''; syncScrollLock(); } catch (e) {}
+  renderWelcome(); if (t) toast(t, b || '', 'warn');
+}
+(function () {
+  var baseExp = sessionExpired;
+  sessionExpired = function () { if (isGuest()) return guestEnd('สิ้นสุดช่วงทดลองใช้งาน', 'กรุณาสมัครสมาชิกหรือเข้าสู่ระบบเพื่อใช้งานต่อ'); return baseExp.apply(this, arguments); };
+  var baseGeo = geoAskFlow; geoAskFlow = function () { if (isGuest()) return; return baseGeo.apply(this, arguments); };
+  ['renderWelcome', 'renderLogin'].forEach(function (fn) { var f = window[fn]; window[fn] = function () { var r = f.apply(this, arguments); setTimeout(guestOffer, 400); return r; }; });
+})();
+
+/* ---------- 7) ส่วนหัว: ปุ่มขยาย/ย่อ (โฟกัสเฉพาะเนื้อหา) · ปุ่มให้คะแนน · ปุ่มเข้าสู่หน้าเว็บไซต์หลัก (โหมดทดลอง) ---------- */
+function setFocusMode(on) {
+  document.body.classList.toggle('focus11', !!on);
+  var b = document.getElementById('btnFocus'); if (b) { b.innerHTML = ic(on ? 'minimize' : 'maximize'); b.setAttribute('aria-label', on ? 'ย่อออก' : 'ขยายเข้า'); }
+  var x = document.getElementById('focusExit');
+  if (on && !x) { x = h('<button class="focus-exit" id="focusExit" aria-label="ย่อออก">' + ic('minimize') + '<span>ย่อออก</span></button>'); document.body.appendChild(x); x.onclick = function () { setFocusMode(false); }; }
+  if (!on && x) x.remove();
+  var cf = document.getElementById('chFocus'); if (cf) { cf.innerHTML = ic(on ? 'minimize' : 'maximize') + '<span>' + (on ? 'ย่อออก' : 'ขยายเข้า') + '</span>'; }
+  try { moveIndicator(); } catch (e) {}
+}
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && document.body.classList.contains('focus11') && !document.querySelector('#layer .modal-wrap')) setFocusMode(false); });
+(function () {
+  var baseApp = renderApp;
+  renderApp = function () {
+    var r = baseApp.apply(this, arguments);
+    var head = document.querySelector('.app-head .wrap'), srch = document.getElementById('btnSearch');
+    if (head && srch && !document.getElementById('btnFocus')) {
+      var fb = h('<button class="icon-btn" id="btnFocus" aria-label="ขยายเข้า" title="ขยายเข้า/ย่อออก (โฟกัสเฉพาะเนื้อหา)">' + ic('maximize') + '</button>');
+      head.insertBefore(fb, srch); fb.onclick = function () { setFocusMode(!document.body.classList.contains('focus11')); };
+    }
+    document.body.classList.toggle('guest', isGuest());
+    if (isGuest() && head && !document.getElementById('btnMainSite')) {
+      var gb = h('<button class="btn sm k" id="btnMainSite">' + ic('home') + '<span>เข้าสู่หน้าเว็บไซต์หลัก</span></button>');
+      head.appendChild(gb); gb.onclick = function () { guestEnd('', ''); };
+    }
+    setFocusMode(false); ratingUi();
+    return r;
+  };
+  if (store.get('member', null) && (store.get('member', {}) || {}).memberId === GUEST_ID_FE) document.body.classList.add('guest');
+})();
+
+/* ---------- 8) ให้คะแนนความประทับใจ (เปิดจากระบบหลังบ้าน) ---------- */
+var RATE_LABEL = ['', 'ควรปรับปรุงอย่างมาก', 'ควรปรับปรุง', 'พอใช้', 'ดี', 'ดีมาก ประทับใจที่สุด'];
+function ratingUi() {
+  var srch = document.getElementById('btnSearch'), b = document.getElementById('btnRate');
+  var on = !!(MODES.rating.active && S.token);
+  if (on && !b && srch) {
+    b = h('<button class="icon-btn" id="btnRate" aria-label="ให้คะแนนความประทับใจ" title="ให้คะแนนความประทับใจ">' + ic('star') + '</button>');
+    srch.parentNode.insertBefore(b, srch.nextSibling); b.onclick = function () { nav('rating'); };
+    var k = 'tll.rate11.' + ((S.member && S.member.memberId) || '');
+    var seen = false; try { seen = sessionStorage.getItem(k) === '1'; } catch (e) {}
+    if (!seen) { try { sessionStorage.setItem(k, '1'); } catch (e) {} setTimeout(ratingIntro, 900); }
+  }
+  if (!on && b) b.remove();
+  if (!on && S.ui && S.ui.view === 'rating') nav('home', { noAnim: true });
+}
+function ratingIntro() {
+  if (document.querySelector('.p11-wrap') || !MODES.rating.active) return;
+  popup11({ cls: 'rt11', icon: 'star', title: 'ขอเชิญประเมินความประทับใจต่อเว็บไซต์ “คลังกฎหมาย”', sub: 'ความคิดเห็นของท่านช่วยพัฒนาระบบก่อนเปิดให้บริการจริง', ok: 'ไปให้คะแนน', cancel: 'ไว้ภายหลัง',
+    html: (MODES.rating.message ? '<p>' + esc(MODES.rating.message).replace(/\n/g, '<br>') + '</p>' : '') +
+      '<p>ท่านสามารถให้คะแนนความประทับใจตั้งแต่ 1 ถึง 5 ดาว พร้อมพิมพ์ความคิดเห็นหรือข้อเสนอแนะได้ไม่จำกัดความยาว ผ่านปุ่มรูปดาวที่อยู่ข้างปุ่มค้นหาด้านบน คะแนนและความคิดเห็นจะส่งถึงระบบหลังบ้านของผู้ดูแลทันที และแสดงคะแนนเฉลี่ยพร้อมความคิดเห็นของผู้ใช้งานรายอื่น (แสดงชื่อแบบปกปิดบางส่วน) เพื่อความโปร่งใส</p>' +
+      '<p>ขอความร่วมมือแสดงความคิดเห็นด้วยถ้อยคำสุภาพ ไม่ระบุข้อมูลส่วนบุคคลของตนเองหรือผู้อื่น ไม่หมิ่นประมาทผู้ใด (ประมวลกฎหมายอาญา มาตรา 326 และมาตรา 328) และไม่นำเข้าข้อมูลอันเป็นเท็จสู่ระบบคอมพิวเตอร์ (พระราชบัญญัติว่าด้วยการกระทำความผิดเกี่ยวกับคอมพิวเตอร์ พ.ศ. 2550 มาตรา 14) ข้อมูลการประเมินจะใช้เพื่อการพัฒนาบริการเท่านั้นตามพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562</p>' })
+    .then(function (ok) { if (ok) nav('rating'); });
+}
+var RT11 = { timer: null, stars: 0, data: null, prev: 'home' };
+VIEWS.rating = function (el) {
+  setFocusMode(true);
+  el.innerHTML = '<section class="rate11"><div class="r-head"><div class="grow"><h2>' + ic('star') + ' ให้คะแนนความประทับใจ</h2><p class="muted small">ความคิดเห็นของท่านส่งถึงผู้ดูแลระบบทันที</p></div><button class="icon-btn" id="rtClose" aria-label="ปิด">' + ic('x') + '</button></div>' +
+    '<div class="panel r-sum" id="rtSum"><p class="muted small">กำลังโหลดคะแนน…</p></div>' +
+    '<div class="panel r-form"><h3>คะแนนของท่าน</h3><div class="r-stars" id="rtStars" role="radiogroup" aria-label="เลือกจำนวนดาว">' + [1, 2, 3, 4, 5].map(function (n) { return '<button type="button" class="r-star" data-st="' + n + '" role="radio" aria-label="' + n + ' ดาว ' + RATE_LABEL[n] + '">' + ic('star') + '<span>' + n + '</span></button>'; }).join('') + '</div>' +
+    '<div class="r-lab" id="rtLab">แตะดาวเพื่อเลือกคะแนน</div>' +
+    '<div class="field"><label for="rtText">ความคิดเห็นเพิ่มเติม (ไม่บังคับ)</label><textarea id="rtText" rows="3" placeholder="เล่าความประทับใจหรือข้อเสนอแนะ พิมพ์ได้ไม่จำกัดความยาว"></textarea></div>' +
+    '<button class="btn lg k block" id="rtSend">' + ic('send') + ' ส่งคะแนน</button></div>' +
+    '<div class="r-list" id="rtList"></div></section>';
+  var ta = $('#rtText', el), grow = function () { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; };
+  ta.addEventListener('input', grow);
+  var pick = function (n) { RT11.stars = n; $$('.r-star', el).forEach(function (b) { b.classList.toggle('on', +b.getAttribute('data-st') <= n); b.setAttribute('aria-checked', String(+b.getAttribute('data-st') === n)); }); $('#rtLab', el).textContent = n + ' ดาว — ' + RATE_LABEL[n]; };
+  on($('#rtStars', el), 'click', '[data-st]', function (e, b) { pick(+b.getAttribute('data-st')); });
+  if (RT11.stars) pick(RT11.stars);
+  $('#rtClose', el).onclick = function () { setFocusMode(false); nav(RT11.prev && RT11.prev !== 'rating' ? RT11.prev : 'home'); };
+  $('#rtSend', el).onclick = function () {
+    if (!RT11.stars) { toast('กรุณาเลือกจำนวนดาว', 'แตะดาว 1–5 ดวงก่อนส่ง', 'warn'); return; }
+    var item = { id: 'tmp' + uid(), time: new Date().toISOString(), name: 'ท่าน', stars: RT11.stars, text: ta.value.trim(), mine: true, pending: true };
+    if (RT11.data) { RT11.data.items.unshift(item); ratingDraw(); }
+    var payload = { stars: RT11.stars, text: ta.value.trim(), cid: uid() + uid(), device: deviceInfo().device };
+    ta.value = ''; grow();
+    var tries = 0;
+    (function send() {
+      api('ratingSend', payload, { noRetry: true, timeout: 20000 }).then(function (r) { item.pending = false; item.id = r.id; ratingDraw(); toast('ส่งคะแนนแล้ว', 'ขอบคุณสำหรับความคิดเห็นของท่าน', 'ok'); ratingLoad(); })
+        .catch(function (e) { if (e && /RATING_OFF|BAD_STARS|REJECTED/.test(e.code)) { item.failed = true; ratingDraw(); toast('ส่งคะแนนไม่สำเร็จ', e.msg, 'bad'); return; } if (++tries < 6) setTimeout(send, 400 * tries); else { item.failed = true; ratingDraw(); } });
+    })();
+  };
+  ratingLoad();
+};
+function ratingLoad() {
+  clearTimeout(RT11.timer);
+  if (!S.ui || S.ui.view !== 'rating') return;
+  api('ratingList', {}, { noRetry: true, timeout: 15000, silent: true }).then(function (r) {
+    var pend = RT11.data ? RT11.data.items.filter(function (x) { return x.pending || x.failed; }) : [];
+    RT11.data = r; r.items = pend.concat(r.items); ratingDraw();
+  }).catch(function () {}).then(function () { if (S.ui.view === 'rating') RT11.timer = setTimeout(ratingLoad, 3000); });
+}
+function starRow(n) { var s = ''; for (var i = 1; i <= 5; i++) s += '<span class="sr ' + (i <= Math.round(n) ? 'on' : '') + '">' + ic('star') + '</span>'; return '<span class="srow">' + s + '</span>'; }
+function ratingDraw() {
+  var d = RT11.data, sum = document.getElementById('rtSum'), list = document.getElementById('rtList'); if (!d || !sum || !list) return;
+  var mx = Math.max.apply(null, d.dist.concat([1]));
+  sum.innerHTML = '<div class="r-avg"><b>' + (d.avg ? d.avg.toFixed(2) : '0.00') + '</b>' + starRow(d.avg) + '<span class="muted small">จาก ' + fmtN(d.count) + ' การประเมิน</span></div><div class="r-dist">' + [5, 4, 3, 2, 1].map(function (n) { var c = d.dist[n - 1] || 0; return '<div class="r-bar"><span>' + n + ' ดาว</span><i><em style="width:' + Math.round(c / mx * 100) + '%"></em></i><span>' + fmtN(c) + '</span></div>'; }).join('') + '</div>';
+  var html = d.items.length ? d.items.map(function (x) { return '<div class="panel r-item' + (x.mine ? ' mine' : '') + '"><div class="r-ih"><b>' + esc(x.mine ? 'ท่าน' : x.name) + '</b>' + starRow(x.stars) + '<span class="muted tiny">' + fmtDateTime(x.time) + (x.failed ? ' · ส่งไม่สำเร็จ' : '') + '</span></div>' + (x.text ? '<div class="r-text">' + esc(x.text).replace(/\n/g, '<br>') + '</div>' : '') + '</div>'; }).join('') : '<div class="panel"><div class="empty"><div class="eic">' + ic('star') + '</div><h3>ยังไม่มีการประเมิน</h3><p>ร่วมเป็นคนแรกที่ให้คะแนนความประทับใจ</p></div></div>';
+  if (list.getAttribute('data-h') !== hashStr(html)) { list.setAttribute('data-h', hashStr(html)); list.innerHTML = '<h3 class="r-lh">ความคิดเห็นจากผู้ใช้งาน</h3>' + html; }
+}
+(function () {
+  var baseNav = nav;
+  nav = function (view, opt) {
+    if (view === 'rating' && S.ui && S.ui.view !== 'rating') RT11.prev = S.ui.view;
+    if (S.ui && S.ui.view === 'rating' && view !== 'rating') { clearTimeout(RT11.timer); setFocusMode(false); }
+    return baseNav.apply(this, arguments);
+  };
+})();
+
+/* ---------- 9) แชท: ส่งทันที (ไม่ต้องรอข้อความก่อนหน้า) · ตัวเลขข้อความผู้ดูแลที่ยังไม่อ่านที่ปุ่มแชท · ปุ่มขยาย/ย่อ ---------- */
+var CH11 = { syncT: null };
+chatFlush = function () {
+  if (!S.token) return;
+  CHAT.outbox.forEach(function (m) {
+    if (m._inflight) return; m._inflight = true;
+    var msg = CHAT.msgs.filter(function (x) { return x.cid === m.cid; })[0] || m, tries = 0;
+    msg.status = 'pending';
+    (function send() {
+      api('chatSend', { text: m.text, cid: m.cid }, { noRetry: true, timeout: 15000 }).then(function (r) {
+        CHAT.outbox = CHAT.outbox.filter(function (x) { return x.cid !== m.cid; });
+        msg.id = r.id; msg.status = 'sent'; chatSaveLocal(); chatDraw(false);
+        clearTimeout(CH11.syncT); CH11.syncT = setTimeout(function () { api('chatSync', {}, { noRetry: true, silent: true, timeout: 30000 }).then(function () { CHAT.poke(); }).catch(function () {}); }, 150);
+      }).catch(function (e) {
+        if (e && /EMPTY|TOO_LONG|REJECTED|GUEST_ONLY/.test(e.code)) { CHAT.outbox = CHAT.outbox.filter(function (x) { return x.cid !== m.cid; }); msg.status = 'failed'; m._inflight = false; chatSaveLocal(); chatDraw(false); toast('ส่งข้อความไม่สำเร็จ', e.msg, 'bad'); return; }
+        tries++;
+        if (tries < 8) setTimeout(send, Math.min(300 * tries, 2500));   // เน็ตช้า/สะดุด: ส่งซ้ำอัตโนมัติ (ระบบกันข้อความซ้ำด้วยรหัสข้อความ)
+        else { m._inflight = false; msg.status = 'failed'; chatSaveLocal(); chatDraw(false); }
+      });
+    })();
+  });
+  chatSaveLocal(); chatDraw(true);
+};
+chatDraw = function (stick) {
+  var log = document.getElementById('chLog'); if (!log) return;
+  var near = log.scrollHeight - log.scrollTop - log.clientHeight < 80, day = '';
+  var html = CHAT.msgs.length ? CHAT.msgs.map(function (m) {
+    var d = fmtDate(m.time), sep = d !== day ? '<div class="ch-day"><span>' + esc(d) + '</span></div>' : ''; day = d;
+    var me = m.sender === 'member';
+    var st = me ? (m.status === 'failed' ? '<button class="ch-st bad" data-retry>' + ic('alert') + ' แตะเพื่อส่งอีกครั้ง</button>' : m.status === 'pending' ? '' : '<span class="ch-st">' + ic('check') + (m.status === 'ส่งถึงผู้ดูแลแล้ว' || m.delivered ? ' ถึงผู้ดูแลแล้ว' : ' ส่งแล้ว') + '</span>') : '';
+    return sep + '<div class="ch-msg ' + (me ? 'me' : 'adm') + (m.status === 'pending' ? ' pend' : '') + '">' + (me ? '' : '<div class="ch-who">' + ic('shieldCheck') + ' ' + esc(m.adminName || 'ผู้ดูแลระบบ') + '</div>') + '<div class="ch-bub">' + esc(m.text).replace(/\n/g, '<br>') + '</div><div class="ch-meta">' + fmtTime(m.time) + ' ' + st + '</div></div>';
+  }).join('') : '<div class="empty"><div class="eic">' + ic('chat') + '</div><h3>เริ่มสนทนากับผู้ดูแลระบบ</h3><p>พิมพ์คำถาม ข้อร้องเรียน หรือแจ้งปัญหาการใช้งานได้ที่ช่องด้านล่าง</p></div>';
+  if (log.getAttribute('data-h') === hashStr(html)) return;
+  log.setAttribute('data-h', hashStr(html)); log.innerHTML = html;
+  if (stick || near) log.scrollTop = log.scrollHeight;
+};
+(function () {
+  var baseMerge = chatMerge;
+  chatMerge = function (list) {
+    var ch = false;
+    (list || []).forEach(function (x) { if (x.sender !== 'member') return; var m = CHAT.msgs.filter(function (y) { return y.id === x.id; })[0]; if (m && x.status === 'ส่งถึงผู้ดูแลแล้ว' && !m.delivered) { m.delivered = true; ch = true; } });
+    return baseMerge(list) || ch;
+  };
+  var baseView = VIEWS.chat;
+  VIEWS.chat = function (el) {
+    baseView(el);
+    var head = $('.ch-head', el);
+    if (head && !$('#chFocus', el)) {
+      var b = h('<button class="btn sm" id="chFocus" aria-label="ขยายเข้า">' + ic(document.body.classList.contains('focus11') ? 'minimize' : 'maximize') + '<span>' + (document.body.classList.contains('focus11') ? 'ย่อออก' : 'ขยายเข้า') + '</span></button>');
+      head.insertBefore(b, $('#chRules', el)); b.onclick = function () { setFocusMode(!document.body.classList.contains('focus11')); var log = $('#chLog'); if (log) log.scrollTop = log.scrollHeight; };
+    }
+    chatMarkRead();
+  };
+})();
+var CHAT_ADMIN = [];
+function chatUnread() { var seen = store.get('chatSeen', '') || ''; return CHAT_ADMIN.filter(function (x) { return x[1] > seen; }).length; }
+function chatMarkRead() { var last = ''; CHAT_ADMIN.forEach(function (x) { if (x[1] > last) last = x[1]; }); CHAT.msgs.forEach(function (m) { if (m.sender === 'admin' && m.time > last) last = m.time; }); if (last && last > (store.get('chatSeen', '') || '')) store.set('chatSeen', last); setChatBadge(); }
+function setChatBadge() {
+  var b = document.querySelector('.tab[data-tab="chat"]'); if (!b) return;
+  var d = b.querySelector('.chat-dot'); if (d) d.remove();
+  var n = S.ui && S.ui.view === 'chat' ? 0 : chatUnread(), c = b.querySelector('.chat-cnt');
+  if (n && !c) { c = document.createElement('span'); c.className = 'chat-cnt'; b.appendChild(c); }
+  if (c) { if (n) { c.textContent = n > 99 ? '99+' : String(n); c.setAttribute('aria-label', 'ข้อความใหม่จากผู้ดูแลระบบ ' + n + ' ข้อความ'); } else c.remove(); }
+}
+setChatDot = function () { setChatBadge(); };
+markChatDot = function () {};
+(function () {
+  var baseApply = rtApply;
+  rtApply = function (r) {
+    if (r && r.chat && Array.isArray(r.chat.admin)) { CHAT_ADMIN = r.chat.admin; if (S.ui && S.ui.view === 'chat') { chatMarkRead(); CHAT.poke(); } }
+    var x = baseApply(r); setChatBadge(); return x;
+  };
+  /* ข้อความแชทจากผู้ดูแล (MSG-) นับที่ปุ่มแชทด้านล่างเท่านั้น ไม่นับในกล่องแจ้งเตือนมุมขวาบน */
+  unreadCount = function () { if (!S.ud) return 0; return S.ud.notices.filter(function (n) { return !S.ud.readNotices[n.id] && !/^MSG-/.test(String(n.id || '')); }).length; };
+  var baseTabs = renderHeaderBits; renderHeaderBits = function () { var r = baseTabs.apply(this, arguments); setChatBadge(); return r; };
+})();
+
+/* ---------- 10) หน้าการแจ้งเตือน: ปุ่มรีเฟรช ดึงการแจ้งเตือนใหม่ทันที ---------- */
+(function () {
+  var base = VIEWS.notifications;
+  VIEWS.notifications = function (el) {
+    base(el);
+    var add = function () {
+      var row = el.querySelector('.view-head .row'); if (!row || $('#nfRefresh', el)) return;
+      var b = h('<button class="btn sm" id="nfRefresh" aria-label="รีเฟรชการแจ้งเตือน">' + ic('refresh') + ' รีเฟรช</button>');
+      row.insertBefore(b, row.firstChild);
+      b.onclick = function () {
+        b.disabled = true; b.classList.add('spin11');
+        Promise.all([api('pulse', { act: 1 }, { noRetry: true, timeout: 15000 }).then(rtApply).catch(function () {}), bootstrap(false)]).then(function () {
+          renderView('notifications', { noAnim: true, keepScroll: true }); toast('อัปเดตการแจ้งเตือนล่าสุดแล้ว', '', 'ok');
+        });
+      };
+    };
+    add();
+    new MutationObserver(add).observe(el, { childList: true, subtree: true });
+  };
+})();
+
+/* ---------- 11) อนุสัญญา/สนธิสัญญา: อ่านภายในเว็บไซต์ (อ่านอย่างเดียว) + แปลภาษา + พิมพ์ PDF ---------- */
+var TR11_LANGS = [['th', 'ภาษาไทย'], ['en', 'English'], ['ja', '日本語 (ญี่ปุ่น)'], ['zh-CN', '中文 (จีน)'], ['ko', '한국어 (เกาหลีใต้)'], ['es', 'Español (สเปน)']];
+(function () {
+  function fix(root) {
+    $$('.tw-item a[href*="wikidata.org/wiki/"]', root).forEach(function (a) { var s = document.createElement('span'); s.className = 'tw-src'; s.textContent = 'ที่มา: Wikidata'; a.replaceWith(s); });
+    $$('.tw-item:not([data-r11])', root).forEach(function (it) { it.setAttribute('data-r11', '1'); it.setAttribute('role', 'button'); it.setAttribute('tabindex', '0'); if (!it.querySelector('.tw-open')) it.querySelector('.grow').insertAdjacentHTML('beforeend', '<div class="tw-open">' + ic('book') + ' อ่านภายในเว็บไซต์</div>'); });
+  }
+  new MutationObserver(function () { var v = document.getElementById('view'); if (v && S.ui && S.ui.view === 'treaties') fix(v); }).observe(document.documentElement, { childList: true, subtree: true });
+  document.addEventListener('click', function (e) {
+    var it = e.target.closest && e.target.closest('.tw-item'); if (!it || e.target.closest('a,button:not(.tw-item)')) return;
+    var id = it.getAttribute('data-twid'); if (!id) return;
+    if (secBlocked(['treaties'])) return;
+    openTreaty(id, (it.querySelector('.li-t') || {}).textContent || id);
+  });
+  var baseLock = syncScrollLock;
+  syncScrollLock = function () { baseLock.apply(this, arguments); if (document.querySelector('.tr11')) document.documentElement.classList.add('scroll-lock'); };
+})();
+function openTreaty(id, title) {
+  $$('.tr11').forEach(function (x) { x.remove(); });
+  var ov = h('<div class="tr11" role="dialog" aria-modal="true" aria-label="อ่านอนุสัญญา"><div class="tr11-in"><div class="tr11-bar"><button class="icon-btn" data-x aria-label="กลับ">' + ic('arrowL') + '</button><b class="grow">' + esc(title) + '</b><button class="icon-btn" data-x aria-label="ปิด">' + ic('x') + '</button></div><div class="tr11-body"><div class="panel"><p class="muted">กำลังโหลดเนื้อหา…</p></div></div></div></div>');
+  document.body.appendChild(ov); syncScrollLock();
+  var close = function () { ov.remove(); syncScrollLock(); };
+  $$('[data-x]', ov).forEach(function (b) { b.onclick = close; });
+  api('treatyText', { id: id }, { timeout: 60000 }).then(function (r) {
+    var body = $('.tr11-body', ov), name = r.th || r.en || title;
+    var kindNote = r.kind === 'text' ? 'ตัวบท (อ่านอย่างเดียว)' : r.kind === 'summary' ? 'ข้อมูลสรุปจากสารานุกรมเสรี — แหล่งข้อมูลเปิดยังไม่มีตัวบทฉบับเต็มของรายการนี้' : 'ข้อมูลพื้นฐาน — แหล่งข้อมูลเปิดยังไม่มีตัวบทของรายการนี้';
+    body.innerHTML = '<article class="panel tr11-doc"><div class="tr11-h"><span class="st-badge">' + ic('book') + ' อ่านอย่างเดียว</span><h2>' + esc(name) + '</h2>' + (r.th && r.en ? '<div class="muted">' + esc(r.en) + '</div>' : '') + '<div class="small muted">' + esc(kindNote) + ' · ที่มา: ' + esc(r.source) + '</div></div>' +
+      '<div class="tr-bar tr11-tr">' + ic('globe', 'tr-ic') + '<select id="t11Lang" aria-label="เลือกภาษา">' + TR11_LANGS.map(function (l) { return '<option value="' + l[0] + '">' + esc(l[1]) + '</option>'; }).join('') + '</select><button class="btn sm k" id="t11Go">แปลภาษา</button><button class="btn sm" id="t11Off" disabled>ยกเลิกแปลภาษา</button><span class="spacer"></span><button class="btn sm" id="t11Print">' + ic('printer') + ' พิมพ์ PDF</button></div>' +
+      '<div class="tr11-text">' + r.paras.map(function (p, i) { return '<p data-i="' + i + '">' + esc(p) + '</p>'; }).join('') + '</div></article>';
+    var tr = { lang: '', map: {} };
+    $('#t11Go', body).onclick = function () {
+      var lang = $('#t11Lang', body).value, ps = $$('.tr11-text p[data-i]', body), b = this; b.disabled = true; b.textContent = 'กำลังแปล…';
+      $$('.trx', body).forEach(function (x) { x.remove(); });
+      var chunks = []; for (var i = 0; i < ps.length; i += 40) chunks.push(ps.slice(i, i + 40));
+      var lab = (TR11_LANGS.filter(function (l) { return l[0] === lang; })[0] || [])[1];
+      chunks.reduce(function (pr, ch) { return pr.then(function () { return api('translate', { to: lang, texts: ch.map(function (p) { return p.textContent; }) }, { timeout: 90000 }).then(function (x) { ch.forEach(function (p, k) { if (x.texts[k]) { tr.map[p.getAttribute('data-i')] = x.texts[k]; p.insertAdjacentHTML('afterend', '<div class="trx"><div class="trx-h">' + ic('globe') + ' คำแปล (' + esc(lab) + ')</div>' + esc(x.texts[k]) + '</div>'); } }); }); }); }, Promise.resolve())
+        .then(function () { tr.lang = lab; $('#t11Off', body).disabled = false; }).catch(function () { toast('แปลไม่สำเร็จบางส่วน', 'กรุณาลองใหม่อีกครั้ง', 'warn'); })
+        .then(function () { b.disabled = false; b.textContent = 'แปลภาษา'; });
+    };
+    $('#t11Off', body).onclick = function () { $$('.trx', body).forEach(function (x) { x.remove(); }); tr.map = {}; tr.lang = ''; this.disabled = true; };
+    $('#t11Print', body).onclick = function () {
+      var go = function (withTr) {
+        PRINT_SRC = r.source;
+        printDoc(name, r.th && r.en ? r.en : '', r.paras.map(function (p, i) { return '<p>' + esc(p) + '</p>' + (withTr && tr.map[i] ? '<div class="tr9"><b>คำแปล (' + esc(tr.lang) + '):</b> ' + esc(tr.map[i]) + '</div>' : ''); }).join(''));
+      };
+      if (Object.keys(tr.map).length) popup11({ icon: 'printer', title: 'รวมคำแปลในไฟล์ PDF หรือไม่', html: '<p>เลือก “ตกลง” เพื่อพิมพ์ตัวบทพร้อมคำแปล หรือ “ยกเลิก” เพื่อพิมพ์เฉพาะตัวบทตามต้นฉบับ</p>', ok: 'ตกลง (รวมคำแปล)', cancel: 'ยกเลิก (ไม่รวมคำแปล)' }).then(go);
+      else go(false);
+    };
+  }).catch(function (e) { var b = $('.tr11-body', ov); if (b) b.innerHTML = '<div class="panel"><div class="empty warn"><div class="eic">' + ic('alert') + '</div><h3>ยังโหลดเนื้อหาไม่ได้ในขณะนี้</h3><p>' + esc((e && e.msg) || 'กรุณาลองใหม่อีกครั้ง') + '</p></div></div>'; });
+}
+
+/* ---------- 12) พิมพ์ PDF: ระยะบรรทัดไม่เบียดกัน · หัว/ท้ายกระดาษ 12 pt ทุกหน้า ---------- */
+(function () {
+  var basePrint = printHtml;
+  var css = '<style id="pdf11">body{line-height:1.65 !important}p,li,.pre,.sec,td,th,div{line-height:1.65}p{margin:0 0 5pt !important}.sec{margin:0 0 9pt !important}h2,h3,h4{line-height:1.45 !important;margin-top:9pt !important}' +
+    '*{letter-spacing:0 !important;word-spacing:0.02em}p,.pre{overflow-wrap:break-word;word-break:normal;line-break:normal}' +
+    '.rh,.rh *,.rf,.rf *{font-size:12pt !important;line-height:1.35 !important}.rh{padding-bottom:3pt !important;margin-bottom:10pt !important}.rf{padding-top:3pt !important;margin-top:10pt !important}' +
+    '@page{@bottom-center{font-size:12pt}}</style>';
+  printHtml = function (html) { html = String(html || ''); if (html.indexOf('id="pdf11"') < 0) html = html.indexOf('</head>') > -1 ? html.replace('</head>', css + '</head>') : css + html; return basePrint(html); };
+})();
+</script>
+<script>
+/* ==========================================================================
+   v11: “ดูดวง” (เมนูสามขีดมุมซ้ายบน) — เพื่อเป็นกำลังใจ ไม่ใช่ให้งมงาย
+   คำนวณในอุปกรณ์ของผู้ใช้ทั้งหมด (ไม่ส่งวันเกิด/ชื่อไปเก็บที่เซิร์ฟเวอร์)
+   อ้างอิงหลักโหราศาสตร์ไทยที่เผยแพร่ทั่วไป: วันเกิด–เทวดาประจำวัน–พระประจำวัน–สีประจำวัน, ทักษาปกรณ์,
+   อักษรประจำวัน (วรรค), เลขศาสตร์, ราศีตามสุริยคติ, ปีนักษัตร (ความสัมพันธ์ ชง/สามประสาน/หกประสาน), ยามเกิด, ข้างขึ้นข้างแรม
+   ========================================================================== */
+var HORO = (function () {
+  var DAYS = [
+    { n: 'อาทิตย์', g: 'พระอาทิตย์', p: 'ปางถวายเนตร', c: 'แดง', num: 1, en: 'Sunday',
+      t: 'ผู้ที่เกิดวันอาทิตย์ตามตำราโหราศาสตร์ไทยมีพระอาทิตย์เป็นเทวดาประจำวัน ถือเป็นดาวแห่งเกียรติยศ ความเป็นผู้นำ และความภาคภูมิใจในตนเอง มักมีบุคลิกสง่า ใจกว้าง รักศักดิ์ศรี กล้าตัดสินใจ และไม่ชอบอยู่ใต้การบังคับของผู้อื่น จุดที่ควรระวังคือความทะนงตนและความใจร้อนเมื่อถูกท้าทาย หากรู้จักฟังผู้อื่นมากขึ้น จะเป็นผู้นำที่ผู้คนเคารพอย่างแท้จริง' },
+    { n: 'จันทร์', g: 'พระจันทร์', p: 'ปางห้ามญาติ (ห้ามสมุทร)', c: 'เหลือง', num: 2, en: 'Monday',
+      t: 'ผู้ที่เกิดวันจันทร์มีพระจันทร์เป็นเทวดาประจำวัน ซึ่งเป็นดาวแห่งความอ่อนโยน ความรู้สึก และเสน่ห์ มักเป็นคนละเอียดอ่อน มีจิตใจดี เข้ากับผู้อื่นได้ง่าย มีความจำดี ช่างสังเกต และมีความคิดสร้างสรรค์ จุดที่ควรระวังคืออารมณ์ที่ขึ้นลงตามสถานการณ์และความเกรงใจจนเสียโอกาส หากฝึกความหนักแน่นทางใจ จะประสบความสำเร็จได้อย่างมั่นคง' },
+    { n: 'อังคาร', g: 'พระอังคาร', p: 'ปางไสยาสน์', c: 'ชมพู', num: 3, en: 'Tuesday',
+      t: 'ผู้ที่เกิดวันอังคารมีพระอังคารเป็นเทวดาประจำวัน เป็นดาวแห่งพลัง ความกล้าหาญ และการต่อสู้ มักขยัน อดทน ตรงไปตรงมา ทำอะไรทำจริง และพร้อมปกป้องคนที่ตนรัก จุดที่ควรระวังคือความใจร้อน การพูดตรงจนกระทบใจผู้อื่น และการทำงานหนักจนลืมพักผ่อน หากรู้จักผ่อนหนักผ่อนเบา พลังของท่านจะสร้างผลงานได้มาก' },
+    { n: 'พุธ (กลางวัน)', g: 'พระพุธ', p: 'ปางอุ้มบาตร', c: 'เขียว', num: 4, en: 'Wednesday (day)',
+      t: 'ผู้ที่เกิดวันพุธกลางวันมีพระพุธเป็นเทวดาประจำวัน เป็นดาวแห่งสติปัญญา การสื่อสาร และการค้า มักช่างพูด ฉลาด ปรับตัวเก่ง มีไหวพริบ เรียนรู้เร็ว และเจรจาเก่ง จุดที่ควรระวังคือความลังเลเมื่อมีทางเลือกมาก และการรับปากหลายเรื่องพร้อมกัน หากจัดลำดับความสำคัญให้ชัด ความสามารถด้านการสื่อสารจะนำโอกาสดีมาให้เสมอ' },
+    { n: 'พฤหัสบดี', g: 'พระพฤหัสบดี', p: 'ปางสมาธิ', c: 'ส้ม', num: 5, en: 'Thursday',
+      t: 'ผู้ที่เกิดวันพฤหัสบดีมีพระพฤหัสบดีเป็นเทวดาประจำวัน ซึ่งถือเป็นครูของเทวดา เป็นดาวแห่งความรู้ คุณธรรม และความเป็นผู้ใหญ่ มักรักการศึกษา มีหลักการ เป็นที่ปรึกษาที่ดี และได้รับความเคารพนับถือ จุดที่ควรระวังคือความยึดมั่นในความคิดของตนและการคาดหวังให้ผู้อื่นทำได้ดีเท่าตน หากเปิดใจรับความคิดใหม่ จะยิ่งเป็นที่รักของผู้คน' },
+    { n: 'ศุกร์', g: 'พระศุกร์', p: 'ปางรำพึง', c: 'ฟ้า', num: 6, en: 'Friday',
+      t: 'ผู้ที่เกิดวันศุกร์มีพระศุกร์เป็นเทวดาประจำวัน เป็นดาวแห่งความรัก ความงาม ศิลปะ และโชคลาภ มักรักความสวยงาม มีรสนิยม อารมณ์ดี เป็นมิตร และมีพรสวรรค์ด้านศิลปะหรือการสร้างสรรค์ จุดที่ควรระวังคือการใช้จ่ายตามใจและความไม่ชอบความขัดแย้งจนเก็บปัญหาไว้ หากวางแผนการเงินให้ดี ชีวิตจะทั้งสุขสบายและมั่นคง' },
+    { n: 'เสาร์', g: 'พระเสาร์', p: 'ปางนาคปรก', c: 'ม่วง', num: 7, en: 'Saturday',
+      t: 'ผู้ที่เกิดวันเสาร์มีพระเสาร์เป็นเทวดาประจำวัน เป็นดาวแห่งความอดทน ความรับผิดชอบ และบทเรียนชีวิต มักเป็นคนหนักแน่น สู้งาน ไม่ย่อท้อ เก็บความรู้สึกเก่ง และสร้างตัวได้ด้วยตนเอง จุดที่ควรระวังคือการคิดมาก การเก็บตัว และการแบกภาระไว้คนเดียว หากเปิดใจให้คนรอบข้างช่วยเหลือ ความพยายามของท่านจะผลิดอกออกผลอย่างมั่นคงในระยะยาว' },
+    { n: 'พุธ (กลางคืน)', g: 'พระราหู', p: 'ปางป่าเลไลยก์', c: 'เทาหรือดำ', num: 8, en: 'Wednesday (night)',
+      t: 'ผู้ที่เกิดวันพุธหลังเวลา 18.00 น. ตำราไทยถือว่าเกิดวันพุธกลางคืน มีพระราหูเป็นเทวดาประจำวัน เป็นดาวแห่งความลึกซึ้ง ไหวพริบ และการเปลี่ยนแปลง มักเป็นคนช่างคิด มีความคิดแปลกใหม่ กล้าลองสิ่งที่ผู้อื่นไม่กล้า และมีเสน่ห์ลึกลับ จุดที่ควรระวังคือความหุนหันและความไม่แน่นอนของอารมณ์ หากมีเป้าหมายชัดเจน ความคิดสร้างสรรค์ของท่านจะพาไปไกลกว่าที่คิด' }
+  ];
+  var TAKSA_ORDER = [0, 1, 2, 3, 6, 4, 7, 5];   // อาทิตย์ จันทร์ อังคาร พุธ เสาร์ พฤหัสบดี ราหู ศุกร์ (ลำดับทักษา)
+  var TAKSA = [
+    ['บริวาร', 'คนรอบข้าง ครอบครัว ลูกน้อง และผู้ที่คอยสนับสนุน'],
+    ['อายุ', 'สุขภาพ ความเป็นอยู่ และความราบรื่นในการใช้ชีวิต'],
+    ['เดช', 'อำนาจ ความน่าเกรงขาม ชื่อเสียง และความสามารถในการเป็นผู้นำ'],
+    ['ศรี', 'โชคลาภ ทรัพย์สิน ความเป็นสิริมงคล และเสน่ห์'],
+    ['มูละ', 'หลักฐาน ทรัพย์สินที่มั่นคง มรดก และรากฐานของชีวิต'],
+    ['อุตสาหะ', 'ความขยันหมั่นเพียร ความพยายาม และการทำงานหนัก'],
+    ['มนตรี', 'ผู้ใหญ่ให้การอุปถัมภ์ ผู้ให้คำปรึกษา และความช่วยเหลือ'],
+    ['กาลกิณี', 'อุปสรรค สิ่งที่ตำราแนะนำให้หลีกเลี่ยง']
+  ];
+  var LETTERS = { 0: 'อะาิีึืุูเแโใไำั็่้๊๋์ฤฦ', 1: 'กขคฆง', 2: 'จฉชซฌญ', 3: 'ฎฏฐฑฒณ', 6: 'ดตถทธน', 4: 'บปผฝพฟภม', 7: 'ยรลว', 5: 'ศษสหฬฮ' };
+  var NUMV = { 1: 'กดถทภฤาำุ่', 2: 'ขชงบปเแู้', 3: 'ฆตฑฒ๋', 4: 'คธญรษะโัิ', 5: 'ฉณฌนมหฎฮฬึ', 6: 'จลวอใ', 7: 'ซศสีื๊', 8: 'ยผฝพฟ็', 9: 'ฏฐไ์' };
+  var NUM_MEAN = ['', 'พลังของดวงอาทิตย์: ความเป็นผู้นำ ความมุ่งมั่น และความเชื่อมั่นในตนเอง', 'พลังของดวงจันทร์: ความอ่อนโยน เสน่ห์ และความสามารถในการประสานคน', 'พลังของดาวอังคาร: ความกล้า ความขยัน และพลังในการลงมือทำ', 'พลังของดาวพุธ: สติปัญญา การสื่อสาร และการเรียนรู้', 'พลังของดาวพฤหัสบดี: ความรู้ คุณธรรม และการได้รับความเคารพ', 'พลังของดาวศุกร์: ความรัก ความงาม ศิลปะ และความสุขในชีวิต', 'พลังของดาวเสาร์: ความอดทน ความรับผิดชอบ และความมั่นคงที่สร้างด้วยตนเอง', 'พลังของราหู: ความคิดนอกกรอบ ไหวพริบ และการเปลี่ยนแปลง', 'พลังของเกตุ: ความศรัทธา สมาธิ สัญชาตญาณ และการหยั่งรู้'];
+  var ZOD = [
+    ['มังกร', 'Capricorn', 12, 22, 1, 19, 'ธาตุดิน', 'ดาวเสาร์', 'มีความรับผิดชอบ อดทน วางแผนเก่ง และมุ่งมั่นสู่ความสำเร็จระยะยาว'],
+    ['กุมภ์', 'Aquarius', 1, 20, 2, 18, 'ธาตุลม', 'ดาวเสาร์และดาวมฤตยู', 'มีความคิดก้าวหน้า รักอิสระ เป็นมิตร และใส่ใจส่วนรวม'],
+    ['มีน', 'Pisces', 2, 19, 3, 20, 'ธาตุน้ำ', 'ดาวพฤหัสบดีและดาวเนปจูน', 'อ่อนโยน เห็นอกเห็นใจผู้อื่น มีจินตนาการ และมีศิลปะในหัวใจ'],
+    ['เมษ', 'Aries', 3, 21, 4, 19, 'ธาตุไฟ', 'ดาวอังคาร', 'กล้าหาญ กระตือรือร้น ชอบความท้าทาย และพร้อมเป็นผู้บุกเบิก'],
+    ['พฤษภ', 'Taurus', 4, 20, 5, 20, 'ธาตุดิน', 'ดาวศุกร์', 'หนักแน่น รักความมั่นคง อดทน และให้คุณค่ากับความสุขที่จับต้องได้'],
+    ['เมถุน', 'Gemini', 5, 21, 6, 20, 'ธาตุลม', 'ดาวพุธ', 'ช่างสื่อสาร ปรับตัวเร็ว อยากรู้อยากเห็น และมีไหวพริบ'],
+    ['กรกฎ', 'Cancer', 6, 21, 7, 22, 'ธาตุน้ำ', 'ดวงจันทร์', 'รักครอบครัว อ่อนไหว ห่วงใยผู้อื่น และมีสัญชาตญาณดี'],
+    ['สิงห์', 'Leo', 7, 23, 8, 22, 'ธาตุไฟ', 'ดวงอาทิตย์', 'มั่นใจ ใจกว้าง มีภาวะผู้นำ และชอบสร้างแรงบันดาลใจให้ผู้อื่น'],
+    ['กันย์', 'Virgo', 8, 23, 9, 22, 'ธาตุดิน', 'ดาวพุธ', 'ละเอียดรอบคอบ มีระเบียบ ช่างวิเคราะห์ และใส่ใจคุณภาพ'],
+    ['ตุลย์', 'Libra', 9, 23, 10, 22, 'ธาตุลม', 'ดาวศุกร์', 'รักความยุติธรรม ประนีประนอม มีรสนิยม และเข้ากับผู้คนได้ดี'],
+    ['พิจิก', 'Scorpio', 10, 23, 11, 21, 'ธาตุน้ำ', 'ดาวอังคารและดาวพลูโต', 'มุ่งมั่น ลึกซึ้ง จริงจัง และมีพลังใจสูง'],
+    ['ธนู', 'Sagittarius', 11, 22, 12, 21, 'ธาตุไฟ', 'ดาวพฤหัสบดี', 'มองโลกในแง่ดี รักการเรียนรู้ ชอบผจญภัย และตรงไปตรงมา']
+  ];
+  var CZ = [['ชวด', 'หนู', 'ปราดเปรียว ช่างสังเกต และหาโอกาสเก่ง'], ['ฉลู', 'วัว', 'ขยัน อดทน และเชื่อถือได้'], ['ขาล', 'เสือ', 'กล้าหาญ มีพลัง และรักความยุติธรรม'], ['เถาะ', 'กระต่าย', 'สุภาพ อ่อนโยน และมีศิลปะในการใช้ชีวิต'], ['มะโรง', 'งูใหญ่ (มังกร)', 'มีพลัง มีความทะเยอทะยาน และมีบารมี'], ['มะเส็ง', 'งูเล็ก', 'ลึกซึ้ง มีปัญญา และวางแผนรอบคอบ'], ['มะเมีย', 'ม้า', 'กระตือรือร้น รักอิสระ และเข้าสังคมเก่ง'], ['มะแม', 'แพะ', 'ใจดี มีเมตตา และมีความคิดสร้างสรรค์'], ['วอก', 'ลิง', 'ฉลาด มีไหวพริบ และแก้ปัญหาเก่ง'], ['ระกา', 'ไก่', 'ขยัน ละเอียด และตรงต่อเวลา'], ['จอ', 'สุนัข', 'ซื่อสัตย์ จริงใจ และรักพวกพ้อง'], ['กุน', 'หมู', 'ใจกว้าง จริงใจ และรักความสงบสุข']];
+  var HOURS = ['ชวด (23.00–00.59 น.)', 'ฉลู (01.00–02.59 น.)', 'ขาล (03.00–04.59 น.)', 'เถาะ (05.00–06.59 น.)', 'มะโรง (07.00–08.59 น.)', 'มะเส็ง (09.00–10.59 น.)', 'มะเมีย (11.00–12.59 น.)', 'มะแม (13.00–14.59 น.)', 'วอก (15.00–16.59 น.)', 'ระกา (17.00–18.59 น.)', 'จอ (19.00–20.59 น.)', 'กุน (21.00–22.59 น.)'];
+  var ELEM_GOOD = { 'ธาตุไฟ': 'ธาตุลม', 'ธาตุลม': 'ธาตุไฟ', 'ธาตุดิน': 'ธาตุน้ำ', 'ธาตุน้ำ': 'ธาตุดิน' };
+
+  function hash(s) { var h = 2166136261; for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+  function pick(arr, seed, salt) { return arr[hash(seed + '|' + salt) % arr.length]; }
+  function dayIdx(d, hour) { var w = d.getDay(); if (w === 3 && hour !== null && hour >= 18) return 7; return w; }
+  function letterDay(ch) { for (var k in LETTERS) if (LETTERS[k].indexOf(ch) > -1) return +k; return -1; }
+  function taksaOf(birth) { var start = TAKSA_ORDER.indexOf(birth), out = {}; for (var i = 0; i < 8; i++) out[TAKSA_ORDER[(start + i) % 8]] = i; return out; }   // day -> category index
+  function zodiac(m, d) { for (var i = 0; i < ZOD.length; i++) { var z = ZOD[i]; if ((m === z[2] && d >= z[3]) || (m === z[4] && d <= z[5])) return z; } return ZOD[0]; }
+  function czIdx(y) { return ((y - 4) % 12 + 12) % 12; }
+  function moon(date) {
+    var P = 29.530588853, ref = Date.UTC(2000, 0, 6, 18, 14) / 86400000, age = (((date.getTime() / 86400000 - ref) % P) + P) % P;
+    return age < P / 2 ? { side: 'ข้างขึ้น', n: Math.min(15, Math.max(1, Math.ceil(age))), age: age } : { side: 'ข้างแรม', n: Math.min(15, Math.max(1, Math.ceil(age - P / 2))), age: age };
+  }
+  function numSum(s) { var t = 0; String(s).split('').forEach(function (ch) { for (var k in NUMV) if (NUMV[k].indexOf(ch) > -1) t += +k; }); return t; }
+  function reduce9(n) { while (n > 9) n = String(n).split('').reduce(function (a, b) { return a + +b; }, 0); return n; }
+
+  var AREA = {
+    work: { good: ['งานที่ท่านตั้งใจไว้มีแนวโน้มคืบหน้าดี เหมาะกับการเริ่มต้นโครงการใหม่หรือเสนอความคิดต่อผู้ใหญ่', 'มีโอกาสได้แสดงฝีมือ ผลงานที่ทำด้วยความตั้งใจจะได้รับการยอมรับ ควรรักษามาตรฐานไว้อย่างสม่ำเสมอ', 'ผู้ใหญ่หรือเพื่อนร่วมงานพร้อมสนับสนุน การทำงานเป็นทีมจะได้ผลดีกว่าการทำคนเดียว'],
+      mid: ['งานโดยรวมราบรื่น แต่ควรตรวจทานรายละเอียดก่อนส่งงานทุกครั้ง', 'เป็นช่วงที่เหมาะกับการเรียนรู้ทักษะใหม่เพื่อเตรียมพร้อมสำหรับโอกาสที่กำลังจะมา', 'ควรจัดลำดับความสำคัญของงานให้ชัดเจน แล้วความกดดันจะลดลงอย่างเห็นได้ชัด'],
+      care: ['อาจมีงานเร่งหรือการเปลี่ยนแปลงกะทันหัน ขอให้ตั้งสติและสื่อสารกับผู้เกี่ยวข้องอย่างใจเย็น', 'ระวังความเข้าใจผิดในการสื่อสาร ควรยืนยันข้อตกลงสำคัญเป็นลายลักษณ์อักษร', 'งานอาจต้องใช้ความอดทนมากกว่าปกติ แต่ความพยายามช่วงนี้คือรากฐานของความสำเร็จในอนาคต'] },
+    money: { good: ['การเงินมีแนวโน้มคล่องตัว เหมาะกับการวางแผนออมเงินระยะยาว', 'มีโอกาสได้รับผลตอบแทนจากความขยันที่ผ่านมา ควรแบ่งส่วนหนึ่งเก็บไว้เพื่อความมั่นคง'],
+      mid: ['รายรับรายจ่ายค่อนข้างสมดุล ควรทำบัญชีรายรับรายจ่ายเพื่อเห็นภาพการเงินชัดขึ้น', 'ควรหลีกเลี่ยงการตัดสินใจซื้อสิ่งของราคาสูงโดยไม่ได้วางแผน'],
+      care: ['ระวังค่าใช้จ่ายที่ไม่คาดคิดและการให้ผู้อื่นยืมเงิน ควรมีเงินสำรองฉุกเฉินไว้เสมอ', 'ควรตรวจสอบข้อเสนอการลงทุนอย่างรอบคอบ หากผลตอบแทนสูงผิดปกติให้ระวังเป็นพิเศษ'] },
+    love: { good: ['ความสัมพันธ์มีความอบอุ่น เป็นช่วงที่ดีสำหรับการแสดงความใส่ใจต่อคนที่รัก', 'ผู้ที่ยังโสดมีโอกาสพบคนที่มีความคิดตรงกันจากการทำกิจกรรมที่ตนสนใจ'],
+      mid: ['ความสัมพันธ์ราบรื่นหากหมั่นพูดคุยและรับฟังกันอย่างเปิดใจ', 'ควรให้เวลากับครอบครัวและคนใกล้ชิดมากขึ้น ความสุขเล็ก ๆ จะช่วยเติมพลังใจ'],
+      care: ['อาจมีความเห็นไม่ตรงกันบ้าง ขอให้ใช้เหตุผลและความเข้าใจมากกว่าอารมณ์', 'หลีกเลี่ยงการตัดสินใจเรื่องสำคัญขณะที่อารมณ์ยังไม่มั่นคง'] },
+    health: { good: ['สุขภาพโดยรวมแข็งแรง เหมาะกับการเริ่มต้นออกกำลังกายอย่างสม่ำเสมอ', 'พลังกายพลังใจดี ควรรักษาการนอนหลับให้เพียงพอเพื่อรักษาสมดุลนี้ไว้'],
+      mid: ['ควรดูแลเรื่องการพักผ่อนและการดื่มน้ำให้เพียงพอ', 'ความเครียดสะสมอาจส่งผลต่อร่างกาย ลองหาเวลาพักใจด้วยกิจกรรมที่ชอบ'],
+      care: ['ระวังอาการเหนื่อยล้าจากการทำงานหนัก ควรตรวจสุขภาพประจำปีตามกำหนด', 'ระมัดระวังอุบัติเหตุเล็กน้อยระหว่างการเดินทาง ไม่ประมาทในการใช้รถใช้ถนน'] },
+    study: { good: ['การเรียนและการสอบมีแนวโน้มดี สมาธิดี เหมาะกับการทบทวนเนื้อหาที่ยาก', 'การอ่านตัวบทกฎหมายและฝึกทำข้อสอบเก่าอย่างสม่ำเสมอจะเห็นผลชัดเจน'],
+      mid: ['ควรแบ่งเวลาอ่านหนังสือเป็นช่วงสั้น ๆ แต่สม่ำเสมอ จะจำได้ดีกว่าการอ่านรวดเดียว', 'การติวกับเพื่อนหรือการอธิบายให้ผู้อื่นฟังจะช่วยให้เข้าใจลึกซึ้งขึ้น'],
+      care: ['สิ่งรบกวนอาจทำให้เสียสมาธิ ควรจัดสภาพแวดล้อมให้เหมาะกับการเรียน', 'อย่าเพิ่งท้อหากผลลัพธ์ยังไม่เป็นดังหวัง ความพยายามที่สม่ำเสมอคือกุญแจสำคัญ'] }
+  };
+  var AREA_NAME = { work: 'การงาน', money: 'การเงิน', love: 'ความรักและครอบครัว', health: 'สุขภาพ', study: 'การเรียนและการสอบ' };
+
+  function compute(inp, now) {
+    var bd = new Date(inp.date + 'T12:00:00'), hour = inp.time ? +inp.time.split(':')[0] : null, min = inp.time ? +inp.time.split(':')[1] : 0;
+    if (isNaN(bd.getTime())) return null;
+    var y = bd.getFullYear(), m = bd.getMonth() + 1, d = bd.getDate();
+    var di = dayIdx(bd, hour), day = DAYS[di], tk = taksaOf(di);
+    var name = String(inp.name || '').trim(), sur = String(inp.surname || '').trim(), fullName = name + (inp.useSur && sur ? ' ' + sur : '');
+    var seed = fullName + '|' + inp.date + '|' + (inp.time || '');
+    var byCat = {}; TAKSA.forEach(function (t, i) { byCat[i] = []; });
+    var kali = [];
+    fullName.replace(/\s/g, '').split('').forEach(function (ch) { var ld = letterDay(ch); if (ld < 0) return; var cat = tk[ld]; byCat[cat].push(ch); if (cat === 7) kali.push(ch); });
+    var sumFirst = numSum(name), sumFull = numSum(fullName);
+    var z = zodiac(m, d), zNow = zodiac(now.getMonth() + 1, now.getDate());
+    var cz = czIdx(y), czNow = czIdx(now.getFullYear()), diff = ((czNow - cz) % 12 + 12) % 12;
+    var rel = diff === 0 ? 'same' : diff === 6 ? 'clash' : (diff === 4 || diff === 8) ? 'trine' : ((cz + czNow) % 12 === 1) ? 'pair' : 'neutral';
+    var relText = { same: 'ปีนี้เป็นปีนักษัตรเดียวกับปีเกิดของท่าน ตำราจีนเรียกว่า “ปีชง (ปีเปิ่นมิ่ง)” ถือเป็นปีแห่งการเปลี่ยนแปลงและการทบทวนตนเอง ควรทำสิ่งต่าง ๆ อย่างรอบคอบ ไม่ประมาท และหมั่นดูแลสุขภาพ', clash: 'ปีนี้เป็นปีนักษัตรที่อยู่ตรงข้ามกับปีเกิดของท่าน ตำราจีนเรียกว่า “ปีชงตรง” แนะนำให้ระมัดระวังการตัดสินใจครั้งใหญ่ การเดินทาง และการลงทุน ควรใช้ความใจเย็นเป็นหลัก', trine: 'ปีนี้อยู่ในกลุ่ม “สามประสาน” กับปีเกิดของท่าน ตำราจีนถือว่าเป็นปีที่ส่งเสริมกัน มีผู้สนับสนุน งานและความสัมพันธ์มีแนวโน้มราบรื่น', pair: 'ปีนี้เป็นคู่ “หกประสาน” กับปีเกิดของท่าน ตำราจีนถือว่าเป็นปีแห่งความร่วมมือ เหมาะกับการสร้างความสัมพันธ์และการทำงานร่วมกับผู้อื่น', neutral: 'ปีนี้ไม่ได้เป็นปีชงหรือปีประสานโดยตรงกับปีเกิดของท่าน ตำราจีนถือว่าเป็นปีกลาง ๆ ผลลัพธ์ขึ้นอยู่กับความตั้งใจและการลงมือทำของท่านเป็นสำคัญ' }[rel];
+    var elemRel = z[6] === zNow[6] ? 'same' : ELEM_GOOD[z[6]] === zNow[6] ? 'good' : 'other';
+    var todayDi = dayIdx(now, now.getHours()), todayCat = tk[todayDi];
+    var level = function (area) {   // ระดับ (ดี/กลาง/ระวัง) จากความสัมพันธ์ปีนักษัตร + ธาตุราศีเดือนนี้ + วันนี้ตามทักษา
+      var score = (rel === 'trine' || rel === 'pair' ? 2 : rel === 'neutral' ? 1 : 0) + (elemRel === 'same' || elemRel === 'good' ? 1 : 0) + (todayCat === 3 || todayCat === 2 || todayCat === 6 ? 1 : todayCat === 7 ? -1 : 0) + (hash(seed + area + now.getFullYear() + '-' + now.getMonth()) % 3 - 1);
+      return score >= 3 ? 'good' : score >= 1 ? 'mid' : 'care';
+    };
+    var mo = moon(new Date(y, m - 1, d, hour === null ? 12 : hour, min));
+    var moonNow = moon(now);
+    var lucky = [tk, 3, 2, 6, 1].length && [3, 2, 6, 1].map(function (cat) { var dd = Object.keys(tk).filter(function (k) { return tk[k] === cat; })[0]; return { cat: TAKSA[cat][0], day: DAYS[dd].n, color: DAYS[dd].c, num: DAYS[dd].num }; });
+    var kaliDay = Object.keys(tk).filter(function (k) { return tk[k] === 7; })[0];
+    return { name: name, fullName: fullName, bd: bd, di: di, day: day, tk: tk, byCat: byCat, kali: kali, kaliDay: DAYS[kaliDay], lucky: lucky, sumFirst: sumFirst, sumFull: sumFull, z: z, zNow: zNow, cz: cz, czNow: czNow, rel: rel, relText: relText, elemRel: elemRel, todayDi: todayDi, todayCat: todayCat, level: level, mo: mo, moonNow: moonNow, hour: hour, seed: seed, y: y };
+  }
+
+  function report(r, now) {
+    var P = function (t) { return '<p>' + t + '</p>'; }, H = function (t) { return '<h3>' + t + '</h3>'; };
+    var nm = esc(r.fullName || 'ท่าน');
+    var out = '<div class="hr-greet"><h2>ดวงชะตาของคุณ' + nm + '</h2><p class="muted">เกิดวัน' + esc(r.day.n) + 'ที่ ' + r.bd.getDate() + ' ' + TH_MONTHS[r.bd.getMonth()] + ' พ.ศ. ' + (r.y + 543) + (r.hour !== null ? ' เวลา ' + ('0' + r.hour).slice(-2) + ' นาฬิกา' : '') + ' · วิเคราะห์ ณ วันที่ ' + now.getDate() + ' ' + TH_MONTHS[now.getMonth()] + ' ' + (now.getFullYear() + 543) + '</p></div>';
+    out += '<div class="hr-facts">' + [['เทวดาประจำวันเกิด', r.day.g], ['พระประจำวันเกิด', r.day.p], ['สีประจำวันเกิด', r.day.c], ['ราศีเกิด (สุริยคติ)', 'ราศี' + r.z[0] + ' (' + r.z[1] + ') · ' + r.z[6]], ['ปีนักษัตร', 'ปี' + CZ[r.cz][0] + ' (' + CZ[r.cz][1] + ')'], ['ยามเกิด', r.hour !== null ? 'ยาม' + HOURS[Math.floor(((r.hour + 1) % 24) / 2)] : 'ไม่ได้ระบุเวลาเกิด'], ['ข้างขึ้น/ข้างแรมวันเกิด (โดยประมาณ)', r.mo.side + ' ' + r.mo.n + ' ค่ำ'], ['เลขศาสตร์ชื่อ', String(r.sumFirst) + ' (รวมเป็น ' + reduce9(r.sumFirst || 0) + ')']].map(function (x) { return '<div><b>' + esc(x[0]) + '</b><span>' + esc(x[1]) + '</span></div>'; }).join('') + '</div>';
+    out += H('1. ลักษณะนิสัยตามวันเกิด') + P(esc(r.day.t)) + P('คุณ' + nm + ' มีพระประจำวันเกิดคือพระพุทธรูป' + esc(r.day.p) + ' การระลึกถึงพระประจำวันเกิดในทางพุทธศาสนาเป็นการเตือนใจให้ตั้งมั่นในความดีและความไม่ประมาท สีประจำวันเกิดของท่านคือสี' + esc(r.day.c) + ' ซึ่งตามความเชื่อไทยนิยมใช้เพื่อเสริมความมั่นใจในตนเอง และเลขประจำดาวของท่านคือเลข ' + r.day.num);
+    out += H('2. ทักษาประจำตัว (ตำราทักษาปกรณ์)') + P('ตำราทักษาจัดวันทั้ง 8 (รวมพุธกลางคืนหรือราหู) เป็นภูมิทั้ง 8 โดยเริ่มจากวันเกิดเป็น “บริวาร” แล้วเวียนตามลำดับอาทิตย์ จันทร์ อังคาร พุธ เสาร์ พฤหัสบดี ราหู ศุกร์ สำหรับผู้ที่เกิดวัน' + esc(r.day.n) + ' จัดได้ดังนี้') +
+      '<div class="hr-tk">' + TAKSA.map(function (t, i) { var dd = Object.keys(r.tk).filter(function (k) { return r.tk[k] === i; })[0]; return '<div class="' + (i === 7 ? 'bad' : i === 3 ? 'good' : '') + '"><b>' + t[0] + '</b><span>วัน' + esc(DAYS[dd].n) + ' · สี' + esc(DAYS[dd].c) + '</span><small>' + esc(t[1]) + '</small></div>'; }).join('') + '</div>' +
+      P('สีมงคลที่ตำราแนะนำ: ' + r.lucky.map(function (l) { return 'สี' + esc(l.color) + ' (' + l.cat + ')'; }).join(' · ') + ' และสีที่ตำราแนะนำให้หลีกเลี่ยงคือสี' + esc(r.kaliDay.c) + ' (กาลกิณี) ตัวเลขที่ส่งเสริมตามภูมิศรีและภูมิเดชคือเลข ' + r.lucky[0].num + ' และ ' + r.lucky[1].num);
+    var cats = TAKSA.map(function (t, i) { return r.byCat[i].length ? t[0] + ' ' + r.byCat[i].length + ' ตัว' : ''; }).filter(String).join(' · ');
+    out += H('3. วิเคราะห์ชื่อ “' + nm + '”') + P('เมื่อนำอักษรในชื่อมาจัดตามวรรคอักษรประจำวันในตำราทักษา จะได้ดังนี้: ' + esc(cats || 'ไม่พบอักษรภาษาไทยในชื่อที่ระบุ') + '.') +
+      (r.kali.length ? P('ชื่อนี้มีอักษรที่ตรงกับภูมิกาลกิณีของผู้เกิดวัน' + esc(r.day.n) + ' ได้แก่ “' + esc(r.kali.join(' ')) + '” ตำราดั้งเดิมแนะนำให้หลีกเลี่ยง อย่างไรก็ตาม ชื่อเป็นสิ่งที่บุพการีตั้งให้ด้วยความรัก ความสำเร็จของชีวิตขึ้นอยู่กับการกระทำของท่านเองมากกว่าตัวอักษร') : P('ชื่อนี้ไม่มีอักษรที่ตรงกับภูมิกาลกิณีของผู้เกิดวัน' + esc(r.day.n) + ' ตามตำราถือว่าเป็นชื่อที่ไม่มีอักษรต้องห้าม')) +
+      P('ผลรวมเลขศาสตร์ของชื่อคือ ' + r.sumFirst + (r.fullName !== r.name ? ' และเมื่อรวมนามสกุลเป็น ' + r.sumFull : '') + ' ซึ่งลดรูปได้เป็นเลข ' + reduce9(r.sumFull || 0) + ' หมายถึง' + NUM_MEAN[reduce9(r.sumFull || 0)] + ' (คำนวณตามตารางค่าตัวอักษรเลขศาสตร์ที่นิยมใช้ในประเทศไทย ซึ่งแต่ละสำนักอาจกำหนดค่าบางอักษรแตกต่างกันเล็กน้อย)');
+    out += H('4. ราศีเกิดตามสุริยคติ: ราศี' + esc(r.z[0])) + P('ผู้ที่เกิดระหว่างช่วงวันที่ของราศี' + esc(r.z[0]) + ' (' + esc(r.z[1]) + ') อยู่ใน' + esc(r.z[6]) + ' มี' + esc(r.z[7]) + 'เป็นดาวเจ้าเรือน ลักษณะเด่นตามตำราโหราศาสตร์สากลคือ ' + esc(r.z[8]) + ' ในเดือนนี้ดวงอาทิตย์โคจรอยู่ในราศี' + esc(r.zNow[0]) + ' (' + esc(r.zNow[6]) + ') ' + (r.elemRel === 'same' ? 'ซึ่งเป็นธาตุเดียวกับราศีเกิดของท่าน ตำราถือว่าพลังสอดคล้องกัน ทำสิ่งใดมักราบรื่น' : r.elemRel === 'good' ? 'ซึ่งเป็นธาตุที่ส่งเสริมกับธาตุของราศีเกิดของท่าน (ไฟกับลม / ดินกับน้ำ) เหมาะกับการเริ่มต้นสิ่งใหม่' : 'ซึ่งเป็นธาตุที่แตกต่างจากธาตุของราศีเกิดของท่าน ควรเพิ่มความยืดหยุ่นและความอดทนในการทำงานร่วมกับผู้อื่น'));
+    out += H('5. ปีนักษัตรและดวงประจำปี ' + (now.getFullYear() + 543)) + P('คุณ' + nm + ' เกิดปี' + CZ[r.cz][0] + ' (' + CZ[r.cz][1] + ') ตามตำราจีนมีลักษณะ' + CZ[r.cz][2] + ' ปีปัจจุบันคือปี' + CZ[r.czNow][0] + ' (' + CZ[r.czNow][1] + ') ' + r.relText) +
+      (r.bd.getMonth() < 2 ? P('หมายเหตุ: ปีนักษัตรตามปฏิทินจีนเปลี่ยนในวันตรุษจีน (ปลายเดือนมกราคมถึงกลางเดือนกุมภาพันธ์) หากท่านเกิดก่อนวันตรุษจีนของปีนั้น ปีนักษัตรของท่านจะเป็นปีก่อนหน้าหนึ่งปี') : '');
+    if (r.hour !== null) { var hi = Math.floor(((r.hour + 1) % 24) / 2); out += H('6. ยามเกิด') + P('ท่านเกิดในยาม' + HOURS[hi] + ' ตามตำราจีนยามนี้สัมพันธ์กับลักษณะ “' + CZ[hi][2] + '” ซึ่งเสริมนิสัยตามปีเกิดให้มีมิติมากขึ้น ผู้ที่รู้เวลาเกิดแน่นอนจะได้คำทำนายละเอียดกว่าผู้ที่ไม่ทราบเวลาเกิด'); }
+    out += H((r.hour !== null ? '7' : '6') + '. จันทรคติ: ข้างขึ้นข้างแรม') + P('วันเกิดของท่านตรงกับ' + r.mo.side + ' ' + r.mo.n + ' ค่ำ (คำนวณจากตำแหน่งดวงจันทร์ทางดาราศาสตร์ อาจคลาดเคลื่อนได้ประมาณ 1 ค่ำจากปฏิทินจันทรคติไทย) ' + (r.mo.side === 'ข้างขึ้น' ? 'ความเชื่อไทยถือว่าข้างขึ้นเป็นช่วงแห่งการเติบโตและการเริ่มต้น ผู้เกิดข้างขึ้นมักมีพลังในการริเริ่มสิ่งใหม่' : 'ความเชื่อไทยถือว่าข้างแรมเป็นช่วงแห่งการทบทวนและการเก็บเกี่ยว ผู้เกิดข้างแรมมักมีความรอบคอบและเข้าใจผู้อื่นลึกซึ้ง') + ' ขณะนี้ดวงจันทร์อยู่ใน' + r.moonNow.side + ' ' + r.moonNow.n + ' ค่ำ');
+    var sec = r.hour !== null ? 8 : 7;
+    out += H(sec + '. คำแนะนำประจำวันนี้ (วัน' + esc(DAYS[r.todayDi].n) + ')') + P('ตามทักษาของผู้เกิดวัน' + esc(r.day.n) + ' วันนี้ตรงกับภูมิ “' + TAKSA[r.todayCat][0] + '” ซึ่งเกี่ยวกับ' + TAKSA[r.todayCat][1] + ' ' + (r.todayCat === 7 ? 'ตำราแนะนำให้ทำสิ่งต่าง ๆ ด้วยความไม่ประมาท และเลี่ยงการเริ่มเรื่องสำคัญหากไม่จำเป็น' : r.todayCat === 3 || r.todayCat === 2 || r.todayCat === 6 ? 'ถือเป็นวันที่ส่งเสริม เหมาะกับการติดต่อผู้ใหญ่ เจรจา หรือเริ่มต้นสิ่งที่ตั้งใจไว้' : 'เป็นวันที่เหมาะกับการทำงานตามแผนอย่างสม่ำเสมอ') + ' สีที่ส่งเสริมสำหรับวันนี้ตามความนิยมคือสี' + esc(r.lucky[0].color) + ' หรือสี' + esc(r.lucky[1].color));
+    out += H((sec + 1) + '. แนวโน้มช่วงนี้ (เดือน' + TH_MONTHS[now.getMonth()] + ' ' + (now.getFullYear() + 543) + ')') + Object.keys(AREA).map(function (a) { var lv = r.level(a); return '<div class="hr-area ' + lv + '"><b>' + AREA_NAME[a] + '</b><span class="lv">' + (lv === 'good' ? 'ส่งเสริม' : lv === 'mid' ? 'ทรงตัว' : 'ควรระวัง') + '</span><p>' + pick(AREA[a][lv], r.seed, a + now.getFullYear() + now.getMonth()) + ' ' + pick(AREA[a][lv === 'care' ? 'mid' : lv], r.seed, a + 'x' + now.getMonth()) + '</p></div>'; }).join('');
+    out += H((sec + 2) + '. ข้อคิดส่งท้าย') + P('ไม่ว่าดวงชะตาจะกล่าวไว้อย่างไร สิ่งที่กำหนดอนาคตของคุณ' + nm + ' อย่างแท้จริงคือความตั้งใจ ความเพียร และการกระทำของท่านเอง พระพุทธศาสนาสอนว่า “อตฺตา หิ อตฺตโน นาโถ” ตนแลเป็นที่พึ่งแห่งตน และหลักกาลามสูตรสอนให้พิจารณาด้วยปัญญา ไม่เชื่อเพียงเพราะเป็นตำราหรือเป็นสิ่งที่สืบต่อกันมา ขอให้ใช้คำทำนายนี้เป็นกำลังใจและเครื่องเตือนสติ แล้วลงมือทำสิ่งที่ดีที่สุดในทุกวัน ขอเป็นกำลังใจให้ท่านประสบความสำเร็จในการเรียน การงาน และชีวิตครอบครัว');
+    return out;
+  }
+  return { compute: compute, report: report, DAYS: DAYS };
+})();
+
+/* ---------- ป๊อปอัปก่อนเข้า “ดูดวง” ---------- */
+var HORO_TERMS = [
+  ['ทำไมจึงมีเมนู “ดูดวง”', 'การเรียนกฎหมาย การเตรียมสอบ และการทำงานด้านกฎหมายเป็นงานที่ต้องใช้ความอดทนและกำลังใจสูง เมนูนี้จัดทำขึ้นเพื่อเป็นมุมพักใจ ให้ผู้ใช้งานได้รับกำลังใจ ความภาคภูมิใจในตนเอง และแรงบันดาลใจในการใช้ชีวิตและทำงานต่อไป โดยอธิบายตามหลักโหราศาสตร์ไทยและสากลที่เผยแพร่เป็นความรู้ทั่วไป ได้แก่ วันเกิดและเทวดาประจำวัน ตำราทักษาปกรณ์ อักษรประจำวัน เลขศาสตร์ ราศีตามสุริยคติ ปีนักษัตรตามตำราจีน ยามเกิด และข้างขึ้นข้างแรม'],
+  ['ความเชื่อกับความเป็นจริง', 'โหราศาสตร์เป็นศาสตร์ทางความเชื่อและวัฒนธรรมที่สืบทอดกันมายาวนาน ผู้คนจำนวนมากใช้เป็นเครื่องเตือนสติและสร้างกำลังใจ ซึ่งเป็นสิ่งที่ควรเคารพ ในขณะเดียวกัน คำทำนายไม่ใช่ข้อเท็จจริงทางวิทยาศาสตร์ ไม่สามารถพิสูจน์หรือรับรองผลได้ และไม่ควรใช้แทนการตัดสินใจด้วยเหตุผล ข้อมูล หรือคำแนะนำจากผู้เชี่ยวชาญ เช่น แพทย์ นักกฎหมาย หรือที่ปรึกษาทางการเงิน เว็บไซต์ไม่มีเจตนาส่งเสริมหรือดูแคลนความเชื่อของผู้ใด'],
+  ['พึ่งตนเองเป็นสำคัญ', 'พระพุทธศาสนาสอนว่า “ตนแลเป็นที่พึ่งแห่งตน” และหลักกาลามสูตรสอนไม่ให้เชื่อเพียงเพราะได้ยินตามกันมา หรือเพราะเป็นตำรา แต่ให้พิจารณาด้วยปัญญาว่าสิ่งใดเป็นประโยชน์และไม่มีโทษ ขอให้ท่านใช้ผลการดูดวงเป็นเพียงแรงบันดาลใจ ความสำเร็จที่แท้จริงเกิดจากความตั้งใจ ความเพียร และการกระทำของท่านเอง'],
+  ['ข้อควรระวังทางกฎหมาย', 'ขอให้ระมัดระวังบุคคลที่อ้างการดูดวงหรือพิธีกรรมเพื่อเรียกเงินหรือทรัพย์สิน การหลอกลวงด้วยการแสดงข้อความอันเป็นเท็จเพื่อให้ได้ทรัพย์สินเป็นความผิดฐานฉ้อโกงตามประมวลกฎหมายอาญา มาตรา 341 และหากกระทำต่อประชาชนทั่วไปอาจเป็นความผิดตามมาตรา 343 ส่วนการนำเข้าสู่ระบบคอมพิวเตอร์ซึ่งข้อมูลอันเป็นเท็จโดยทุจริตหรือหลอกลวงเป็นความผิดตามพระราชบัญญัติว่าด้วยการกระทำความผิดเกี่ยวกับคอมพิวเตอร์ พ.ศ. 2550 มาตรา 14 เมนูนี้ให้บริการฟรี ไม่มีการเรียกเก็บเงินหรือขายวัตถุมงคลใด ๆ'],
+  ['ข้อมูลส่วนบุคคล', 'ชื่อ วันเกิด และเวลาเกิดที่ท่านกรอก ใช้คำนวณภายในอุปกรณ์ของท่านเท่านั้น ระบบไม่ส่งไปเก็บที่เซิร์ฟเวอร์ (ยกเว้นวันเกิดที่ท่านบันทึกไว้ในโปรไฟล์อยู่แล้ว) จึงเป็นไปตามหลักการเก็บข้อมูลเท่าที่จำเป็นตามพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562'],
+  ['แหล่งความรู้และภาพประกอบ', 'คำอธิบายเรียบเรียงจากหลักโหราศาสตร์ที่เป็นความรู้ทั่วไป ไม่ได้คัดลอกข้อความจากเว็บไซต์ดูดวงใด ภาพประกอบดึงจาก Wikimedia Commons เฉพาะภาพที่เจ้าของอนุญาตให้นำไปใช้ได้ตามสัญญาอนุญาตแบบเปิด (Creative Commons หรือสาธารณสมบัติ) พร้อมระบุชื่อผู้สร้างสรรค์และสัญญาอนุญาตกำกับทุกภาพ เมื่อกด “ยอมรับ” ถือว่าท่านเข้าใจวัตถุประสงค์และข้อควรทราบข้างต้นแล้ว']
+];
+(function () {
+  var baseNav = nav;
+  nav = function (view, opt) {
+    if (view === 'horo' && !(opt && opt.termsOk) && S.ui.view !== 'horo') {
+      popup11({ cls: 'hr11p', icon: 'sparkle', title: 'ก่อนเข้าสู่เมนู “ดูดวง”', sub: 'เพื่อเป็นกำลังใจ ไม่ใช่เพื่อความงมงาย', ok: 'ยอมรับ', cancel: 'ยกเลิก',
+        html: HORO_TERMS.map(function (t, i) { return '<section><h4>' + (i + 1) + '. ' + esc(t[0]) + '</h4><p>' + esc(t[1]) + '</p></section>'; }).join('') })
+        .then(function (ok) { if (ok) baseNav('horo', Object.assign({}, opt || {}, { termsOk: true })); });
+      return;
+    }
+    return baseNav.apply(this, arguments);
+  };
+  var baseMenu = openMainMenu;
+  openMainMenu = function () {
+    var r = baseMenu.apply(this, arguments);
+    var tools = document.querySelector('.drawer [data-v="tools"]');
+    if (tools && !document.querySelector('.drawer [data-v="horo"]')) {
+      tools.insertAdjacentHTML('afterend', '<button class="menu-item" data-v="horo"><span class="mi">' + ic('sparkle') + '</span><span class="grow"><span class="mt">ดูดวง</span><br><span class="ms">ดวงชะตาตามวันเกิด ชื่อ ราศี และปีนักษัตร เพื่อเป็นกำลังใจ</span></span>' + ic('chevR', 'chev') + '</button>');
+    }
+    return r;
+  };
+  I18N.th.horo = 'ดูดวง'; I18N.en.horo = 'Horoscope'; I18N.ko.horo = '운세';
+})();
+
+/* ---------- หน้า “ดูดวง” ---------- */
+var HORO_IMG = {};
+VIEWS.horo = function (el) {
+  var m = S.member || {}, saved = store.get('horo11', {}) || {};
+  var bd = saved.date || (/^\d{4}-\d{2}-\d{2}/.test(String(m.birthDate || '')) ? String(m.birthDate).slice(0, 10) : '');
+  el.innerHTML = '<div class="view-head"><div><h2>' + ic('sparkle') + ' ดูดวง</h2><p class="sub">ดวงชะตาเฉพาะบุคคลตามวันเกิด เวลาเกิด และชื่อ เพื่อเป็นกำลังใจในการใช้ชีวิต</p></div></div>' +
+    '<section class="panel horo-form"><div class="hf-grid">' +
+      '<div class="field"><label for="hrName">ชื่อ</label><div class="input"><input id="hrName" maxlength="60" value="' + esc(saved.name || m.firstName || m.displayName || '') + '" placeholder="เช่น บุญจันทร์"></div></div>' +
+      '<div class="field"><label for="hrSur">นามสกุล (ไม่บังคับ)</label><div class="input"><input id="hrSur" maxlength="60" value="' + esc(saved.surname || m.lastName || '') + '" placeholder="เช่น พรีพรม"></div></div>' +
+      '<div class="field"><label for="hrDate">วันเกิด</label><div class="input"><input id="hrDate" type="date" value="' + esc(bd) + '"></div></div>' +
+      '<div class="field"><label for="hrTime">เวลาเกิด (ถ้าทราบ)</label><div class="input"><input id="hrTime" type="time" value="' + esc(saved.time || '') + '"></div></div>' +
+    '</div><label class="hf-chk"><input type="checkbox" id="hrUseSur" ' + (saved.useSur ? 'checked' : '') + '> นำนามสกุลมาวิเคราะห์ด้วย</label>' +
+    '<button class="btn lg k block" id="hrGo">' + ic('sparkle') + ' ดูดวงของฉัน</button></section>' +
+    '<section class="panel horo-gal"><h3>' + ic('image') + ' พระประจำวันเกิดและเทวดาประจำวัน</h3><div class="hg-tabs hscroll" id="hgTabs">' + HORO.DAYS.map(function (d, i) { return '<button class="chip" data-hd="' + i + '">วัน' + esc(d.n) + '</button>'; }).join('') + '</div><div id="hgBox"><p class="muted small">เลือกวันเพื่อดูภาพและคำอธิบาย</p></div></section>' +
+    '<article class="panel horo-out" id="hrOut" hidden></article>';
+  var go = function () {
+    var inp = { name: $('#hrName', el).value.trim(), surname: $('#hrSur', el).value.trim(), date: $('#hrDate', el).value, time: $('#hrTime', el).value, useSur: $('#hrUseSur', el).checked };
+    if (!inp.name) { toast('กรุณากรอกชื่อ', '', 'warn'); return; }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(inp.date)) { toast('กรุณาเลือกวันเกิด', '', 'warn'); return; }
+    store.set('horo11', inp);
+    var now = new Date(), r = HORO.compute(inp, now); if (!r) { toast('วันเกิดไม่ถูกต้อง', '', 'warn'); return; }
+    var out = $('#hrOut', el); out.hidden = false; out.innerHTML = HORO.report(r, now) + '<div id="hrImg"></div><div class="row wrapr" style="gap:8px;margin-top:12px"><button class="btn" id="hrPrint">' + ic('printer') + ' พิมพ์ PDF</button></div>';
+    horoImage(r.di, $('#hrImg', out));
+    $('#hrPrint', out).onclick = function () { var c = out.cloneNode(true); $$('button,#hrImg', c).forEach(function (x) { x.remove(); }); PRINT_SRC = 'หลักโหราศาสตร์ไทยและสากลที่เผยแพร่เป็นความรู้ทั่วไป (เรียบเรียงโดยเว็บไซต์ “คลังกฎหมาย”) — เพื่อเป็นกำลังใจ ไม่ใช่การรับรองผล'; printDoc('ดวงชะตาของคุณ' + r.fullName, 'Personal horoscope', c.innerHTML); };
+    out.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+  $('#hrGo', el).onclick = go;
+  on($('#hgTabs', el), 'click', '[data-hd]', function (e, b) { $$('#hgTabs .chip', el).forEach(function (x) { x.classList.toggle('on', x === b); }); var i = +b.getAttribute('data-hd'), d = HORO.DAYS[i]; var box = $('#hgBox', el); box.innerHTML = '<p><b>วัน' + esc(d.n) + '</b> · เทวดาประจำวัน: ' + esc(d.g) + ' · พระประจำวัน: ' + esc(d.p) + ' · สีประจำวัน: ' + esc(d.c) + ' · เลขประจำดาว: ' + d.num + '</p><div class="hg-img"></div>'; horoImage(i, $('.hg-img', box)); });
+  if (saved.name && saved.date) go();
+};
+/* ภาพจาก Wikimedia Commons เฉพาะภาพที่อนุญาตให้ใช้ (CC / สาธารณสมบัติ) พร้อมเครดิต */
+var HORO_Q = ['Buddha Thai Sunday posture', 'Buddha Thai Monday posture', 'Reclining Buddha Thailand', 'Buddha holding alms bowl Thailand', 'Buddha meditation posture Thailand', 'Buddha contemplating posture Thailand', 'Buddha Naga Thailand', 'Pa Lelai Buddha Thailand'];
+function horoImage(di, box) {
+  if (!box) return;
+  var paint = function (imgs) {
+    if (!imgs || !imgs.length) { box.innerHTML = '<p class="tiny muted">ยังไม่พบภาพที่อนุญาตให้นำมาใช้สำหรับหัวข้อนี้</p>'; return; }
+    box.innerHTML = '<div class="hg-grid">' + imgs.map(function (x) { return '<figure><img src="' + esc(x.url) + '" alt="' + esc(x.title) + '" loading="lazy"><figcaption>' + esc(x.title) + '<br><span>ภาพโดย ' + esc(x.artist || 'ไม่ระบุ') + ' · สัญญาอนุญาต ' + esc(x.lic) + ' · ที่มา Wikimedia Commons</span></figcaption></figure>'; }).join('') + '</div><p class="tiny muted hg-note">ขออนุญาตนำภาพประกอบข้างต้นมาแสดงเพื่อประโยชน์ทางการศึกษาและวัฒนธรรม ภาพทั้งหมดเป็นภาพที่เจ้าของผลงานเผยแพร่ภายใต้สัญญาอนุญาตแบบเปิดที่อนุญาตให้นำไปใช้ได้โดยต้องระบุที่มา ลิขสิทธิ์ยังคงเป็นของผู้สร้างสรรค์ตามที่ระบุไว้ หากเจ้าของภาพไม่ประสงค์ให้แสดง กรุณาแจ้งผู้ดูแลระบบเพื่อนำออกทันที</p>';
+  };
+  if (HORO_IMG[di]) return paint(HORO_IMG[di]);
+  box.innerHTML = '<p class="tiny muted">กำลังค้นหาภาพที่อนุญาตให้นำมาใช้…</p>';
+  var url = 'https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrlimit=8&gsrsearch=' + encodeURIComponent(HORO_Q[di] + ' filetype:bitmap') + '&prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=480';
+  fetch(url).then(function (r) { return r.json(); }).then(function (j) {
+    var pages = j && j.query && j.query.pages ? Object.keys(j.query.pages).map(function (k) { return j.query.pages[k]; }) : [];
+    var imgs = pages.map(function (p) {
+      var ii = (p.imageinfo || [])[0] || {}, md = ii.extmetadata || {}, lic = (md.LicenseShortName || {}).value || '';
+      if (!/CC|Public domain|PD/i.test(lic) || /NC|ND/i.test(lic)) return null;
+      var artist = String((md.Artist || {}).value || '').replace(/<[^>]+>/g, '').trim().slice(0, 80);
+      return { url: ii.thumburl || ii.url, title: String(p.title || '').replace(/^File:/, '').replace(/\.[a-z]+$/i, ''), artist: artist, lic: lic };
+    }).filter(function (x) { return x && x.url; }).slice(0, 3);
+    HORO_IMG[di] = imgs; paint(imgs);
+  }).catch(function () { box.innerHTML = '<p class="tiny muted">ยังโหลดภาพประกอบไม่ได้ในขณะนี้ (ไม่กระทบคำทำนาย)</p>'; });
+}
 </script>
 <script>
 /* ==========================================================================
