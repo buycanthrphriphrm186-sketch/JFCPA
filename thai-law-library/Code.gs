@@ -5560,13 +5560,23 @@ liveModes_ = function (cfg) {
 
 /* ผู้ทดลองใช้งานแจ้งว่ายังอยู่บนเว็บไซต์ → บันทึกลงชีต Config แถว GUEST_NOW (รูปแบบเดียวกับระบบหลังบ้าน)
  * เก็บในหน่วยความจำแคชก่อน แล้วเขียนลงชีตไม่เกินทุก 15 วินาที · จำกัด 1 ครั้งต่อ 4 วินาทีต่ออุปกรณ์ · ตรวจรูปแบบทุกช่อง */
+/* โหมดทดลองเปิดอยู่ (กำลังทดลอง หรือยอมรับแล้วรอเวลาเริ่ม) และยังไม่สิ้นสุด */
+function guestOn16_() {
+  try {
+    var cfg = getConfig_(), g = j16_(cfg.GUEST_MODE);
+    if (!g) return guestActive_();
+    var on = g.on === true || g.on === 'on' || g.on === 'true', to = t16_(g.to);
+    return on && (!to || to > Date.now());
+  } catch (e) { return false; }
+}
 function apiGuestBeat16_(p) {
-  if (!guestActive_()) return { ok: false };
+  var off = String(p.off || '') === '1';
+  if (!off && !guestOn16_()) return { ok: false };
   var id = String(p.id || '');
   if (!/^G-[A-Za-z0-9]{8,32}$/.test(id)) return { ok: false };
   var c = CacheService.getScriptCache();
-  if (c.get('gb16:' + id)) return { ok: true };
-  c.put('gb16:' + id, '1', 4);
+  if (!off && c.get('gb16:' + id)) return { ok: true };
+  c.put('gb16:' + id, '1', 3);
   var clean = function (v, n) { return s16_(v, n).replace(/[<>"'`\u0000-\u001f=+@]/g, '').trim(); };
   var num = function (v, lo, hi) { if (v === '' || v == null) return null; v = Number(v); return isFinite(v) && v >= lo && v <= hi ? v : null; };
   var lock = LockService.getScriptLock(); if (!lock.tryLock(1500)) return { ok: true };
@@ -5576,13 +5586,14 @@ function apiGuestBeat16_(p) {
     var now = new Date().toISOString();
     var prev = cur.visitors.filter(function (v) { return v && v.id === id; })[0] || {};
     var list = cur.visitors.filter(function (v) { return v && v.id !== id && Date.now() - t16_(v.activeAt) < 86400000; });
-    list.unshift({ id: id, firstAt: prev.firstAt || now, activeAt: now, device: clean(p.device, 40), os: clean(p.os, 40), browser: clean(p.browser, 40),
+    /* ออกจากหน้าเว็บไซต์: นำออกจากรายชื่อผู้ที่กำลังทดลองใช้งานทันที */
+    if (off) { if (!prev.id) return { ok: true }; cur = { at: now, visitors: list.slice(0, 300) }; c.put('GUESTS16', JSON.stringify(cur), 21600); c.remove('GNF16'); }
+    else list.unshift({ id: id, firstAt: prev.firstAt || now, activeAt: now, device: clean(p.device, 40), os: clean(p.os, 40), browser: clean(p.browser, 40),
       ip: clean(p.ip, 64) || prev.ip || '', location: clean(p.loc, 160) || prev.location || '', lat: num(p.lat, -90, 90), lng: num(p.lng, -180, 180), accuracy: num(p.acc, 0, 100000),
       page: clean(p.page, 120), views: Math.max(Number(prev.views) || 0, num(p.views, 0, 100000) || 0), screen: clean(p.screen, 30), lang: clean(p.lang, 20), accepted: p.acc2 === '1' || !!prev.accepted });
-    cur = { at: now, visitors: list.slice(0, 300) };
-    c.put('GUESTS16', JSON.stringify(cur), 21600);
+    if (!off) { cur = { at: now, visitors: list.slice(0, 300) }; c.put('GUESTS16', JSON.stringify(cur), 21600); }
     if (!c.get('GNF16')) {
-      c.put('GNF16', '1', 15);
+      c.put('GNF16', '1', 5);
       var out = { at: now, visitors: cur.visitors.slice(0, 200) }, j = JSON.stringify(out);
       while (j.length > 45000 && out.visitors.length > 5) { out.visitors = out.visitors.slice(0, Math.floor(out.visitors.length * 0.8)); j = JSON.stringify(out); }
       cfgSet16_('GUEST_NOW', j);
@@ -5592,3 +5603,33 @@ function apiGuestBeat16_(p) {
   return { ok: true };
 }
 ROUTES.guestBeat = { fn: apiGuestBeat16_, limit: 400 };
+/* =========================================================================
+ *  v17: สถานะผู้ใช้งานแบบเรียลไทม์รูปแบบใหม่ (เพิ่มเท่านั้น)
+ *  - นับว่า “กำลังใช้งาน” ทันทีที่เข้าสู่ระบบ/สมัครสมาชิก/กดยอมรับทดลองใช้งาน และตราบที่ยังเปิดหน้าเว็บไซต์อยู่
+ *    ไม่ต้องแตะ เลื่อน หรือกดปุ่มใด · ออกจากหน้าเว็บไซต์ (ปิดแท็บ/ออกจากระบบ) จึงนับว่าเลิกใช้งาน
+ *  - หน้าเว็บส่งสัญญาณทุก 2 วินาทีขณะแสดงอยู่ และทุก 15 วินาทีเมื่อสลับไปแอปอื่น
+ *    เบราว์เซอร์อาจหน่วงสัญญาณขณะอยู่เบื้องหลัง จึงนับช่วงเวลา 2 นาที
+ * ========================================================================= */
+CONFIG.VERSION = '17.0.0';
+ONLINE_WINDOW_MS = 2 * 60 * 1000;
+
+/* ออกจากหน้าเว็บไซต์ (ปิดแท็บ/ปิดหน้า): หน้าเว็บส่งสัญญาณแบบ beacon มาที่ doPost
+ * - {"tll":"leave","id":"G-..."} → นำผู้ทดลองใช้งานออกจากรายชื่อ GUEST_NOW ทันที
+ * - {"tll":"off","t":"<token>"}  → สมาชิกเลิกใช้งาน (Sessions.online = FALSE) ทันที
+ * คำขออื่นทั้งหมดส่งต่อให้ doPost เดิมตามปกติ */
+var doPostV16_ = doPost;
+doPost = function (e) {
+  try {
+    var pd = e && e.postData, txt = pd && pd.contents ? String(pd.contents) : '';
+    if (txt && txt.length < 1000 && /^\s*\{\s*"tll"\s*:\s*"(leave|off)"/.test(txt)) {
+      var j = JSON.parse(txt);
+      if (j.tll === 'leave' && /^G-[A-Za-z0-9]{8,32}$/.test(String(j.id || ''))) apiGuestBeat16_({ id: String(j.id), off: '1' });
+      if (j.tll === 'off' && j.t && String(j.t).length < 200) {
+        var row = sessionRow_(sha256Hex_(String(j.t)));
+        if (row) { setSessionCells_(row, { online: false }); try { publishOnline_(true); } catch (x) {} }
+      }
+      return ContentService.createTextOutput('OK');
+    }
+  } catch (x) { try { logError_('leave17', x, ''); } catch (y) {} }
+  return doPostV16_.apply(this, arguments);
+};

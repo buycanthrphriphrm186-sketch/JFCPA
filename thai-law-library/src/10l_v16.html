@@ -1,17 +1,25 @@
 <style>
 /* ======================= v16: ส่วนที่ควบคุมจากระบบหลังบ้าน ======================= */
-.g16-dock{position:fixed;right:max(12px,var(--safe-r,0px));top:calc(76px + env(safe-area-inset-top,0px));z-index:70;display:flex;flex-direction:column;align-items:flex-end;gap:8px;pointer-events:none;max-width:calc(100vw - 24px)}
-body.focus11 .g16-dock{top:calc(12px + env(safe-area-inset-top,0px))}
+.g16-dock{position:fixed;right:12px;top:76px;z-index:70;display:flex;flex-direction:column;align-items:flex-end;gap:8px;pointer-events:none;max-width:calc(100vw - 24px);touch-action:none;user-select:none;-webkit-user-select:none}
+.g16-dock .g16-pill{cursor:grab;touch-action:none}
+.g16-dock.dragging .g16-pill{cursor:grabbing;box-shadow:0 18px 40px rgba(0,0,0,.35)}
+.g16-dock:not(.dragging){transition:left .28s cubic-bezier(.16,1,.3,1),top .28s cubic-bezier(.16,1,.3,1)}
 .g16-dock:empty{display:none}
 .g16-pill{pointer-events:auto;display:flex;align-items:center;gap:10px;background:#111113;color:#fff;border-radius:16px;padding:8px 14px;box-shadow:0 10px 30px rgba(0,0,0,.22);font-size:14px;line-height:1.25;border:1px solid #27272a;max-width:min(380px,calc(100vw - 24px));animation:g16in .4s cubic-bezier(.16,1,.3,1) both}
 .g16-pill span{opacity:.88}
 .g16-pill b{font-size:20px;font-variant-numeric:tabular-nums;color:#fb923c;white-space:nowrap;letter-spacing:.02em}
 .g16-pill.warn{background:#7c2d12;border-color:#9a3412}.g16-pill.warn b{color:#fed7aa}
-.g16-next{pointer-events:auto;border:0;cursor:pointer;background:#f07c1e;color:#fff;font-weight:700;font-size:16px;border-radius:14px;padding:10px 16px;box-shadow:0 10px 26px rgba(240,124,30,.35);display:inline-flex;align-items:center;gap:6px;font-family:inherit;animation:g16in .4s cubic-bezier(.16,1,.3,1) both}
+.g16-next{pointer-events:auto;border:0;cursor:pointer;background:#f07c1e;color:#fff;font-weight:700;font-size:15px;border-radius:999px;padding:8px 14px;white-space:nowrap;box-shadow:0 10px 26px rgba(240,124,30,.35);display:inline-flex;align-items:center;gap:6px;font-family:inherit;animation:g16in .4s cubic-bezier(.16,1,.3,1) both}
 .g16-next svg{width:18px;height:18px}
 .g16-next:active{transform:scale(.97)}
 @keyframes g16in{from{opacity:0;transform:translateY(-8px) scale(.97)}}
-@media (max-width:600px){.g16-dock{top:calc(66px + env(safe-area-inset-top,0px))}.g16-pill{font-size:13px;padding:7px 12px}.g16-pill b{font-size:17px}}
+.g16-next.float{position:fixed;right:12px;top:calc(12px + env(safe-area-inset-top,0px));z-index:71}
+@media (max-width:600px){.g16-pill{font-size:13px;padding:7px 12px}.g16-pill b{font-size:17px}}
+/* โหมดทดลองเปิด: ปุ่ม “ถัดไป” แทนปุ่มเข้าสู่ระบบ/สมัครสมาชิกด้านบนมุมขวา */
+body.g16-trial .pub-nav [data-go="login"],body.g16-trial .pub-nav [data-go="register"],body.g16-trial .next-fab{display:none !important}
+.g16-big{justify-content:center;margin:16px 0 4px}.g16-big b{font-size:30px}
+#g16WaitRetry.g16-go{animation:g16pulse 1.4s ease-in-out infinite}
+@keyframes g16pulse{50%{box-shadow:0 0 0 8px rgba(240,124,30,.28)}}
 @media (prefers-reduced-motion:reduce){.g16-pill,.g16-next{animation:none}}
 /* ป๊อปอัปรายละเอียด: นาฬิกา ตารางเวลา และส่วนที่ปิด */
 .g16-cd{background:#111113;color:#fff;border-radius:16px;padding:12px 14px;margin:2px 0 12px;display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline}
