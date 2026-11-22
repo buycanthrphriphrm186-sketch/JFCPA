@@ -90,7 +90,7 @@ VIEWS.pricing = function (el) { el.innerHTML = ''; setTimeout(function () { nav(
       if (last && last.scrollIntoView) { last.scrollIntoView({ block: 'end', behavior: 'auto' }); return; }
       a = Object.assign({}, a, { behavior: 'auto' });
     }
-    return nativeScrollTo(a, b);
+    return arguments.length < 2 ? nativeScrollTo(a) : nativeScrollTo(a, b);
   };
   document.addEventListener('keydown', function (e) { if (e.target && e.target.id === 'aiIn' && e.key === 'Enter' && !e.shiftKey) aiFocusWanted = true; }, true);
   document.addEventListener('pointerdown', function (e) { if (e.target && e.target.closest && e.target.closest('#aiSend')) aiFocusWanted = document.activeElement && document.activeElement.id === 'aiIn'; }, true);

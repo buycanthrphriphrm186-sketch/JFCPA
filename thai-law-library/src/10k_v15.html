@@ -1,0 +1,31 @@
+<style>
+/* ======================= v15 ======================= */
+/* ตารางจำนวนกฎหมาย (แนวนอน/จอกว้าง): ตารางมีเส้นแบ่งชัดเจน ข้อความอยู่ในช่องของตัวเอง ไม่ล้นไปช่องอื่น */
+@media (min-width:641px){
+  #lawCounts .ctable-wrap{overflow-x:visible}
+  #lawCounts .lc-table{width:100%;min-width:0;table-layout:fixed;border-collapse:separate;border-spacing:0;border:1px solid var(--line-strong);border-radius:14px;overflow:hidden}
+  #lawCounts .lc-table th{white-space:normal !important;word-break:keep-all;line-height:1.35;padding:12px 12px;background:var(--sky-50);color:var(--ink);font-weight:700;vertical-align:bottom;border-bottom:1px solid var(--line-strong);text-align:right}
+  #lawCounts .lc-table th:first-child{text-align:left;width:30%}
+  #lawCounts .lc-table td{padding:12px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+  #lawCounts .lc-table td:first-child{white-space:normal;word-break:keep-all;font-weight:700;color:var(--sky-700)}
+  #lawCounts .lc-table th+th,#lawCounts .lc-table td+td{border-left:1px solid var(--line)}
+  #lawCounts .lc-table tbody tr:nth-child(even) td{background:color-mix(in srgb,var(--sky-50) 45%,transparent)}
+  #lawCounts .lc-table tfoot td{border-bottom:0;border-top:2px solid var(--line-strong);background:var(--sky-50)}
+}
+/* แชท: ไม่เลื่อนแบบนุ่มนวลขณะเปิดหน้าแชท (ไม่เห็นข้อความเก่าไหลผ่านจนหน้าขาว) */
+html.no-smooth{scroll-behavior:auto !important}
+#view.ch-prep{visibility:hidden}
+.ch-older{display:block;margin:8px auto 0;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 14px;font:inherit;font-size:.85rem;color:var(--sky-700)}
+/* ปุ่มขยาย/ย่อ อยู่ในแต่ละหน้า (ไม่อยู่ที่แถบด้านบน) · ขยายแล้วซ่อนแถบด้านบนและปุ่มนำทาง เนื้อหาเต็มจอ */
+#btnFocus{display:none !important}
+.vf-btn{display:inline-flex;align-items:center;gap:6px;flex:none;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;font:inherit;font-size:.85rem;font-weight:700;cursor:pointer}
+.vf-btn svg.i{width:16px;height:16px}
+.vf-btn.on{background:var(--sky-600);border-color:var(--sky-600);color:#fff}
+.vf-bar{display:flex;justify-content:flex-end;margin:0 0 8px}
+.view-head .vf-btn{margin-left:auto;align-self:flex-start}
+html body.focus11.f15 .app-head{display:none !important}
+body.focus11.f15 .main{padding-top:calc(8px + var(--safe-t,0px)) !important}
+@media (max-width:480px){.vf-btn span{display:none}.vf-btn{padding:7px}}
+/* แชทบนคอมพิวเตอร์: แถบปุ่มนำทางอยู่ด้านล่าง → กรอบส่งข้อความอยู่เหนือแถบ ไม่ทับกัน */
+@media (min-width:1024px) and (pointer:fine){body:not(.focus11) .ch-form.ch-fixed{bottom:calc(var(--tab-h,64px) + 22px + var(--safe-b,0px))}}
+</style>
