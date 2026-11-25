@@ -144,15 +144,45 @@ var EXPLAIN_PROMPT = [
   ' "quiz":{"scenario":"โจทย์ข้อเท็จจริงแบบตัวละครสมมุติ บรรยายละเอียด (อาจดัดแปลงจากแนวคำพิพากษาศาลฎีกา)","question":"คำถามที่ต้องการให้ผู้อ่านวินิจฉัย","answer":"ธงคำตอบ: วินิจฉัยตามตัวบทพร้อมเหตุผลเป็นขั้นตอน ข้อเท็จจริง–ข้อกฎหมาย–ปรับบท–สรุป"},',
   ' "notes":"ข้อควรระวังหรือประเด็นที่มักเข้าใจผิด"}'
 ].join('\n');
+
+/* ตัวบทสำหรับคำอธิบาย: ชีต Sections ก่อน หากไม่มี (เช่น รัฐธรรมนูญจากฐานข้อมูลเปิด) อ่านจากฐานข้อมูลของเว็บไซต์ (db/sNNN) — ไม่รับตัวบทจากหน้าเว็บ */
+function explainLawRepo19_(law) {
+  var c = CacheService.getScriptCache(), mk = 'exr19m_' + law, hit = c.get(mk);
+  if (hit) {
+    var m = JSON.parse(hit), keys = m.nos.map(function (n) { return 'exr19s_' + law + '-' + n; }), got = c.getAll(keys);
+    if (Object.keys(got).length === keys.length) return { title: m.title, cat: m.cat, secs: m.nos.map(function (n, i) { var x = JSON.parse(got[keys[i]]); return { id: law + '-' + n, law: law, no: n, name: x[0], text: x[1] }; }) };
+  }
+  var ix = fetchGzJson_(dbBase_() + 'index.json.gz'), meta = ((ix && ix.laws) || []).filter(function (x) { return x.id === law; })[0];
+  if (!meta) return null;
+  var arr = fetchGzJson_(dbBase_() + 's' + ('00' + meta.shard).slice(-3) + '.json.gz'), e = (arr || []).filter(function (x) { return x.id === law; })[0];
+  var secs = e ? e.s.map(function (s) { return { id: law + '-' + s[0], law: law, no: String(s[0]), name: s[1] || '', text: s[2] || '' }; }) : [];
+  try {
+    var put = {}; secs.forEach(function (x) { var v = JSON.stringify([x.name, x.text]); if (v.length < 95000) put['exr19s_' + x.id] = v; });
+    if (Object.keys(put).length === secs.length) {
+      var ks = Object.keys(put); for (var i = 0; i < ks.length; i += 200) { var part = {}; ks.slice(i, i + 200).forEach(function (k) { part[k] = put[k]; }); c.putAll(part, 21600); }
+      c.put(mk, JSON.stringify({ title: meta.title, cat: meta.cat, nos: secs.map(function (x) { return x.no; }) }), 21600);
+    }
+  } catch (x) {}
+  return { title: meta.title, cat: meta.cat, secs: secs };
+}
+/* ใช้ชุดที่ครบกว่า ระหว่างชีต Sections กับฐานข้อมูลของเว็บไซต์ (ชีตอาจมีเพียงมาตราตัวอย่าง) */
+function explainSecs19_(law) {
+  var secs = [];
+  try { secs = sectionsOfLaw_(law) || []; } catch (e) { secs = []; }
+  var r = null;
+  try { r = explainLawRepo19_(law); } catch (e) { try { logError_('explain.repo', e, ''); } catch (x) {} }
+  if (r && r.secs.length > secs.length) return r;
+  return { secs: secs, title: r ? r.title : '', cat: r ? r.cat : '' };
+}
 function apiLawExplain19_(p, ctx) {
   var secId = String(p.secId || '').slice(0, 80), law = secId.split('-')[0];
   if (!secId || !law) return fail_('INVALID', 'ไม่ได้ระบุมาตรา');
   var hit = explainFind_(secId); if (hit) return { secId: secId, explain: hit.data, reviewed: hit.reviewed, createdAt: hit.createdAt, cached: true };
   if (p.peek) return { secId: secId, explain: null };
-  var secs = sectionsOfLaw_(law), i = -1;
+  var src = explainSecs19_(law), secs = src.secs, i = -1;
   for (var k = 0; k < secs.length; k++) if (secs[k].id === secId) { i = k; break; }
   if (i < 0) return fail_('NOT_FOUND', 'ไม่พบมาตรานี้ในฐานข้อมูล');
-  var meta = (typeof lawMeta_ === 'function' ? lawMeta_(law) : null) || {}, title = meta.title || String(p.lawTitle || '').slice(0, 300), cat = meta.cat || String(p.cat || '');
+  var title = src.title || String(p.lawTitle || '').slice(0, 300), cat = src.cat || String(p.cat || '');
   if (cat && !EXPLAIN_CATS[cat]) return fail_('NOT_SUPPORTED', 'คำอธิบายรายมาตรามีสำหรับรัฐธรรมนูญ พ.ร.บ.ประกอบรัฐธรรมนูญ พ.ร.บ./พ.ร.ก. ปร./ปว./คปค./คสช. และประมวลกฎหมาย');
   var key = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
   if (!key) return fail_('NOT_CONFIGURED', 'ยังไม่ได้เชื่อมต่อบริการ AI สำหรับสร้างคำอธิบาย (GEMINI_API_KEY)');
@@ -175,3 +205,27 @@ function apiLawExplain19_(p, ctx) {
   } finally { lock.releaseLock(); }
 }
 ROUTES.lawExplain = { fn: apiLawExplain19_, auth: true, limit: 400 };
+
+/** สร้างคำอธิบายล่วงหน้าทุกมาตรา (รัฐธรรมนูญ 2560 และประมวลกฎหมายทั้ง 8 ฉบับ) ทีละช่วง — ติดตั้งด้วย installExplainPrebuild() */
+var EXPLAIN_PREBUILD = ['C20', 'K02', 'K01', 'K03', 'K04', 'K05', 'K06', 'K07', 'K08'];
+function explainPrebuild() {
+  var P = PropertiesService.getScriptProperties(), pos = {}, deadline = Date.now() + 270000, made = 0;
+  try { pos = JSON.parse(P.getProperty('EXPLAIN_POS') || '{}'); } catch (e) {}
+  for (var a = 0; a < EXPLAIN_PREBUILD.length && Date.now() < deadline; a++) {
+    var law = EXPLAIN_PREBUILD[a], secs = explainSecs19_(law).secs, i = pos[law] || 0;
+    for (; i < secs.length && Date.now() < deadline; i++) {
+      if (explainFind_(secs[i].id)) continue;
+      var r = apiLawExplain19_({ secId: secs[i].id }, {});
+      if (r && r.ok === false) { if (r.code !== 'NOT_FOUND' && r.code !== 'NOT_SUPPORTED') { pos[law] = i; P.setProperty('EXPLAIN_POS', JSON.stringify(pos)); return r.code; } }
+      else made++;
+    }
+    pos[law] = i;
+  }
+  P.setProperty('EXPLAIN_POS', JSON.stringify(pos));
+  return 'made ' + made + ' · ' + JSON.stringify(pos);
+}
+function installExplainPrebuild() {
+  ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === 'explainPrebuild') ScriptApp.deleteTrigger(t); });
+  ScriptApp.newTrigger('explainPrebuild').timeBased().everyMinutes(10).create();
+  Logger.log('ติดตั้งการสร้างคำอธิบายล่วงหน้าแล้ว: ' + explainPrebuild());
+}
