@@ -43,7 +43,7 @@ GROUPS = [('civil', 'คดีแพ่งและพาณิชย์'), ('cr
  ('cheque', 'คดีเช็ค (พ.ร.บ.ความผิดอันเกิดจากการใช้เช็ค)'), ('land', 'คดีที่ดิน'), ('labour', 'คดีแรงงาน'), ('tax', 'คดีภาษีอากรและศุลกากร'), ('bankrupt', 'คดีล้มละลายและฟื้นฟูกิจการ'),
  ('ip', 'คดีทรัพย์สินทางปัญญา'), ('weapon', 'อาวุธปืนและวัตถุระเบิด'), ('traffic', 'จราจรทางบกและรถยนต์'), ('forest', 'ป่าไม้ อุทยาน สัตว์ป่า และสิ่งแวดล้อม'),
  ('family', 'เด็ก เยาวชน และครอบครัว'), ('consumer', 'คุ้มครองผู้บริโภคและสินเชื่อ'), ('comp', 'คอมพิวเตอร์และการฟอกเงิน'), ('court', 'คำวินิจฉัยชี้ขาดอำนาจหน้าที่ระหว่างศาลและคำสั่งคำร้อง'),
- ('otherlaw', 'กฎหมายอื่น ๆ'), ('nolaw', 'ไม่ได้ระบุกฎหมายที่อ้าง')]
+ ('otherlaw', 'กฎหมายอื่น ๆ'), ('nolaw', 'คำพิพากษาที่ข้อมูลต้นทางไม่ได้ระบุมาตราที่อ้าง (แยกตามปี พ.ศ.)')]
 KW = [('drug', r'ยาเสพติด|วัตถุออกฤทธิ์|ยาเสพย์ติด|กัญชา|ฝิ่น'), ('cheque', r'ใช้เช็ค'), ('land', r'ที่ดิน|จัดรูปที่ดิน|ปฏิรูปที่ดิน|เวนคืน'),
  ('labour', r'แรงงาน|เงินทดแทน|ประกันสังคม|ศาลแรงงาน|แรงงานสัมพันธ์'), ('tax', r'รัษฎากร|ภาษี|ศุลกากร|สรรพสามิต|อากร'), ('bankrupt', r'ล้มละลาย'),
  ('ip', r'เครื่องหมายการค้า|ลิขสิทธิ์|สิทธิบัตร|ความลับทางการค้า|ทรัพย์สินทางปัญญา'), ('weapon', r'อาวุธปืน|เครื่องกระสุน|วัตถุระเบิด|ดอกไม้เพลิง'),
@@ -80,7 +80,7 @@ for ri, r in enumerate(recs):
         elif 'รัษฎากร' in full: hit.add('tax_code')
         else:
             g = next((g for g, rx in KW if re.search(rx, full)), None)
-            hit.add(('kw:' + g) if g else 'other_law')
+            hit.add(('kw:' + g) if g else 'O:' + re.sub(r'\s*(\(ฉบับที่.*|แก้ไขเพิ่มเติม.*)$', '', full).strip())
     if not refs:
         if ty.startswith('คำวินิจฉัย') or ty.startswith('คำสั่ง'): hit.add('court_' + str(r[3]))
         elif cat == 'พ': hit.add('civ_unspec')
@@ -109,17 +109,21 @@ row2rec = {r[5]: i for i, r in enumerate(recs)}
 pending = set(idx.pop('nolaw_all', set()))
 pend_rows = {recs[i][5]: i for i in pending}
 kwidx = collections.defaultdict(set)
-for w, k in PRI:
+for w, k in []:  # ยกเลิก: วัดแล้วความแม่นยำต่ำ (เรื่องย่อยถูก 27%)
     for row in kwrows(w) & set(pend_rows):
         i = pend_rows.pop(row); kwidx[k].add(i)
 for k, s_ in kwidx.items():
     kk = 'K:' + k; idx[kk] = s_
-idx['nolaw_all'] = set(pend_rows.values())
+left_ = set(pend_rows.values())
+for i in left_:
+    y = recs[i][2]; d = (y // 10) * 10
+    k = 'Y:%d' % d; idx.setdefault(k, set()).add(i); SUBNAME[k] = 'พ.ศ. %d–%d' % (d, d + 9); SUBG[k] = 'nolaw'
+idx['nolaw_all'] = set()
 KWG = {'kwd:drug': 'drug', 'kwd:forest': 'forest', 'kwd:ip': 'ip', 'kwd:tax': 'tax', 'kwd:labour': 'labour', 'kwd:bankrupt': 'bankrupt'}
 KWN = {'kwd:drug': 'ยาเสพติด', 'kwd:forest': 'ไม้หวงห้ามและป่าไม้', 'kwd:ip': 'เครื่องหมายการค้าและลิขสิทธิ์', 'kwd:tax': 'ภาษีอากรและศุลกากร', 'kwd:labour': 'เลิกจ้างและค่าชดเชย', 'kwd:bankrupt': 'ล้มละลาย'}
 SUBNAME.update({'civ_other': 'ประมวลกฎหมายแพ่งและพาณิชย์ (มาตราอื่น ๆ)', 'cri_other': 'ประมวลกฎหมายอาญา (มาตราอื่น ๆ)', 'civ_unspec': 'คดีแพ่ง (ไม่ได้ระบุมาตรา)', 'cri_unspec': 'คดีอาญา (ไม่ได้ระบุมาตรา)',
  'cpc_all': 'วิธีพิจารณาความแพ่ง (ไม่ระบุมาตรา)', 'cripro_all': 'วิธีพิจารณาความอาญา (ไม่ระบุมาตรา)', 'land_code': 'ประมวลกฎหมายที่ดิน', 'tax_code': 'ประมวลรัษฎากร',
- 'other_law': 'กฎหมายอื่น ๆ', 'nolaw_all': 'ไม่ได้ระบุกฎหมายที่อ้าง'})
+ 'other_law': 'กฎหมายอื่น ๆ (ฉบับที่ถูกอ้างน้อย)', 'nolaw_all': 'ไม่ได้ระบุกฎหมายที่อ้าง'})
 SUBG.update({'civ_other': 'civil', 'cri_other': 'criminal', 'civ_unspec': 'civil', 'cri_unspec': 'criminal', 'cpc_all': 'cpc', 'cripro_all': 'cripro', 'land_code': 'land', 'tax_code': 'tax', 'other_law': 'otherlaw', 'nolaw_all': 'nolaw'})
 for i, t in enumerate(types): SUBNAME['court_' + str(i)] = t; SUBG['court_' + str(i)] = 'court'
 # กฎหมายเฉพาะตามคำสำคัญ: แยกย่อยตามชื่อกฎหมายจริงที่อ้าง (พ.ร.บ. แต่ละฉบับ)
@@ -135,6 +139,12 @@ for (g, base), s in lawsub.items():
     k = 'L:' + g + ':' + base
     idx[k] = s; SUBNAME[k] = base; SUBG[k] = g
 for k in [k for k in idx if k.startswith('kw:')]: del idx[k]
+# กฎหมายอื่น ๆ: แยกตามชื่อกฎหมายที่อ้างจริง (80 ฉบับที่ถูกอ้างมากที่สุด) ที่เหลือรวมเป็น “กฎหมายอื่น ๆ”
+ok_ = sorted([k for k in idx if k.startswith('O:')], key=lambda k: -len(idx[k]))
+for k in ok_[:80]: SUBNAME[k] = k[2:]; SUBG[k] = 'otherlaw'
+rest = set()
+for k in ok_[80:]: rest |= idx.pop(k)
+if rest: idx['other_law'] = rest
 # รวมจำนวน “จัดตามคำสำคัญ” เข้ากับเรื่องเดียวกัน (แยกตัวเลขไว้แสดง)
 kwn = {}
 for k in [k for k in idx if k.startswith('K:')]:
@@ -153,8 +163,12 @@ for g, gname in GROUPS:
     subs.sort(key=lambda k: (order.get(k, 999), -len(idx[k])))
     allr = set().union(*[idx[k] for k in subs])
     groups.append({'k': g, 'name': gname, 'n': len(allr), 'subs': [dict({'k': k, 'name': SUBNAME[k], 'n': len(idx[k])}, **({'kw': kwn[k]} if kwn.get(k) else {})) for k in subs]})
+for g in groups:
+    g['subs'] = [x for x in g['subs'] if x['n'] > 0]
+    if g['k'] == 'nolaw': g['subs'].sort(key=lambda x: x['k'])
+groups = [g for g in groups if g['subs']]
 groups.sort(key=lambda x: (x['k'] in ('otherlaw', 'nolaw', 'court'), -x['n']))
-out = {'v': 1, 'total': len(recs), 'note': 'จัดหมวดจากกฎหมายและมาตราที่คำพิพากษาแต่ละฉบับอ้างถึง (หนึ่งฉบับอาจอยู่ได้หลายเรื่อง) ฉบับเก่าที่ข้อมูลต้นทางไม่ได้ระบุมาตรา จัดเรื่องจากคำสำคัญเฉพาะในย่อสั้น 1 เรื่องต่อฉบับ และแสดงจำนวนแยกไว้', 'groups': groups,
+out = {'v': 1, 'total': len(recs), 'note': 'จัดหมวดจากกฎหมายและมาตราที่คำพิพากษาแต่ละฉบับอ้างถึงจริงในฐานข้อมูลศาลฎีกา (หนึ่งฉบับอาจอยู่ได้หลายเรื่อง) · ฉบับที่ข้อมูลต้นทางไม่ได้ระบุมาตรา ระบบไม่เดาเรื่องให้ แต่แยกตามช่วงปี พ.ศ. เพื่อความถูกต้อง', 'groups': groups,
        'idx': {k: sorted(v, reverse=True) for k, v in idx.items()}}
 json.dump(out, gzip.open(D + 'topics.json.gz', 'wt', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
 for g in groups: print(g['name'], g['n'], len(g['subs']))

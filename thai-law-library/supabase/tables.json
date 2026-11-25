@@ -1,0 +1,282 @@
+{
+ "Ratings": {
+  "table": "ratings",
+  "cols": [
+   "id",
+   "time",
+   "member_id",
+   "username",
+   "display_name",
+   "stars",
+   "text",
+   "device"
+  ]
+ },
+ "Chat": {
+  "table": "chat",
+  "cols": [
+   "id",
+   "time",
+   "member_id",
+   "username",
+   "sender",
+   "admin_id",
+   "admin_name",
+   "text",
+   "status",
+   "attach",
+   "edited_at"
+  ]
+ },
+ "Members": {
+  "table": "members",
+  "cols": [
+   "member_id",
+   "username",
+   "username_lower",
+   "title",
+   "first_name",
+   "last_name",
+   "display_name",
+   "birth_date",
+   "gender",
+   "member_type",
+   "education_json",
+   "work_json",
+   "phone",
+   "address",
+   "bio",
+   "avatar",
+   "admin_hash",
+   "personal_hash",
+   "salt",
+   "recovery_q",
+   "recovery_ahash",
+   "plan",
+   "plan_cycle",
+   "plan_expires",
+   "trial_start",
+   "created_at",
+   "last_login",
+   "account_status",
+   "fail_count",
+   "lock_until",
+   "lock_count",
+   "social_json",
+   "privacy_json",
+   "role",
+   "extra_json",
+   "email",
+   "email_verified",
+   "otp_hash",
+   "otp_exp",
+   "otp_tries",
+   "blocked",
+   "device_ids",
+   "line_user_id",
+   "line_linked_at",
+   "last_active",
+   "block_reason"
+  ]
+ },
+ "Stats": {
+  "table": "stats",
+  "cols": [
+   "date",
+   "visits",
+   "mobile",
+   "tablet",
+   "desktop",
+   "chrome",
+   "safari",
+   "edge",
+   "firefox",
+   "other",
+   "logins",
+   "law_opens",
+   "updated_at"
+  ]
+ },
+ "Sessions": {
+  "table": "sessions",
+  "cols": [
+   "token_hash",
+   "member_id",
+   "created_at",
+   "last_seen",
+   "device",
+   "os",
+   "browser",
+   "ip",
+   "location",
+   "revoked",
+   "active_at",
+   "online",
+   "lat",
+   "lng",
+   "accuracy",
+   "map_url"
+  ]
+ },
+ "UserData": {
+  "table": "user_data",
+  "cols": [
+   "member_id",
+   "rev",
+   "updated_at",
+   "part",
+   "json"
+  ]
+ },
+ "Laws": {
+  "table": "laws",
+  "cols": [
+   "law_id",
+   "category",
+   "title",
+   "short_name",
+   "year",
+   "source_url",
+   "status",
+   "updated_at",
+   "note"
+  ]
+ },
+ "Sections": {
+  "table": "sections",
+  "cols": [
+   "section_id",
+   "law_id",
+   "section_no",
+   "popular_name",
+   "text",
+   "tags",
+   "source_url",
+   "updated_at"
+  ]
+ },
+ "Treaties": {
+  "table": "treaties",
+  "cols": [
+   "treaty_id",
+   "group",
+   "title",
+   "title_th",
+   "date",
+   "source_url",
+   "summary",
+   "updated_at"
+  ]
+ },
+ "LoginLog": {
+  "table": "login_log",
+  "cols": [
+   "time",
+   "username",
+   "member_id",
+   "result",
+   "reason",
+   "ip",
+   "location",
+   "isp",
+   "device",
+   "os",
+   "browser"
+  ]
+ },
+ "Security": {
+  "table": "security",
+  "cols": [
+   "report_id",
+   "time",
+   "type",
+   "severity",
+   "member_id",
+   "username",
+   "ip",
+   "location",
+   "device",
+   "detail",
+   "attempts",
+   "action",
+   "status",
+   "pdf_url"
+  ]
+ },
+ "ErrorLog": {
+  "table": "error_log",
+  "cols": [
+   "time",
+   "member_id",
+   "where",
+   "message",
+   "stack",
+   "user_agent",
+   "version"
+  ]
+ },
+ "AuditLog": {
+  "table": "audit_log",
+  "cols": [
+   "time",
+   "member_id",
+   "action",
+   "detail"
+  ]
+ },
+ "Config": {
+  "table": "config",
+  "cols": [
+   "key",
+   "value",
+   "note"
+  ]
+ },
+ "Announcements": {
+  "table": "announcements",
+  "cols": [
+   "id",
+   "time",
+   "type",
+   "title",
+   "body",
+   "active"
+  ]
+ },
+ "Reports": {
+  "table": "reports",
+  "cols": [
+   "time",
+   "member_id",
+   "username",
+   "kind",
+   "subject",
+   "detail",
+   "status"
+  ]
+ },
+ "Payments": {
+  "table": "payments",
+  "cols": [
+   "time",
+   "member_id",
+   "username",
+   "plan",
+   "cycle",
+   "amount",
+   "status",
+   "note"
+  ]
+ },
+ "Sources": {
+  "table": "sources",
+  "cols": [
+   "category",
+   "url",
+   "parser",
+   "enabled",
+   "last_run",
+   "last_result"
+  ]
+ }
+}
