@@ -1386,6 +1386,73 @@ body.g16-no-login [data-go="login"],body.g16-no-login [data-go="forgot"]{display
 body.g16-no-signup [data-go="register"]{display:none !important}
 body.g16-no-chat [data-v="chat"],body.g16-no-chat .chat-fab,body.g16-no-chat #chatFab{display:none !important}
 </style>
+<style>
+/* ======================= v18 ======================= */
+/* แนะนำตัวผู้สร้างเว็บไซต์: รูปสี่เหลี่ยมมุมมน แสดงเต็มภาพ (ไม่ตัดเป็นวงกลม) */
+.cr18{margin-bottom:22px}
+.cr18-body{display:grid;grid-template-columns:minmax(0,360px) 1fr;gap:22px;align-items:start}
+.cr18-fig{margin:0;width:100%}
+.cr18-photo{display:block;width:100%;height:auto;border-radius:20px;border:1px solid var(--line);box-shadow:var(--shadow-1,0 6px 20px rgba(0,0,0,.08));background:var(--surface-2,#f4f6f9)}
+.cr18-ph{aspect-ratio:4/5;display:grid;place-items:center;font-size:72px;font-weight:700;color:var(--sky-600,#1F5F99)}
+.cr18-txt h3{margin:0 0 4px;font-size:1.35rem}
+.cr18-role{color:var(--sky-600,#1F5F99);font-weight:600;margin-bottom:10px}
+.cr18-txt p{margin:0 0 10px;line-height:1.75;text-align:justify}
+.cr18-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:16px}
+.cr18-card{border:1px solid var(--line);border-radius:16px;padding:12px;background:var(--surface)}
+.cr18-card img{display:block;width:100%;height:auto;border-radius:12px;margin-bottom:8px}
+.cr18-card p{margin:4px 0 0;line-height:1.65}
+.cr18-up{margin-top:10px}
+@media (max-width:700px){.cr18-body{grid-template-columns:1fr}.cr18-fig{max-width:420px;margin:0 auto}}
+</style>
+<style>
+/* คำพิพากษา: เลือกตามเรื่อง */
+.dt18 .panel-title{display:flex;align-items:center;gap:8px}.dt18 .panel-title h2{flex:1}
+.dt18 .chips{display:flex;flex-wrap:wrap;gap:8px}
+.dt18 .chip .cnt{font-variant-numeric:tabular-nums;opacity:.75;margin-left:4px}
+.dt18 .chip.on{background:var(--sky-600,#1F5F99);color:#fff;border-color:var(--sky-600,#1F5F99)}
+.dt18 .chip.on .cnt{opacity:.95}
+.dt18-sh{margin:14px 0 8px;font-weight:600}
+.dt18-kw{display:inline-block;margin-left:6px;font-size:.78em;padding:1px 6px;border-radius:999px;background:#fff1e6;color:#9a3412}
+#dt18Res{margin-top:12px}
+</style>
+<style>
+/* อนุสัญญา: ไฟล์ PDF ต้นฉบับ */
+.tp18{margin-top:16px}
+.tp18-frame{position:relative;height:min(78vh,900px);border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#f3f4f6}
+.tp18-frame iframe{display:block;width:100%;height:100%;border:0;background:#fff}
+.tp18-load{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted,#6b7280);pointer-events:none}
+.tp18-frame.ok .tp18-load{display:none}
+.tp18-zoom{position:absolute;top:10px;right:10px;z-index:2;display:inline-flex;align-items:center;gap:6px;border:0;border-radius:999px;padding:7px 12px;background:rgba(17,17,19,.82);color:#fff;font:inherit;font-weight:600;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.tp18-zoom svg{width:16px;height:16px}
+.tp18-frame.full{position:fixed;inset:0;z-index:400;height:auto;border-radius:0;border:0}
+html.tp18-lock,html.tp18-lock body{overflow:hidden}
+.tp18-links{margin:12px 0 0;padding-left:18px;line-height:1.8}
+.tp18-links a{display:inline-flex;align-items:center;gap:4px}
+.tp18-links svg{width:15px;height:15px}
+.tp18-cr{margin-top:8px}
+</style>
+<style>
+/* เสียงอ่านกฎหมาย */
+.cbtn.v18b.on,.v18-ps.on{color:#fff;background:var(--sky-600,#1F5F99)}
+.v18-bar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--tab-h,64px) + 22px + var(--safe-b,0px));z-index:65;display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:space-between;width:min(720px,calc(100vw - 16px));padding:8px 10px 8px 14px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:0 10px 30px rgba(0,0,0,.16)}
+body.focus11 .v18-bar{bottom:calc(10px + var(--safe-b,0px))}
+.v18-t{display:flex;flex-direction:column;min-width:0;flex:1}.v18-t b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.v18-c{display:flex;align-items:center;gap:4px}.v18-pp{background:var(--sky-600,#1F5F99);color:#fff}
+.v18-g{margin:0 4px}.v18-g button.on{background:var(--sky-600,#1F5F99);color:#fff}
+.focus .v18-bar,.v18-bar{z-index:130}
+.v18-pick{display:flex;flex-direction:column;gap:10px}.v18-pick label{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:12px;border:1px solid var(--line);border-radius:14px;cursor:pointer}.v18-pick label span{flex-basis:100%;padding-left:24px}
+.v18-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.v18-tile{display:flex;align-items:center;gap:12px;text-align:left;padding:16px;border:1px solid var(--line);border-radius:18px;background:var(--surface);font:inherit;cursor:pointer}
+.v18-tile .mi{display:grid;place-items:center;width:44px;height:44px;border-radius:14px;background:var(--sky-50,#EAF4FC);color:var(--sky-600,#1F5F99)}
+.v18-q{gap:8px;margin:0 0 12px;flex-wrap:wrap}
+.v18-sec{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:var(--surface);margin-bottom:8px}
+.v18-sec .v18-fo{text-align:left;background:none;border:0;font:inherit;cursor:pointer;padding:0}
+.v18-pv{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.v18-back{margin-bottom:6px}
+.v18-fl{display:flex;flex-direction:column;gap:8px}.v18-fi{display:flex;gap:8px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:12px}
+</style>
+<style>.lf18{display:flex;gap:10px;align-items:flex-start;margin-top:12px;padding:12px 14px;border-radius:14px;background:var(--sky-50,#EAF4FC);border:1px solid var(--line)}.lf18 svg{flex:none;width:22px;height:22px;color:var(--sky-600,#1F5F99);margin-top:2px}</style>
+<style>.ai18{margin:10px 0 4px}.ai18 img{display:block;width:100%;max-width:520px;height:auto;border-radius:14px;border:1px solid var(--line)}.ai18 figcaption{font-size:.78rem;color:var(--muted,#6b7280);margin-top:4px}</style>
 <body>
 <div id="readbar" class="progress-read" aria-hidden="true"></div>
 <!-- Splash: โลโก้ต้นฉบับ (ไม่ได้สร้างใหม่) + วงแหวนหมุน -->
@@ -9368,6 +9435,484 @@ rtPulse = function () {
 /* กลับมาจากหน้าที่เก็บไว้ (ปุ่มย้อนกลับของเบราว์เซอร์) → แจ้งกำลังใช้งานทันที */
 window.addEventListener('pageshow', function (e) { if (e && e.persisted && S.token) rtSchedule(100); });
 document.addEventListener('visibilitychange', function () { if (S.token && !RT.busy) rtSchedule(document.visibilityState === 'visible' ? 150 : 1000); });
+</script>
+<script>
+/* ==========================================================================
+   v18: แนะนำตัวผู้สร้างเว็บไซต์ (ควบคุมจากระบบหลังบ้าน · ชีต Config แถว CREATOR_PROFILE)
+   - หน้าแรก: แสดงต่อจาก “สถิติผู้เข้าชมและฐานข้อมูล”
+   - ปุ่ม “แนะนำตัว” ในแถบนำทางด้านล่าง (แนวนอนอยู่ด้านซ้าย)
+   - รูปภาพสี่เหลี่ยมมุมมน แสดงเต็มภาพ ไม่ตัด ไม่จำกัดขนาด
+   ========================================================================== */
+var CR18 = { p: null, sig: '', busy: false };
+try { CR18.p = JSON.parse(localStorage.getItem('tll.creator18') || 'null'); } catch (e) {}
+I18N.th.creator = 'แนะนำตัว'; if (I18N.en) I18N.en.creator = 'About me'; if (I18N.ko) I18N.ko.creator = '소개';
+ICONS.idcard = ICONS.idcard || '<rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="11" r="2.2"/><path d="M5.8 16c.6-1.6 1.8-2.4 3.2-2.4s2.6.8 3.2 2.4M14.5 10h4M14.5 13h3"/>';
+if (!TABS.some(function (t) { return t[0] === 'creator'; })) TABS.push(['creator', 'idcard']);
+function cr18Load(force) {
+  if (CR18.busy) return Promise.resolve(CR18.p);
+  if (CR18.p && !force) return Promise.resolve(CR18.p);
+  CR18.busy = true;
+  return api('creatorProfile', {}, { noRetry: true, silent: true, timeout: 15000 }).then(function (r) {
+    CR18.p = (r && r.profile) || { on: false };
+    try { localStorage.setItem('tll.creator18', JSON.stringify(CR18.p).length < 2000000 ? JSON.stringify(CR18.p) : 'null'); } catch (e) {}
+    return CR18.p;
+  }).catch(function () { return CR18.p; }).then(function (p) { CR18.busy = false; return p; });
+}
+function cr18Html(p, full) {
+  if (!p || !p.on) return full ? '<div class="empty"><div class="em">' + ic('idcard') + '</div><h3>ยังไม่มีข้อมูลแนะนำตัว</h3><p class="muted">ผู้ดูแลระบบสามารถเพิ่มข้อมูลได้จากระบบหลังบ้าน</p></div>' : '';
+  var ph = p.photo ? '<img class="cr18-photo" src="' + esc(p.photo) + '" alt="' + esc(p.name || 'ผู้สร้างเว็บไซต์') + '" loading="lazy">' : '<div class="cr18-photo cr18-ph">' + esc((p.name || 'ค').trim().charAt(0)) + '</div>';
+  var paras = String(p.bio || '').replace(/^[\s—\-–]+$/, '').split(/\n+/).map(function (s) { return s.trim(); }).filter(Boolean);
+  return '<section class="panel rise in cr18" id="creatorIntro"><div class="panel-title"><span class="ic">' + ic('idcard') + '</span><h2>แนะนำตัวผู้สร้างเว็บไซต์</h2></div>' +
+    '<div class="cr18-body"><figure class="cr18-fig">' + ph + '</figure><div class="cr18-txt"><h3>' + esc(p.name || '') + '</h3>' + (p.role ? '<div class="cr18-role">' + esc(p.role) + '</div>' : '') +
+    paras.map(function (s) { return '<p>' + esc(s) + '</p>'; }).join('') + '</div></div>' +
+    ((p.cards || []).length ? '<div class="cr18-cards">' + p.cards.map(function (c) { return '<div class="cr18-card">' + (c.img ? '<img src="' + esc(c.img) + '" alt="" loading="lazy">' : '') + (c.title ? '<b>' + esc(c.title) + '</b>' : '') + (c.text ? '<p>' + esc(c.text).replace(/\n/g, '<br>') + '</p>' : '') + '</div>'; }).join('') + '</div>' : '') +
+    (p.updatedAt ? '<div class="muted small cr18-up">ปรับปรุงล่าสุด ' + esc(fmtDateTime(new Date(p.updatedAt))) + '</div>' : '') + '</section>';
+}
+/* หน้าแรก: ต่อจากสถิติผู้เข้าชมและฐานข้อมูล */
+function cr18Mount() {
+  var dash = document.getElementById('trafficDash'); if (!dash) return;
+  var cur = document.getElementById('creatorIntro'), html = cr18Html(CR18.p, false);
+  if (!html) { if (cur) cur.remove(); return; }
+  if (cur) { if (cur.getAttribute('data-sig') === CR18.sig) return; cur.outerHTML = html; }
+  else dash.insertAdjacentHTML('afterend', html);
+  var n = document.getElementById('creatorIntro'); if (n) n.setAttribute('data-sig', CR18.sig);
+}
+VIEWS.creator = function (el) {
+  el.innerHTML = '<div class="view-head"><div><h1>แนะนำตัว</h1><p class="sub">ผู้สร้างและผู้พัฒนาเว็บไซต์คลังกฎหมาย</p></div></div><div id="cr18View">' + (CR18.p ? cr18Html(CR18.p, true) : '<div class="skel" style="height:220px"></div>') + '</div>';
+  cr18Load(!CR18.p).then(function (p) { var v = document.getElementById('cr18View'); if (v) v.innerHTML = cr18Html(p, true); });
+};
+(function () {
+  var baseW = renderWelcome;
+  renderWelcome = function () {
+    var r = baseW.apply(this, arguments);
+    setTimeout(function () { try { cr18Mount(); cr18Load(true).then(function () { cr18Mount(); }); } catch (e) {} }, 60);
+    return r;
+  };
+  var baseModes = applyModes;
+  applyModes = function (m) {
+    var r = baseModes.apply(this, arguments);
+    try {
+      if (m && m.creatorSig !== undefined && m.creatorSig !== CR18.sig) {
+        var first = !CR18.sig; CR18.sig = m.creatorSig;
+        cr18Load(true).then(function (p) {
+          cr18Mount();
+          var v = document.getElementById('cr18View'); if (v) v.innerHTML = cr18Html(p, true);
+        });
+      }
+    } catch (e) {}
+    return r;
+  };
+})();
+
+/* ==========================================================================
+   v18: คำพิพากษาศาลฎีกา — เลือกตามเรื่อง (คดีแพ่ง คดีอาญา แรงงาน ภาษี ฯลฯ) แล้วเลือกเรื่องย่อย พร้อมจำนวนฉบับจริง
+   ========================================================================== */
+var DT18 = { d: null, p: null, g: '', s: '', shown: 0 };
+function dt18Load() { if (DT18.d) return Promise.resolve(DT18.d); if (DT18.p) return DT18.p; DT18.p = loadIndex(DB_RAW + 'deka/topics.json.gz').then(function (x) { DT18.d = x; return x; }).catch(function (e) { DT18.p = null; throw e; }); return DT18.p; }
+function dt18Panel(box) {
+  var d = DT18.d; if (!d || !box) return;
+  var g = d.groups.filter(function (x) { return x.k === DT18.g; })[0];
+  var html = '<div class="panel-title"><span class="ic">' + ic('layers') + '</span><h2>เลือกตามเรื่อง</h2>' + (DT18.g ? '<button class="btn sm" id="dt18Clear">' + ic('x') + ' ล้าง</button>' : '') + '</div>' +
+    '<p class="muted small" style="margin:-4px 0 10px">' + esc(d.note) + '</p>' +
+    '<div class="chips dt18-g" role="tablist">' + d.groups.map(function (x) { return '<button class="chip' + (x.k === DT18.g ? ' on' : '') + '" data-dtg="' + esc(x.k) + '">' + esc(x.name) + ' <span class="cnt">' + fmtN(x.n) + '</span></button>'; }).join('') + '</div>';
+  if (g) html += '<div class="dt18-sh">' + esc(g.name) + ' · เลือกเรื่องย่อย</div><div class="chips dt18-s">' + g.subs.map(function (x) {
+    return '<button class="chip' + (x.k === DT18.s ? ' on' : '') + '" data-dts="' + esc(x.k) + '">' + esc(x.name) + ' <span class="cnt">' + fmtN(x.n) + '</span>' + (x.kw ? '<span class="dt18-kw" title="จำนวนที่จัดเรื่องจากคำสำคัญ (ข้อมูลต้นทางไม่ได้ระบุมาตรา)">คำสำคัญ ' + fmtN(x.kw) + '</span>' : '') + '</button>';
+  }).join('') + '</div>';
+  html += '<div id="dt18Res"></div>';
+  box.innerHTML = html;
+  if (DT18.s) dt18List(true);
+}
+function dt18List(reset) {
+  var res = document.getElementById('dt18Res'); if (!res || !DT18.d) return;
+  var ids = DT18.d.idx[DT18.s] || [], sub = null;
+  DT18.d.groups.forEach(function (g) { g.subs.forEach(function (x) { if (x.k === DT18.s) sub = x; }); });
+  loadDeka().then(function (D) {
+    if (reset) { DT18.shown = 0; res.innerHTML = '<div class="group-h">' + esc(sub ? sub.name : '') + ' <span class="cnt">' + fmtN(ids.length) + ' ฉบับ</span></div>'; }
+    var mb = document.getElementById('dt18More'); if (mb) mb.remove();
+    var next = ids.slice(DT18.shown, DT18.shown + 30); DT18.shown += next.length;
+    res.insertAdjacentHTML('beforeend', next.map(function (i) {
+      var r = D.recs[i]; if (!r) return '';
+      var seen = {}, ls = (r[6] || []).map(function (x) { return D.laws[x[0]][0] + ' ม. ' + x[1]; }).filter(function (t) { if (seen[t]) return false; seen[t] = 1; return true; }).slice(0, 4).join(', ');
+      return '<button class="law-item" data-dk="' + r[0] + '" data-o="' + r[5] + '"><span class="li-ic">' + ic('gavel') + '</span><span class="grow"><span class="li-t">' + esc((D.types[r[3]] || 'คำพิพากษาศาลฎีกา') + 'ที่ ' + r[1]) + '</span><br><span class="li-s">' + esc((r[4] === 'พ' ? 'คดีแพ่ง' : r[4] === 'อ' ? 'คดีอาญา' : 'ปี พ.ศ. ' + r[2]) + (ls ? ' · ' + ls : ' · จัดเรื่องจากคำสำคัญ')) + '</span></span>' + ic('chevR') + '</button>';
+    }).join('') + (DT18.shown < ids.length ? '<button class="btn block" id="dt18More" style="margin-top:10px">แสดงเพิ่มเติม (' + fmtN(ids.length - DT18.shown) + ')</button>' : ''));
+    var m2 = document.getElementById('dt18More'); if (m2) m2.onclick = function () { dt18List(false); };
+  }).catch(function () { res.innerHTML = '<div class="panel flat"><p class="small muted">ยังโหลดรายการไม่สำเร็จ กรุณาลองอีกครั้ง</p></div>'; });
+}
+(function () {
+  var base = VIEWS.deka;
+  VIEWS.deka = function (el) {
+    base.apply(this, arguments);
+    try {
+      var head = el.querySelector('.view-head'); if (!head) return;
+      var box = document.createElement('section'); box.className = 'panel dt18'; box.id = 'dt18';
+      box.innerHTML = '<div class="skel" style="height:90px"></div>';
+      head.parentNode.insertBefore(box, head.nextSibling);
+      dt18Load().then(function () { if (box.isConnected) dt18Panel(box); }).catch(function () { box.innerHTML = '<p class="small muted">ยังโหลดหมวดเรื่องไม่สำเร็จ</p>'; });
+      box.addEventListener('click', function (e) {
+        var t = e.target.closest('[data-dtg],[data-dts],#dt18Clear,[data-dk]'); if (!t) return;
+        if (t.hasAttribute('data-dk')) { openDeka(t.getAttribute('data-dk'), t.getAttribute('data-o')); return; }
+        if (t.id === 'dt18Clear') { DT18.g = ''; DT18.s = ''; }
+        else if (t.hasAttribute('data-dtg')) { var k = t.getAttribute('data-dtg'); DT18.g = DT18.g === k ? '' : k; DT18.s = ''; var gg = DT18.d.groups.filter(function (x) { return x.k === DT18.g; })[0]; if (gg && gg.subs.length === 1) DT18.s = gg.subs[0].k; }
+        else { DT18.s = t.getAttribute('data-dts'); }
+        dt18Panel(box);
+        if (DT18.s) { var r = document.getElementById('dt18Res'); if (r) r.scrollIntoView({ block: 'start', behavior: 'smooth' }); }
+      });
+    } catch (e) {}
+  };
+})();
+
+/* ==========================================================================
+   v18: อนุสัญญา/สนธิสัญญา — ไฟล์ PDF ต้นฉบับต่อท้ายเนื้อหา (แสดงตัวอย่าง เลื่อนอ่านได้ ปุ่มขยายเข้า/ย่อออกมุมขวาบนของไฟล์)
+   ที่มา: Wikidata (P996 ไฟล์บน Wikimedia Commons, P953 ฉบับเต็ม, P9966 UN Treaty Collection) พร้อมลิงก์แหล่งต้นฉบับ
+   ========================================================================== */
+var TP18 = { d: null, p: null };
+function tp18Load() { if (TP18.d) return Promise.resolve(TP18.d); if (TP18.p) return TP18.p; TP18.p = loadIndex(DB_RAW + 'treaties/pdf.json.gz').then(function (x) { TP18.d = x; return x; }).catch(function () { TP18.p = null; return { items: {} }; }); return TP18.p; }
+function tp18Src(u) { return 'https://docs.google.com/viewer?embedded=true&url=' + encodeURIComponent(u); }
+function tp18Html(id, title) {
+  var L = (TP18.d && TP18.d.items && TP18.d.items[id]) || [], pdf = L.filter(function (x) { return x.k === 'pdf'; })[0];
+  var links = L.map(function (x) {
+    return '<li><a href="' + esc(x.u) + '" target="_blank" rel="noopener">' + ic(x.k === 'pdf' ? 'download' : 'external') + ' ' + esc(x.k === 'pdf' ? 'ไฟล์ PDF ต้นฉบับ' : x.k === 'note' ? x.t : x.k === 'file' ? 'ไฟล์ต้นฉบับ' : 'หน้าต้นฉบับทางการ') + '</a> <span class="muted small">· ' + esc(x.s) + (x.t && x.k !== 'note' ? ' · ' + esc(x.t) : '') + '</span></li>';
+  }).join('');
+  var unSearch = 'https://treaties.un.org/Pages/AdvanceSearch.aspx?tab=UNTS&clang=_en';
+  return '<section class="panel tp18" id="tp18"><div class="panel-title"><span class="ic">' + ic('file') + '</span><h2>ไฟล์ PDF ต้นฉบับ</h2></div>' +
+    (pdf ? '<div class="tp18-frame" id="tp18Frame"><button class="tp18-zoom" id="tp18Zoom" type="button" aria-label="ขยายเข้า">' + ic('maximize') + '<span>ขยายเข้า</span></button>' +
+      '<iframe title="ไฟล์ PDF ต้นฉบับ: ' + esc(title) + '" src="' + esc(tp18Src(pdf.u)) + '" loading="lazy" referrerpolicy="no-referrer"></iframe><div class="tp18-load">กำลังโหลดไฟล์ PDF…</div></div>' :
+      '<div class="panel flat"><p class="small">ยังไม่พบไฟล์ PDF ต้นฉบับของฉบับนี้ในแหล่งข้อมูลเปิด (Wikidata / Wikimedia Commons) ระบบไม่สร้างหรือพิมพ์ไฟล์ขึ้นใหม่ ท่านสามารถค้นต้นฉบับได้ที่ <a href="' + unSearch + '" target="_blank" rel="noopener">United Nations Treaty Collection</a></p></div>') +
+    (links ? '<ul class="tp18-links">' + links + '</ul>' : '') +
+    '<p class="muted small tp18-cr">ลิขสิทธิ์และความถูกต้องของไฟล์ต้นฉบับเป็นของหน่วยงานเจ้าของเอกสารตามลิงก์ข้างต้น เว็บไซต์คลังกฎหมายแสดงไฟล์จากแหล่งต้นทางโดยตรง ไม่ได้แก้ไขหรือพิมพ์ใหม่ · รายการลิงก์จาก Wikidata (CC0)</p></section>';
+}
+function tp18Mount(ov, id, title) {
+  tp18Load().then(function () {
+    var body = ov.querySelector('.tr11-body'); if (!body || !ov.isConnected) return;
+    var old = body.querySelector('#tp18'); if (old) old.remove();
+    body.insertAdjacentHTML('beforeend', tp18Html(id, title));
+    var fr = body.querySelector('#tp18Frame'), z = body.querySelector('#tp18Zoom');
+    if (fr) { var ifr = fr.querySelector('iframe'); ifr.addEventListener('load', function () { fr.classList.add('ok'); }); setTimeout(function () { fr.classList.add('ok'); }, 8000); }
+    if (z) z.onclick = function () {
+      var on = !fr.classList.contains('full'); fr.classList.toggle('full', on);
+      document.documentElement.classList.toggle('tp18-lock', on);
+      z.innerHTML = ic(on ? 'minimize' : 'maximize') + '<span>' + (on ? 'ย่อออก' : 'ขยายเข้า') + '</span>'; z.setAttribute('aria-label', on ? 'ย่อออก' : 'ขยายเข้า');
+    };
+  });
+}
+(function () {
+  var base = openTreaty;
+  openTreaty = function (id, title) {
+    var r = base.apply(this, arguments);
+    var tries = 0, wait = function () {
+      var ov = document.querySelector('.tr11'); var art = ov && ov.querySelector('.tr11-doc');
+      if (art) { if (!ov.getAttribute('data-tp18')) { ov.setAttribute('data-tp18', id); tp18Mount(ov, id, title); } return; }
+      if (tries++ < 80) setTimeout(wait, 250);
+    };
+    wait();
+    return r;
+  };
+})();
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { var f = document.querySelector('#tp18Frame.full'); if (f) { e.stopPropagation(); document.getElementById('tp18Zoom').click(); } } }, true);
+
+/* ==========================================================================
+   v18: จำนวนกฎหมายไทยที่มีผลใช้บังคับ (อ้างอิงคลังสารสนเทศรัฐสภา) แสดงใต้ตาราง “จำนวนกฎหมายในฐานข้อมูล”
+   ========================================================================== */
+function lf18Mount() {
+  var t = document.getElementById('lawCounts'); if (!t || document.getElementById('lawInforce')) return;
+  api('lawInforce', {}, { noRetry: true, silent: true, timeout: 15000 }).then(function (r) {
+    var o = r && r.inforce; if (!o || !o.n || document.getElementById('lawInforce') || !t.isConnected) return;
+    var d = new Date(o.asOf);
+    t.insertAdjacentHTML('beforeend', '<div class="lf18" id="lawInforce">' + ic('scale') + '<div><b>กฎหมายไทยที่มีผลใช้บังคับในปัจจุบัน ' + fmtN(o.n) + ' ฉบับ</b> <span class="muted small">(ข้อมูล ณ วันที่ ' + esc(isNaN(d) ? o.asOf : fmtDate(d)) + ')</span><div class="small muted">' + esc(o.note || '') + ' · ที่มา: <a href="' + esc(o.url || '#') + '" target="_blank" rel="noopener">' + esc(o.src || '') + '</a> · ตารางด้านบนนับรวมกฎหมายที่ยกเลิกแล้ว เพื่อให้ศึกษาเหตุผลและประวัติการยกเลิกได้</div></div></div>');
+  }).catch(function () {});
+}
+new MutationObserver(function () { try { if (document.getElementById('lawCounts') && !document.getElementById('lawInforce')) lf18Mount(); } catch (e) {} }).observe(document.documentElement, { childList: true, subtree: true });
+
+/* ==========================================================================
+   v18: ผู้ช่วย AI — แสดงภาพประกอบต่อท้ายคำตอบ (จาก Wikimedia Commons พร้อมเครดิตและลิงก์ต้นฉบับ)
+   ========================================================================== */
+var AI18 = { cache: {}, busy: {} };
+try { AI18.cache = JSON.parse(localStorage.getItem('tll.ai18img') || '{}') || {}; } catch (e) {}
+var AI18_EN = [[/รัฐธรรมนูญ/, 'Constitution of Thailand'], [/ศาลฎีกา|ฎีกา|คำพิพากษา/, 'Supreme Court of Thailand'], [/ศาลปกครอง/, 'Administrative Court Thailand'], [/ศาลรัฐธรรมนูญ/, 'Constitutional Court of Thailand'],
+  [/รัฐสภา|สภาผู้แทน|วุฒิสภา|ส\.ส\.|ส\.ว\./, 'Parliament of Thailand Sappaya Sapasathan'], [/สนธิสัญญา|อนุสัญญา|treaty|convention/i, 'treaty signing ceremony'], [/อาญา|ตำรวจ|จับกุม|criminal|police/i, 'Royal Thai Police'],
+  [/ที่ดิน|โฉนด|land/i, 'Thai land title deed'], [/แรงงาน|ลูกจ้าง|labou?r/i, 'workers Thailand'], [/ภาษี|tax/i, 'Revenue Department Thailand'], [/สหประชาชาติ|united nations/i, 'United Nations General Assembly hall'],
+  [/ญี่ปุ่น|japan/i, 'Supreme Court of Japan'], [/อเมริกา|สหรัฐ|united states|us law/i, 'Supreme Court of the United States building'], [/กฎหมาย|law|legal/i, 'Supreme Court of Thailand']];
+function ai18Query(q) { for (var i = 0; i < AI18_EN.length; i++) if (AI18_EN[i][0].test(q)) return AI18_EN[i][1]; return 'Supreme Court of Thailand'; }
+function ai18Find(q) {
+  var key = ai18Query(q);
+  if (AI18.cache[key]) return Promise.resolve(AI18.cache[key]);
+  if (AI18.busy[key]) return AI18.busy[key];
+  var url = 'https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrnamespace=6&gsrlimit=6&gsrsearch=' + encodeURIComponent(key + ' filetype:bitmap') + '&prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=720&format=json&origin=*';
+  AI18.busy[key] = fetch(url).then(function (r) { return r.json(); }).then(function (j) {
+    var pages = j && j.query && j.query.pages ? Object.keys(j.query.pages).map(function (k) { return j.query.pages[k]; }) : [];
+    pages.sort(function (a, b) { return (a.index || 0) - (b.index || 0); });
+    var p = pages.filter(function (x) { return x.imageinfo && x.imageinfo[0] && x.imageinfo[0].thumburl; })[0]; if (!p) return null;
+    var ii = p.imageinfo[0], md = ii.extmetadata || {}, strip = function (v) { return String((v && v.value) || '').replace(/<[^>]+>/g, '').trim(); };
+    var o = { src: ii.thumburl, page: ii.descriptionurl, title: String(p.title || '').replace(/^File:/, '').replace(/\.[a-z]+$/i, ''), by: strip(md.Artist).slice(0, 80), lic: strip(md.LicenseShortName) };
+    AI18.cache[key] = o; try { localStorage.setItem('tll.ai18img', JSON.stringify(AI18.cache)); } catch (e) {} return o;
+  }).catch(function () { return null; }).then(function (o) { delete AI18.busy[key]; return o; });
+  return AI18.busy[key];
+}
+function ai18Decorate() {
+  var box = document.getElementById('aiLog'); if (!box) return;
+  $$('.msg .bub[data-i]', box).forEach(function (b) {
+    if (b.querySelector('.ai18') || b.querySelector('.typing')) return;
+    var m = b.closest('.msg'), q = '', prev = m && m.previousElementSibling;
+    while (prev && !(prev.classList && prev.classList.contains('user'))) prev = prev.previousElementSibling;
+    if (prev) q = prev.textContent || '';
+    var ans = (b.textContent || '').slice(0, 300);
+    var fig = document.createElement('figure'); fig.className = 'ai18'; b.insertBefore(fig, b.querySelector('.row') || null);
+    ai18Find(q + ' ' + ans).then(function (o) {
+      if (!o || !fig.isConnected) { fig.remove(); return; }
+      fig.innerHTML = '<a href="' + esc(o.page) + '" target="_blank" rel="noopener"><img src="' + esc(o.src) + '" alt="' + esc(o.title) + '" loading="lazy"></a><figcaption>ภาพประกอบ: ' + esc(o.title) + (o.by ? ' · ' + esc(o.by) : '') + (o.lic ? ' · ' + esc(o.lic) : '') + ' · Wikimedia Commons</figcaption>';
+      var im = fig.querySelector('img'); im.onerror = function () { fig.remove(); };
+    });
+  });
+}
+new MutationObserver(function () { try { ai18Decorate(); } catch (e) {} }).observe(document.documentElement, { childList: true, subtree: true });
+</script>
+<script>
+/* ==========================================================================
+   v18: เสียงอ่านกฎหมาย (ElevenLabs) — เฉพาะ “ประมวลกฎหมาย” และ “รัฐธรรมนูญ” ทุกฉบับ
+   - ปุ่ม “เสียง” ข้างปุ่ม “บันทึก” ของทุกมาตรา (ฟังเฉพาะมาตรานั้น) และปุ่ม “ฟังทั้งฉบับ”
+   - เลือกได้ 2 เสียง: ผู้ชาย / ผู้หญิง (โทนเดิมทุกครั้ง) · ความเร็วการอ่านปกติแบบมนุษย์
+   - อ่าน “ชื่อกฎหมาย มาตรา …” แล้วอ่านตามวรรค/อนุมาตรา (อนุมาตรา ๑ ก. …) เว้นช่วงระหว่างมาตรา
+   - เล่นต่อเนื่องไม่สะดุด: เตรียมเสียงมาตราถัดไปล่วงหน้าระหว่างที่กำลังฟัง
+   - เมนูสามขีด › เสียงกฎหมาย › เสียงประมวลกฎหมาย / เสียงรัฐธรรมนูญ · โฟลเดอร์สำหรับเก็บมาตราไว้ฟัง (ไม่จำกัดจำนวน)
+   ========================================================================== */
+var V18 = { voice: null, audio: null, queue: [], idx: -1, chunk: 0, playing: false, cache: {}, order: [], loading: {}, gapT: null, title: '', bar: null, on: null };
+try { V18.voice = localStorage.getItem('tll.v18.voice'); } catch (e) {}
+ICONS.speaker = ICONS.speaker || '<path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/>';
+ICONS.play = ICONS.play || '<path d="M7 4.5v15l12.5-7.5z"/>';
+ICONS.pause = ICONS.pause || '<rect x="6" y="4.5" width="4" height="15" rx="1"/><rect x="14" y="4.5" width="4" height="15" rx="1"/>';
+ICONS.stop = ICONS.stop || '<rect x="5.5" y="5.5" width="13" height="13" rx="2"/>';
+ICONS.skipF = ICONS.skipF || '<path d="M5 5v14l10-7z"/><path d="M19 5v14"/>';
+ICONS.skipB = ICONS.skipB || '<path d="M19 5v14L9 12z"/><path d="M5 5v14"/>';
+ICONS.folder = ICONS.folder || '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>';
+var V18_CATS = { 'ประมวลกฎหมาย': 1, 'รัฐธรรมนูญ': 1 };
+function v18Ok(lawId) { var l = LAWS[lawId]; return !!(l && V18_CATS[l.cat]); }
+var V18_ORD = ['', 'หนึ่ง', 'สอง', 'สาม', 'สี่', 'ห้า', 'หก', 'เจ็ด', 'แปด', 'เก้า', 'สิบ', 'สิบเอ็ด', 'สิบสอง', 'สิบสาม', 'สิบสี่', 'สิบห้า', 'สิบหก', 'สิบเจ็ด', 'สิบแปด', 'สิบเก้า', 'ยี่สิบ'];
+function v18Dig(s) { return String(s || '').replace(/[๐-๙]/g, function (d) { return String('๐๑๒๓๔๕๖๗๘๙'.indexOf(d)); }); }
+/* ข้อความสำหรับอ่าน: ชื่อกฎหมาย มาตรา … / วรรค… / อนุมาตรา ๑ ก. … (ตามโครงสร้างจริงของแต่ละมาตรา) */
+function v18Text(s, withLaw) {
+  var l = LAWS[s.law] || {};
+  var raw = String(s.text || '').replace(/(\S)[ \t\u00a0]+\(\s*([0-9๐-๙]{1,3}|[ก-ฮ])\s*\)[ \t\u00a0]+/g, function (m, prev, k) { return /[0-9๐-๙]/.test(prev) ? m : prev + '\n(' + k + ') '; });
+  var lines = raw.split(/\n+/).map(function (x) { return x.trim(); }).filter(Boolean);
+  var nPara = lines.filter(function (x) { return !/^\(\s*([0-9๐-๙]{1,3}|[ก-ฮ])\s*\)/.test(x); }).length;
+  var out = [(withLaw ? (l.title || '') + ' ' : '') + 'มาตรา ' + v18Dig(s.no) + '.'], p = 0, cur = null;
+  lines.forEach(function (ln) {
+    var m1 = ln.match(/^\(\s*([0-9๐-๙]{1,3})\s*\)\s*(.*)$/), m2 = ln.match(/^\(\s*([ก-ฮ])\s*\)\s*(.*)$/);
+    if (m1) { cur = v18Dig(m1[1]); out.push('อนุมาตรา ' + cur + '. ' + v18Dig(m1[2])); }
+    else if (m2) { out.push('อนุมาตรา ' + (cur ? cur + ' ' : '') + m2[1] + '. ' + v18Dig(m2[2])); }
+    else { p++; cur = null; out.push((nPara > 1 ? 'วรรค' + (V18_ORD[p] || p) + '. ' : '') + v18Dig(ln)); }
+  });
+  return out.join('\n');
+}
+function v18Chunks(t) {
+  if (t.length <= 4500) return [t];
+  var out = [], cur = '';
+  t.replace(/([\n ])/g, '$1\u0000').split('\u0000').forEach(function (w) { if ((cur + w).length > 4400) { out.push(cur); cur = ''; } cur += w; });
+  if (cur.trim()) out.push(cur); return out;
+}
+function v18Url(r) {
+  var bin = atob(r.b64), n = bin.length, u = new Uint8Array(n); for (var i = 0; i < n; i++) u[i] = bin.charCodeAt(i);
+  var type = u[0] === 0x52 && u[1] === 0x49 && u[2] === 0x46 && u[3] === 0x46 ? 'audio/wav' : (r.mime || 'audio/mpeg');
+  return URL.createObjectURL(new Blob([u], { type: type }));
+}
+function v18Fetch(id) {
+  var key = V18.voice + '|' + id;
+  if (V18.cache[key]) return Promise.resolve(V18.cache[key]);
+  if (V18.loading[key]) return V18.loading[key];
+  var s = SECS[id]; if (!s) return Promise.reject({ msg: 'ไม่พบมาตรา' });
+  var parts = v18Chunks(v18Text(s, true)), urls = [];
+  var p = parts.reduce(function (acc, t) { return acc.then(function () { return api('tts', { text: t, voice: V18.voice }, { timeout: 90000, noRetry: true }).then(function (r) { urls.push(v18Url(r)); }); }); }, Promise.resolve())
+    .then(function () { delete V18.loading[key]; V18.cache[key] = urls; V18.order.push(key); while (V18.order.length > 40) { var old = V18.order.shift(); (V18.cache[old] || []).forEach(function (u) { try { URL.revokeObjectURL(u); } catch (e) {} }); delete V18.cache[old]; } return urls; },
+      function (e) { delete V18.loading[key]; throw e; });
+  V18.loading[key] = p; return p;
+}
+function v18Prefetch() { for (var k = 1; k <= 2; k++) { var id = V18.queue[V18.idx + k]; if (id) v18Fetch(id).catch(function () {}); } }
+function v18Bar() {
+  if (V18.bar && V18.bar.isConnected) return V18.bar;
+  V18.bar = h('<div class="v18-bar" role="region" aria-label="เครื่องเล่นเสียงอ่านกฎหมาย"><div class="v18-t"><b id="v18T"></b><span id="v18S" class="small muted"></span></div>' +
+    '<div class="v18-c"><button class="icon-btn" data-v18c="prev" aria-label="มาตราก่อนหน้า">' + ic('skipB') + '</button><button class="icon-btn v18-pp" data-v18c="pp" aria-label="หยุดชั่วคราว">' + ic('pause') + '</button><button class="icon-btn" data-v18c="next" aria-label="มาตราถัดไป">' + ic('skipF') + '</button>' +
+    '<div class="seg v18-g"><button data-v18g="m">ชาย</button><button data-v18g="f">หญิง</button></div><button class="icon-btn" data-v18c="stop" aria-label="ปิดเสียง">' + ic('x') + '</button></div></div>');
+  document.body.appendChild(V18.bar);
+  V18.bar.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-v18c],[data-v18g]'); if (!b) return;
+    var c = b.getAttribute('data-v18c'), g = b.getAttribute('data-v18g');
+    if (g) { if (g !== V18.voice) { V18.voice = g; try { localStorage.setItem('tll.v18.voice', g); } catch (x) {} v18PlayAt(V18.idx); } return; }
+    if (c === 'pp') { if (V18.playing) { V18.audio.pause(); V18.playing = false; } else { V18.playing = true; V18.audio.src ? V18.audio.play().catch(function () {}) : v18PlayAt(V18.idx); } v18Paint(); }
+    else if (c === 'next') { if (V18.idx < V18.queue.length - 1) v18PlayAt(V18.idx + 1); }
+    else if (c === 'prev') { v18PlayAt(Math.max(0, V18.idx - 1)); }
+    else if (c === 'stop') v18Stop();
+  });
+  return V18.bar;
+}
+function v18Paint(status) {
+  var b = v18Bar(), s = SECS[V18.queue[V18.idx]] || {}, l = LAWS[s.law] || {};
+  $('#v18T', b).textContent = lawShort(l) + (s.no ? ' · มาตรา ' + s.no : '');
+  $('#v18S', b).textContent = status || (V18.queue.length > 1 ? 'มาตราที่ ' + (V18.idx + 1) + ' จาก ' + V18.queue.length + ' · ' : '') + (V18.voice === 'f' ? 'เสียงผู้หญิง' : 'เสียงผู้ชาย');
+  $('.v18-pp', b).innerHTML = ic(V18.playing ? 'pause' : 'play'); $('.v18-pp', b).setAttribute('aria-label', V18.playing ? 'หยุดชั่วคราว' : 'เล่นต่อ');
+  $$('[data-v18g]', b).forEach(function (x) { x.classList.toggle('on', x.getAttribute('data-v18g') === V18.voice); });
+  $$('.v18b').forEach(function (x) { x.classList.toggle('on', V18.playing && x.getAttribute('data-v18') === V18.queue[V18.idx]); });
+  document.body.classList.add('v18-on');
+}
+function v18Audio() {
+  if (V18.audio) return V18.audio;
+  var a = V18.audio = new Audio(); a.preload = 'auto';
+  a.addEventListener('ended', function () {
+    var urls = V18.cache[V18.voice + '|' + V18.queue[V18.idx]] || [];
+    if (V18.chunk < urls.length - 1) { V18.chunk++; a.src = urls[V18.chunk]; a.play().catch(function () {}); return; }
+    if (V18.idx < V18.queue.length - 1) { clearTimeout(V18.gapT); V18.gapT = setTimeout(function () { if (V18.playing) v18PlayAt(V18.idx + 1); }, 900); }
+    else { V18.playing = false; v18Paint('ฟังจบแล้ว'); }
+  });
+  a.addEventListener('error', function () { if (V18.playing) v18Paint('เล่นเสียงไม่สำเร็จ กดเล่นอีกครั้ง'); });
+  return a;
+}
+function v18PlayAt(i) {
+  clearTimeout(V18.gapT);
+  var a = v18Audio(), id = V18.queue[i]; if (!id) return;
+  V18.idx = i; V18.chunk = 0; V18.playing = true; v18Paint('กำลังเตรียมเสียง…');
+  var tok = V18.on = {};
+  v18Fetch(id).then(function (urls) {
+    if (V18.on !== tok || !V18.playing) return;
+    a.src = urls[0]; var pr = a.play(); if (pr && pr.catch) pr.catch(function () { V18.playing = false; v18Paint('แตะปุ่มเล่นเพื่อฟัง'); });
+    v18Paint(); v18Prefetch();
+  }).catch(function (e) {
+    if (V18.on !== tok) return; V18.playing = false; v18Paint((e && e.msg) || 'ยังเล่นเสียงไม่ได้');
+    toast('ยังเล่นเสียงไม่ได้', (e && e.msg) || 'กรุณาลองอีกครั้ง', 'warn');
+  });
+}
+function v18Stop() { V18.playing = false; V18.on = null; clearTimeout(V18.gapT); if (V18.audio) { V18.audio.pause(); V18.audio.removeAttribute('src'); } if (V18.bar) V18.bar.remove(); V18.bar = null; document.body.classList.remove('v18-on'); $$('.v18b.on').forEach(function (x) { x.classList.remove('on'); }); }
+/* เลือกเสียงครั้งแรก (ผู้ชาย / ผู้หญิง) */
+function v18Pick() {
+  if (V18.voice === 'm' || V18.voice === 'f') return Promise.resolve(V18.voice);
+  return popup11({ cls: 'v18p', icon: 'speaker', title: 'เลือกเสียงอ่านกฎหมาย', sub: 'เปลี่ยนได้ทุกเมื่อจากแถบเครื่องเล่นด้านล่าง', ok: 'เริ่มฟัง', cancel: 'ยกเลิก',
+    html: '<div class="v18-pick"><label><input type="radio" name="v18g" value="m" checked> <b>เสียงผู้ชาย</b><span class="small muted">น้ำเสียงสุภาพ ชัดเจน อ่านด้วยจังหวะปกติ</span></label><label><input type="radio" name="v18g" value="f"> <b>เสียงผู้หญิง</b><span class="small muted">น้ำเสียงนุ่มนวล ชัดเจน อ่านด้วยจังหวะปกติ</span></label></div>' })
+    .then(function (ok) { if (!ok) return null; var r = document.querySelector('.v18p input[name=v18g]:checked'); V18.voice = r ? r.value : 'm'; try { localStorage.setItem('tll.v18.voice', V18.voice); } catch (e) {} return V18.voice; });
+}
+function v18Play(ids, start) {
+  ids = (ids || []).filter(function (id) { var s = SECS[id]; return s && v18Ok(s.law); });
+  if (!ids.length) return toast('ไม่มีมาตราสำหรับฟัง', 'เสียงอ่านมีเฉพาะประมวลกฎหมายและรัฐธรรมนูญ', 'warn');
+  var go = function () { V18.queue = ids; v18PlayAt(Math.max(0, ids.indexOf(start))); };
+  if (V18.voice === 'm' || V18.voice === 'f') { var a = v18Audio(); try { a.play().catch(function () {}); } catch (e) {} return go(); }
+  v18Pick().then(function (v) { if (v) go(); });
+}
+function v18LawIds(lawId) { return (SECS_BY_LAW[lawId] || []).slice().sort(secCmp).map(function (s) { return s.id; }); }
+/* ปุ่ม “เสียง” ข้างปุ่ม “บันทึก” ของทุกมาตรา + ปุ่ม “ฟังทั้งฉบับ” */
+function v18Inject() {
+  $$('.flip .bar [data-act="fav"]').forEach(function (fav) {
+    var bar = fav.parentNode; if (bar.querySelector('.v18b')) return;
+    var f = fav.closest('.flip'), id = f && f.getAttribute('data-id'), s = SECS[id]; if (!s || !v18Ok(s.law)) return;
+    fav.insertAdjacentHTML('afterend', '<button class="cbtn v18b' + (V18.playing && V18.queue[V18.idx] === id ? ' on' : '') + '" data-v18="' + esc(id) + '" aria-label="ฟังเสียงมาตรา ' + esc(s.no) + '">' + ic('speaker') + '<span>เสียง</span></button>');
+  });
+  var lp = document.getElementById('lawPrint'), law = S.ui && S.ui.content && S.ui.content.law;
+  if (lp && law && v18Ok(law) && !document.getElementById('v18All')) lp.insertAdjacentHTML('afterend', '<button class="btn sm" id="v18All">' + ic('speaker') + ' ฟังทั้งฉบับ</button>');
+}
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('.v18b,#v18All'); if (!b) return;
+  e.preventDefault(); e.stopPropagation();
+  if (b.id === 'v18All') { var law = S.ui.content.law; ensureLaw(law).then(function () { var ids = v18LawIds(law); v18Play(ids, ids[0]); }); return; }
+  var id = b.getAttribute('data-v18');
+  if (V18.playing && V18.queue[V18.idx] === id) { V18.audio.pause(); V18.playing = false; v18Paint(); return; }
+  v18Play([id], id);
+}, true);
+new MutationObserver(function () { try { v18Inject(); } catch (e) {} }).observe(document.documentElement, { childList: true, subtree: true });
+
+/* ---------- โฟลเดอร์สำหรับเก็บมาตราไว้ฟัง (ไม่จำกัดจำนวน · ซิงก์ทุกอุปกรณ์ผ่านข้อมูลผู้ใช้) ---------- */
+function v18Folders() {
+  var f = S.ud && Array.isArray(S.ud.voiceFolders) ? S.ud.voiceFolders : null;
+  if (!f) { try { f = JSON.parse(localStorage.getItem('tll.v18.folders') || '[]'); } catch (e) { f = []; } if (S.ud) S.ud.voiceFolders = f; }
+  return f;
+}
+function v18SaveFolders() { try { localStorage.setItem('tll.v18.folders', JSON.stringify(v18Folders())); } catch (e) {} try { saveUD(); } catch (e) {} }
+function v18NameBox(title, val) {
+  return popup11({ cls: 'v18n', icon: 'folder', title: title, sub: 'ตั้งชื่อเพื่อแยกเก็บมาตราตามวิชาหรือหัวข้อที่ต้องการท่อง', ok: 'ยืนยัน', cancel: 'ยกเลิก',
+    html: '<div class="field"><label for="v18Name">ชื่อโฟลเดอร์</label><div class="input"><input id="v18Name" maxlength="80" placeholder="เช่น กฎหมายอาญา ภาค 2 ความผิดเกี่ยวกับทรัพย์" value="' + esc(val || '') + '"></div></div>' })
+    .then(function (ok) { var i = document.getElementById('v18Name'), v = i ? i.value.trim() : ''; return ok ? v : null; });
+}
+function v18NewFolder() {
+  return v18NameBox('สร้างโฟลเดอร์ใหม่', '').then(function (name) {
+    if (name === null) return null; if (!name) { toast('กรุณากรอกชื่อโฟลเดอร์', '', 'warn'); return null; }
+    var f = { id: 'VF' + Date.now().toString(36), name: name, items: [], at: new Date().toISOString() }; v18Folders().push(f); v18SaveFolders(); toast('สร้างโฟลเดอร์แล้ว', name, 'ok'); return f;
+  });
+}
+function v18AddTo(id) {
+  var fs = v18Folders(), s = SECS[id] || {};
+  var html = '<div class="v18-fl">' + (fs.length ? fs.map(function (f) { return '<label class="v18-fi"><input type="radio" name="v18f" value="' + esc(f.id) + '"> ' + esc(f.name) + ' <span class="muted small">(' + f.items.length + ' มาตรา)</span></label>'; }).join('') : '<p class="small muted">ยังไม่มีโฟลเดอร์ กด “ยืนยัน” เพื่อสร้างโฟลเดอร์ใหม่</p>') + '</div>';
+  popup11({ cls: 'v18a', icon: 'folder', title: 'เพิ่มลงโฟลเดอร์', sub: lawShort(LAWS[s.law]) + ' มาตรา ' + s.no, ok: 'ยืนยัน', cancel: 'ยกเลิก', html: html }).then(function (ok) {
+    if (!ok) return; var r = document.querySelector('.v18a input[name=v18f]:checked');
+    var fp = r ? Promise.resolve(fs.filter(function (f) { return f.id === r.value; })[0]) : v18NewFolder();
+    fp.then(function (f) { if (!f) return; if (f.items.indexOf(id) < 0) f.items.push(id); v18SaveFolders(); toast('เพิ่มลงโฟลเดอร์แล้ว', f.name, 'ok'); if (S.ui.view === 'voice') refreshCurrent(); });
+  });
+}
+
+/* ---------- เมนูสามขีด › เสียงกฎหมาย ---------- */
+(function () {
+  var baseMenu = openMainMenu;
+  openMainMenu = function () {
+    var r = baseMenu.apply(this, arguments);
+    var list = document.querySelector('.drawer .menu-list');
+    if (list && !list.querySelector('[data-v="voice"]')) {
+      var after = list.querySelector('[data-v="chat"]') || list.firstChild;
+      var html = '<button class="menu-item" data-v="voice"><span class="mi">' + ic('speaker') + '</span><span class="grow"><span class="mt">เสียงกฎหมาย</span><br><span class="ms">ฟังประมวลกฎหมายและรัฐธรรมนูญ เสียงผู้ชาย/ผู้หญิง · โฟลเดอร์สำหรับท่องจำ</span></span>' + ic('chevR', 'chev') + '</button>';
+      if (after && after.insertAdjacentHTML) after.insertAdjacentHTML(after.getAttribute && after.getAttribute('data-v') === 'chat' ? 'afterend' : 'beforebegin', html); else list.insertAdjacentHTML('afterbegin', html);
+    }
+    return r;
+  };
+})();
+I18N.th.voice = 'เสียงกฎหมาย';
+VIEWS.voice = function (el) {
+  var st = S.ui.voice = S.ui.voice || { lvl: 'root' }, q = st.q || '';
+  var head = function (t, sub, back) { return '<div class="view-head"><div>' + (back ? '<button class="btn sm ghost v18-back" data-v18n="' + back + '">' + ic('arrowL') + ' ย้อนกลับ</button>' : '') + '<h1>' + esc(t) + '</h1>' + (sub ? '<p class="sub">' + esc(sub) + '</p>' : '') + '</div></div>'; };
+  var tile = function (k, icn, t, d) { return '<button class="v18-tile" data-v18n="' + k + '"><span class="mi">' + ic(icn) + '</span><span class="grow"><b>' + esc(t) + '</b><br><span class="small muted">' + esc(d) + '</span></span>' + ic('chevR') + '</button>'; };
+  var lawsOf = function (cat) { return Object.keys(LAWS).map(function (k) { return LAWS[k]; }).filter(function (l) { return l.cat === cat; }).sort(function (a, b) { return String(a.title).localeCompare(String(b.title), 'th'); }); };
+  var html = '';
+  if (st.lvl === 'root') html = head('เสียงกฎหมาย', 'ฟังตัวบทประมวลกฎหมายและรัฐธรรมนูญทุกฉบับ ด้วยเสียงผู้ชายหรือเสียงผู้หญิง') + '<div class="v18-tiles">' + tile('codesHome', 'book', 'เสียงประมวลกฎหมาย', 'ประมวลกฎหมายทุกฉบับ และโฟลเดอร์สำหรับเก็บมาตราไว้ฟัง') + tile('consts', 'scale', 'เสียงรัฐธรรมนูญ', 'รัฐธรรมนูญแห่งราชอาณาจักรไทยทุกฉบับ') + '</div>';
+  else if (st.lvl === 'codesHome') html = head('เสียงประมวลกฎหมาย', 'เลือกประมวลกฎหมายที่ต้องการฟัง หรือเปิดโฟลเดอร์ที่เก็บไว้', 'root') + '<div class="v18-tiles">' + tile('codes', 'speaker', 'เสียงประมวลกฎหมาย', 'ฟังทีละมาตราหรือทั้งฉบับ') + tile('folders', 'folder', 'โฟลเดอร์', 'โฟลเดอร์สำหรับเก็บไว้ฟังเสียงมาตรา') + '</div>';
+  else if (st.lvl === 'codes' || st.lvl === 'consts') {
+    var ls = lawsOf(st.lvl === 'codes' ? 'ประมวลกฎหมาย' : 'รัฐธรรมนูญ').filter(function (l) { return !q || norm(l.title).indexOf(norm(q)) > -1; });
+    html = head(st.lvl === 'codes' ? 'เสียงประมวลกฎหมาย' : 'เสียงรัฐธรรมนูญ', fmtN(ls.length) + ' ฉบับ', st.lvl === 'codes' ? 'codesHome' : 'root') +
+      '<div class="row v18-q"><div class="input grow">' + ic('search') + '<input id="v18Q" placeholder="ค้นหาชื่อฉบับ" value="' + esc(q) + '"></div><button class="btn" id="v18QC">' + ic('x') + ' ล้าง</button></div>' +
+      '<div class="col">' + ls.map(function (l) { return '<button class="law-item" data-v18law="' + esc(l.id) + '"><span class="li-ic">' + ic('speaker') + '</span><span class="grow"><span class="li-t">' + esc(l.title) + '</span><br><span class="li-s">' + fmtN(l.n || 0) + ' มาตรา</span></span>' + ic('chevR') + '</button>'; }).join('') + '</div>';
+  } else if (st.lvl === 'law') {
+    var l = LAWS[st.law] || {}, secs = (SECS_BY_LAW[st.law] || []).slice().sort(secCmp).filter(function (s) { return !q || v18Dig(s.no) === v18Dig(q.replace(/^มาตรา\s*/, '')) || norm(s.text || '').indexOf(norm(q)) > -1; });
+    html = head(l.title || '', 'ฟังเฉพาะมาตรา หรือฟังต่อเนื่องทั้งฉบับ · กด + เพื่อเก็บลงโฟลเดอร์', l.cat === 'รัฐธรรมนูญ' ? 'consts' : 'codes') +
+      '<div class="row v18-q"><div class="input grow">' + ic('search') + '<input id="v18Q" placeholder="เลขมาตราหรือคำในตัวบท" value="' + esc(q) + '"></div><button class="btn" id="v18QC">' + ic('x') + ' ล้าง</button><button class="btn k" id="v18PlayAll">' + ic('play') + ' ฟังทั้งหมด</button></div>' +
+      (LAW_LOADED[st.law] ? '<div class="col v18-secs">' + secs.slice(0, st.lim || 80).map(function (s) { return '<div class="v18-sec"><button class="icon-btn v18-ps v18b" data-v18="' + esc(s.id) + '" aria-label="ฟังมาตรา ' + esc(s.no) + '">' + ic('play') + '</button><div class="grow"><b>มาตรา ' + esc(s.no) + '</b><div class="small muted v18-pv">' + esc(String(s.text || '').slice(0, 140)) + '…</div></div><button class="icon-btn" data-v18add="' + esc(s.id) + '" aria-label="เพิ่มลงโฟลเดอร์">' + ic('plus') + '</button></div>'; }).join('') + '</div>' +
+        (secs.length > (st.lim || 80) ? '<button class="btn block" id="v18More">แสดงเพิ่มเติม (' + fmtN(secs.length - (st.lim || 80)) + ')</button>' : '') : '<div class="skel" style="height:200px"></div>');
+    if (!LAW_LOADED[st.law]) ensureLaw(st.law).then(function () { if (S.ui.view === 'voice') refreshCurrent(); });
+  } else if (st.lvl === 'folders') {
+    var fs = v18Folders();
+    html = head('โฟลเดอร์', 'โฟลเดอร์สำหรับเก็บไว้ฟังเสียงมาตรา (ไม่จำกัดจำนวน)', 'codesHome') + '<div class="row v18-q"><button class="btn k" id="v18NewF">' + ic('plus') + ' สร้างโฟลเดอร์</button>' + (fs.length ? '<button class="btn" id="v18ClearAll">' + ic('x') + ' ล้าง</button>' : '') + '</div>' +
+      (fs.length ? '<div class="col">' + fs.map(function (f) { return '<div class="v18-sec"><span class="li-ic">' + ic('folder') + '</span><button class="grow v18-fo" data-v18fo="' + esc(f.id) + '"><b>' + esc(f.name) + '</b><div class="small muted">' + f.items.length + ' มาตรา</div></button><button class="icon-btn" data-v18fp="' + esc(f.id) + '" aria-label="ฟังทั้งโฟลเดอร์">' + ic('play') + '</button><button class="icon-btn" data-v18fd="' + esc(f.id) + '" aria-label="ลบโฟลเดอร์">' + ic('trash') + '</button></div>'; }).join('') + '</div>' : '<div class="panel flat"><p class="small muted">ยังไม่มีโฟลเดอร์ กด “สร้างโฟลเดอร์” แล้วเพิ่มมาตราจากหน้าฟังเสียงด้วยปุ่ม +</p></div>');
+  } else if (st.lvl === 'folder') {
+    var f = v18Folders().filter(function (x) { return x.id === st.folder; })[0];
+    if (!f) { st.lvl = 'folders'; return VIEWS.voice(el); }
+    var miss = f.items.filter(function (id) { return !SECS[id]; }); if (miss.length && typeof ensureIds === 'function') ensureIds(miss, function () { if (S.ui.view === 'voice') refreshCurrent(); });
+    html = head(f.name, f.items.length + ' มาตรา', 'folders') + '<div class="row v18-q"><button class="btn k" id="v18FPlay">' + ic('play') + ' ฟังทั้งโฟลเดอร์</button><button class="btn" id="v18FRen">' + ic('edit') + ' เปลี่ยนชื่อ</button><button class="btn" id="v18FClear">' + ic('x') + ' ล้าง</button></div>' +
+      '<div class="col">' + f.items.map(function (id) { var s = SECS[id] || {}; return '<div class="v18-sec"><button class="icon-btn v18-ps v18b" data-v18="' + esc(id) + '">' + ic('play') + '</button><div class="grow"><b>' + esc(lawShort(LAWS[s.law]) + ' มาตรา ' + (s.no || '…')) + '</b><div class="small muted v18-pv">' + esc(String(s.text || 'กำลังโหลดตัวบท…').slice(0, 120)) + '</div></div><button class="icon-btn" data-v18rm="' + esc(id) + '" aria-label="นำออกจากโฟลเดอร์">' + ic('x') + '</button></div>'; }).join('') + '</div>';
+  }
+  el.innerHTML = '<div class="v18v">' + html + '</div>';
+  var go = function (lvl, extra) { S.ui.voice = Object.assign({ lvl: lvl, q: '' }, extra || {}); store.set('ui', S.ui); refreshCurrent(); window.scrollTo({ top: 0, behavior: 'instant' }); };
+  el.onclick = function (e) {
+    var t = e.target.closest('[data-v18n],[data-v18law],[data-v18add],[data-v18fo],[data-v18fp],[data-v18fd],[data-v18rm],#v18QC,#v18PlayAll,#v18More,#v18NewF,#v18ClearAll,#v18FPlay,#v18FRen,#v18FClear'); if (!t) return;
+    var fsx = v18Folders(), cf = fsx.filter(function (x) { return x.id === st.folder; })[0];
+    if (t.hasAttribute('data-v18n')) go(t.getAttribute('data-v18n'));
+    else if (t.hasAttribute('data-v18law')) go('law', { law: t.getAttribute('data-v18law') });
+    else if (t.hasAttribute('data-v18add')) v18AddTo(t.getAttribute('data-v18add'));
+    else if (t.hasAttribute('data-v18fo')) go('folder', { folder: t.getAttribute('data-v18fo') });
+    else if (t.hasAttribute('data-v18fp')) { var f1 = fsx.filter(function (x) { return x.id === t.getAttribute('data-v18fp'); })[0]; if (f1) ensureIdsThen(f1.items, function () { v18Play(f1.items, f1.items[0]); }); }
+    else if (t.hasAttribute('data-v18fd')) { var fid = t.getAttribute('data-v18fd'); confirmBox('ลบโฟลเดอร์', 'ต้องการลบโฟลเดอร์นี้หรือไม่ (มาตราในตัวบทไม่ได้ถูกลบ)', { danger: true, ok: 'ลบ' }).then(function (ok) { if (!ok) return; S.ud.voiceFolders = fsx.filter(function (x) { return x.id !== fid; }); v18SaveFolders(); refreshCurrent(); }); }
+    else if (t.hasAttribute('data-v18rm') && cf) { cf.items = cf.items.filter(function (x) { return x !== t.getAttribute('data-v18rm'); }); v18SaveFolders(); refreshCurrent(); }
+    else if (t.id === 'v18QC') { st.q = ''; store.set('ui', S.ui); refreshCurrent(); }
+    else if (t.id === 'v18PlayAll') { var ids = v18LawIds(st.law); v18Play(ids, ids[0]); }
+    else if (t.id === 'v18More') { st.lim = (st.lim || 80) + 120; refreshCurrent(); }
+    else if (t.id === 'v18NewF') v18NewFolder().then(function (f) { if (f) refreshCurrent(); });
+    else if (t.id === 'v18ClearAll') confirmBox('ล้างโฟลเดอร์ทั้งหมด', 'ต้องการลบโฟลเดอร์ทั้งหมดหรือไม่', { danger: true, ok: 'ล้าง' }).then(function (ok) { if (!ok) return; S.ud.voiceFolders = []; v18SaveFolders(); refreshCurrent(); });
+    else if (t.id === 'v18FPlay' && cf) ensureIdsThen(cf.items, function () { v18Play(cf.items, cf.items[0]); });
+    else if (t.id === 'v18FRen' && cf) v18NameBox('เปลี่ยนชื่อโฟลเดอร์', cf.name).then(function (n) { if (n) { cf.name = n; v18SaveFolders(); refreshCurrent(); } });
+    else if (t.id === 'v18FClear' && cf) confirmBox('ล้างโฟลเดอร์', 'นำมาตราทั้งหมดออกจากโฟลเดอร์ “' + cf.name + '” หรือไม่', { danger: true, ok: 'ล้าง' }).then(function (ok) { if (!ok) return; cf.items = []; v18SaveFolders(); refreshCurrent(); });
+  };
+  var qi = el.querySelector('#v18Q');
+  if (qi) qi.addEventListener('input', debounce(function () { st.q = qi.value.trim(); store.set('ui', S.ui); var pos = qi.selectionStart; refreshCurrent(); var n = document.getElementById('v18Q'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (x) {} } }, 350));
+};
+function ensureIdsThen(ids, cb) { var miss = ids.filter(function (id) { return !SECS[id]; }); if (!miss.length || typeof ensureIds !== 'function') return cb(); if (ensureIds(miss, cb) === false) cb(); }
 </script>
 <script>
 /* ==========================================================================
