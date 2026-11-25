@@ -12,7 +12,7 @@ var SB19 = {
   url: 'https://deevvykxfvcadextxfby.supabase.co',
   tables: { Ratings: 'ratings', Chat: 'chat', Members: 'members', Stats: 'stats', Sessions: 'sessions', UserData: 'user_data', Treaties: 'treaties', LoginLog: 'login_log',
     Security: 'security', ErrorLog: 'error_log', AuditLog: 'audit_log', Config: 'config', Announcements: 'announcements', Reports: 'reports', Payments: 'payments', Sources: 'sources',
-    Laws: 'laws', Sections: 'sections' },
+    Laws: 'laws', Sections: 'sections', Explain: 'explain' },
   big: { Laws: 1, Sections: 1 },
   snaps: ['สรุปผล', 'สรุปผู้ใช้งาน'],
   chunk: 800, budgetMs: 270000
@@ -110,3 +110,68 @@ function supabaseStatus() {
   Logger.log('ค้างอยู่: ' + (PropertiesService.getScriptProperties().getProperty('SB19_POS') || '{}'));
   return list;
 }
+
+/* =========================================================================
+ *  v19: อธิบายกฎหมายไทย (รายมาตรา) — รัฐธรรมนูญ พ.ร.บ.ประกอบรัฐธรรมนูญ พ.ร.บ./พ.ร.ก. ปร./ปว./คปค./คสช. และประมวลกฎหมาย
+ *  - อ่านตัวบทจากฐานข้อมูลของเว็บไซต์เอง (ไม่รับตัวบทจากหน้าเว็บ) แล้วให้ AI เรียบเรียงคำอธิบายตามโครงสร้างที่กำหนด
+ *  - เก็บผลไว้ในชีต Explain ครั้งเดียว ทุกคนเปิดได้ทันทีครั้งต่อไป · ผู้ดูแลแก้ไข/ตรวจทานได้ในชีต (คอลัมน์ reviewed)
+ * ========================================================================= */
+SHEETS.Explain = ['secId', 'lawId', 'sectionNo', 'json', 'model', 'createdAt', 'reviewed', 'reviewer'];
+var EXPLAIN_CATS = { 'รัฐธรรมนูญ': 1, 'พระราชบัญญัติประกอบรัฐธรรมนูญ': 1, 'พระราชบัญญัติ/พระราชกำหนด': 1, 'ปร./ปว./คปค./คสช.': 1, 'ประมวลกฎหมาย': 1 };
+function explainSheet_() {
+  var ss = ss_(), sh = ss.getSheetByName('Explain');
+  if (!sh) { sh = ss.insertSheet('Explain'); sh.getRange(1, 1, 1, SHEETS.Explain.length).setValues([SHEETS.Explain]).setFontWeight('bold'); sh.setFrozenRows(1); }
+  return sh;
+}
+function explainFind_(secId) {
+  var sh = explainSheet_(), last = sh.getLastRow(); if (last < 2) return null;
+  var hit = (sh.getRange(2, 1, last - 1, 1).createTextFinder(secId).matchEntireCell(true).findAll() || [])[0];
+  if (!hit) return null;
+  var v = sh.getRange(hit.getRow(), 1, 1, SHEETS.Explain.length).getValues()[0], o = json_(v[3], null);
+  return o ? { data: o, model: String(v[4] || ''), createdAt: String(v[5] || ''), reviewed: /^(true|ตรวจแล้ว|yes|1)$/i.test(String(v[6] || '')), reviewer: String(v[7] || '') } : null;
+}
+var EXPLAIN_PROMPT = [
+  'คุณเป็นอาจารย์นิติศาสตร์ชาวไทยที่อธิบายกฎหมายให้นักศึกษาเข้าใจง่าย เขียนเป็นภาษาไทยที่เป็นธรรมชาติแบบที่คนอธิบายให้กันฟัง ไม่ใช่สำนวนเครื่อง ไม่ขึ้นต้นด้วยคำเกริ่นหรือคำชม ไม่ใช้อีโมจิ',
+  'อธิบายเฉพาะมาตราที่ให้มา โดยยึดตัวบทเป็นหลักทุกตัวอักษร ห้ามแต่งข้อความของตัวบทขึ้นใหม่ ห้ามอ้างเลขคำพิพากษาฎีกาที่ไม่แน่ใจว่ามีอยู่จริง ถ้าไม่แน่ใจให้อธิบายหลักโดยไม่ระบุเลข',
+  'ตอบเป็น JSON เท่านั้น ตามโครงสร้าง:',
+  '{"summary":"สรุปสาระของมาตรา 2-3 ประโยค",',
+  ' "purpose":"วัตถุประสงค์และเหตุผลของบทบัญญัติ (ย่อหน้ายาว)",',
+  ' "elements":[{"term":"ถ้อยคำหรือองค์ประกอบจากตัวบท ยกมาตรงตามตัวบท","meaning":"อธิบายความหมายทางกฎหมายและภาษาธรรมดาอย่างละเอียด"}],  // แยกทุกองค์ประกอบ/ถ้อยคำสำคัญในตัวบททีละส่วน ไม่อธิบายรวม',
+  ' "explanation":["ย่อหน้าอธิบายเนื้อหาโดยละเอียด เรียงตามวรรคและอนุมาตรา อย่างน้อย 3 ย่อหน้า"],',
+  ' "related":[{"ref":"ชื่อกฎหมายและเลขมาตราที่เกี่ยวข้อง","why":"เชื่อมโยงหรือนำมาปรับใช้ร่วมกันอย่างไร"}],',
+  ' "differences":"ข้อแตกต่างจากมาตราหรือหลักกฎหมายที่คล้ายกัน พร้อมตัวอย่าง",',
+  ' "example":"ตัวอย่างสถานการณ์สมมุติที่ทำให้เห็นการปรับใช้มาตรานี้",',
+  ' "quiz":{"scenario":"โจทย์ข้อเท็จจริงแบบตัวละครสมมุติ บรรยายละเอียด (อาจดัดแปลงจากแนวคำพิพากษาศาลฎีกา)","question":"คำถามที่ต้องการให้ผู้อ่านวินิจฉัย","answer":"ธงคำตอบ: วินิจฉัยตามตัวบทพร้อมเหตุผลเป็นขั้นตอน ข้อเท็จจริง–ข้อกฎหมาย–ปรับบท–สรุป"},',
+  ' "notes":"ข้อควรระวังหรือประเด็นที่มักเข้าใจผิด"}'
+].join('\n');
+function apiLawExplain19_(p, ctx) {
+  var secId = String(p.secId || '').slice(0, 80), law = secId.split('-')[0];
+  if (!secId || !law) return fail_('INVALID', 'ไม่ได้ระบุมาตรา');
+  var hit = explainFind_(secId); if (hit) return { secId: secId, explain: hit.data, reviewed: hit.reviewed, createdAt: hit.createdAt, cached: true };
+  if (p.peek) return { secId: secId, explain: null };
+  var secs = sectionsOfLaw_(law), i = -1;
+  for (var k = 0; k < secs.length; k++) if (secs[k].id === secId) { i = k; break; }
+  if (i < 0) return fail_('NOT_FOUND', 'ไม่พบมาตรานี้ในฐานข้อมูล');
+  var meta = (typeof lawMeta_ === 'function' ? lawMeta_(law) : null) || {}, title = meta.title || String(p.lawTitle || '').slice(0, 300), cat = meta.cat || String(p.cat || '');
+  if (cat && !EXPLAIN_CATS[cat]) return fail_('NOT_SUPPORTED', 'คำอธิบายรายมาตรามีสำหรับรัฐธรรมนูญ พ.ร.บ.ประกอบรัฐธรรมนูญ พ.ร.บ./พ.ร.ก. ปร./ปว./คปค./คสช. และประมวลกฎหมาย');
+  var key = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
+  if (!key) return fail_('NOT_CONFIGURED', 'ยังไม่ได้เชื่อมต่อบริการ AI สำหรับสร้างคำอธิบาย (GEMINI_API_KEY)');
+  var c = CacheService.getScriptCache(), day = Utilities.formatDate(new Date(), 'Asia/Bangkok', 'yyyyMMdd'), used = Number(c.get('expl_' + day) || 0);
+  if (used >= Number(PropertiesService.getScriptProperties().getProperty('EXPLAIN_DAILY') || 3000)) return fail_('QUOTA', 'วันนี้ระบบสร้างคำอธิบายใหม่ครบจำนวนแล้ว มาตราที่มีคำอธิบายแล้วยังเปิดได้ตามปกติ');
+  var lock = LockService.getScriptLock(); if (!lock.tryLock(20000)) return fail_('BUSY', 'ระบบกำลังเตรียมคำอธิบาย กรุณาลองอีกครั้ง');
+  try {
+    hit = explainFind_(secId); if (hit) return { secId: secId, explain: hit.data, reviewed: hit.reviewed, createdAt: hit.createdAt, cached: true };
+    var s = secs[i], near = [secs[i - 1], secs[i + 1]].filter(Boolean).map(function (x) { return 'มาตรา ' + x.no + ': ' + String(x.text || '').slice(0, 1200); }).join('\n\n');
+    var body = { systemInstruction: { parts: [{ text: EXPLAIN_PROMPT }] },
+      contents: [{ role: 'user', parts: [{ text: 'กฎหมาย: ' + title + (cat ? ' (หมวด ' + cat + ')' : '') + '\nมาตรา ' + s.no + (s.name ? ' (' + s.name + ')' : '') + '\nตัวบท:\n' + String(s.text || '') + (near ? '\n\nมาตราข้างเคียง (ใช้ประกอบความเข้าใจเท่านั้น):\n' + near : '') }] }],
+      generationConfig: { responseMimeType: 'application/json', temperature: 0.4, maxOutputTokens: 8192 } };
+    var out = geminiCall_(getConfig_().GEMINI_MODEL || 'gemini-2.5-flash', key, body);
+    if (!out.ok) return fail_('AI_ERROR', out.msg);
+    var data = json_(String(out.text).replace(/^```(json)?|```$/g, '').trim(), null);
+    if (!data || !data.summary || !data.quiz) return fail_('AI_ERROR', 'ยังสร้างคำอธิบายไม่สมบูรณ์ กรุณาลองอีกครั้ง');
+    explainSheet_().appendRow([secId, law, s.no, JSON.stringify(data).slice(0, 49000), getConfig_().GEMINI_MODEL || 'gemini-2.5-flash', new Date().toISOString(), '', '']);
+    c.put('expl_' + day, String(used + 1), 90000);
+    return { secId: secId, explain: data, reviewed: false, createdAt: new Date().toISOString(), cached: false };
+  } finally { lock.releaseLock(); }
+}
+ROUTES.lawExplain = { fn: apiLawExplain19_, auth: true, limit: 400 };
