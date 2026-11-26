@@ -53,19 +53,36 @@
 </div>
 <script>
 (function () {
-  var url = String(window.TLL_APP_URL || '');
-  var ok = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(url);
+  var RE = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
+  var list = (window.TLL_APP_URLS || [window.TLL_APP_URL]).filter(function (u) { return RE.test(String(u || '')); });
   var msg = document.getElementById('bootMsg');
-  if (!ok) { msg.textContent = 'เว็บไซต์กำลังเตรียมเปิดให้บริการ กรุณากลับมาใหม่อีกครั้งในภายหลัง'; return; }
-  var f = document.createElement('iframe');
-  f.id = 'app'; f.title = 'THAI LAW LIBRARY | คลังกฎหมาย';
-  f.allow = 'fullscreen; clipboard-write; geolocation';
-  f.setAttribute('allowfullscreen', '');
-  f.referrerPolicy = 'strict-origin-when-cross-origin';
-  f.src = url;
-  f.onload = function () { document.getElementById('boot').classList.add('gone'); };
-  setTimeout(function () { msg.textContent = 'ระบบกำลังโหลด อาจใช้เวลาสักครู่ในการเข้าใช้งานครั้งแรก'; }, 6000);
-  document.body.insertBefore(f, document.body.firstChild);
+  if (!list.length) { msg.textContent = 'เว็บไซต์กำลังเตรียมเปิดให้บริการ กรุณากลับมาใหม่อีกครั้งในภายหลัง'; return; }
+  var KEY = 'tll.appUrl', started = false;
+  var open = function (url) {
+    if (started) return; started = true;
+    var f = document.createElement('iframe');
+    f.id = 'app'; f.title = 'THAI LAW LIBRARY | คลังกฎหมาย';
+    f.allow = 'fullscreen; clipboard-write; geolocation; autoplay';
+    f.setAttribute('allowfullscreen', '');
+    f.referrerPolicy = 'strict-origin-when-cross-origin';
+    f.src = url;
+    f.onload = function () { document.getElementById('boot').classList.add('gone'); };
+    setTimeout(function () { msg.textContent = 'ระบบกำลังโหลด อาจใช้เวลาสักครู่ในการเข้าใช้งานครั้งแรก'; }, 6000);
+    document.body.insertBefore(f, document.body.firstChild);
+  };
+  var ver = function (v) { return String(v || '0').split('.').reduce(function (a, x) { return a * 1000 + (parseInt(x, 10) || 0); }, 0); };
+  /* ตรวจทุก URL พร้อมกัน แล้วเปิดเวอร์ชันล่าสุด (รอไม่เกิน 4 วินาที) */
+  var best = null, left = list.length;
+  var done = function () { var u = best ? best.u : (function () { try { return localStorage.getItem(KEY); } catch (e) { return null; } })() || list[0]; try { localStorage.setItem(KEY, u); } catch (e) {} open(u); };
+  var timer = setTimeout(done, 4000);
+  list.forEach(function (u, i) {
+    var ctl = window.AbortController ? new AbortController() : null;
+    fetch(u + '?api=version', { signal: ctl ? ctl.signal : undefined, credentials: 'omit' }).then(function (r) { return r.json(); }).then(function (j) {
+      var score = j && j.ok && j.v ? ver(j.v) : (j && j.ok ? 1 : 0);
+      if (score && (!best || score > best.s || (score === best.s && i < best.i))) best = { u: u, s: score, i: i };
+    }).catch(function () {}).then(function () { if (--left === 0) { clearTimeout(timer); done(); } });
+    if (ctl) setTimeout(function () { ctl.abort(); }, 3900);
+  });
 })();
 </script>
 <noscript><p style="text-align:center">กรุณาเปิดใช้งาน JavaScript เพื่อใช้งานคลังกฎหมาย</p></noscript>

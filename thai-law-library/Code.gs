@@ -6260,3 +6260,13 @@ function apiForeignLawV20_(p, ctx) {
   return out;
 }
 ROUTES.foreignLaw.fn = apiForeignLawV20_;
+
+/* ?api=version — ให้หน้าเว็บบน Vercel ตรวจว่า URL ของ Apps Script ใดเป็นเวอร์ชันล่าสุด แล้วเลือกเปิดเวอร์ชันนั้นอัตโนมัติ */
+var apiHttpV19_ = apiHttp_;
+apiHttp_ = function (p) {
+  if (String(p.api || '') === 'version') {
+    var u = ''; try { u = ScriptApp.getService().getUrl(); } catch (e) {}
+    return jsonOut_({ ok: true, v: CONFIG.VERSION, label: CONFIG.VERSION_LABEL || CONFIG.VERSION, url: u });
+  }
+  return apiHttpV19_(p);
+};
