@@ -48,7 +48,7 @@ function explainDefs20_(secs, text) {
 /* คำอธิบายที่เรียบเรียงจากข้อมูลจริงทั้งหมด (ไม่ใช้ AI และไม่แต่งข้อเท็จจริง) */
 function explainRule20_(title, cat, secs, i) {
   var s = secs[i], text = String(s.text || '').trim(), no = s.no;
-  var raw = text.replace(/(\S)[ \t ]+\(\s*([0-9๐-๙]{1,3}|[ก-ฮ])\s*\)[ \t ]+/g, function (m, prev, k) { return /[0-9๐-๙]/.test(prev) ? m : prev + '\n(' + k + ') '; });
+  var raw = text.replace(/(\S)[ \t\u00a0]+\(\s*([0-9๐-๙]{1,3}|[ก-ฮ])\s*\)[ \t\u00a0]+/g, function (m, prev, k) { return /[0-9๐-๙]/.test(prev) ? m : prev + '\n(' + k + ') '; });
   var lines = raw.split(/\n+/).map(function (x) { return x.trim(); }).filter(Boolean);
   var paras = [], items = [];
   lines.forEach(function (ln) { if (/^\(\s*([0-9๐-๙]{1,3}|[ก-ฮ])\s*\)/.test(ln)) items.push(ln); else paras.push(ln); });
@@ -279,7 +279,7 @@ function worldSrcUrl20_(cc, id) {
 function htmlToText20_(h) {
   h = String(h || '').replace(/<(script|style|noscript|nav|header|footer)[\s\S]*?<\/\1>/gi, ' ').replace(/<br\s*\/?>/gi, '\n').replace(/<\/(p|div|li|tr|h[1-6]|table|section|article)>/gi, '\n').replace(/<[^>]+>/g, ' ');
   h = h.replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&#(\d+);/g, function (m, n) { return String.fromCharCode(Number(n)); });
-  return h.replace(/[ \t ]+/g, ' ').replace(/ *\n */g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+  return h.replace(/[ \t\u00a0]+/g, ' ').replace(/ *\n */g, '\n').replace(/\n{3,}/g, '\n\n').trim();
 }
 var apiForeignLawV19_ = ROUTES.foreignLaw.fn;
 function apiForeignLawV20_(p, ctx) {

@@ -24,7 +24,7 @@ var CAT_RULES = [
 ];
 
 function lawCategory_(title) {
-  var t = String(title || '').replace(/[​‌‍﻿]/g, '').replace(/^\s+/, '');
+  var t = String(title || '').replace(/[\u200b\u200c\u200d\ufeff]/g, '').replace(/^\s+/, '');
   for (var i = 0; i < CAT_RULES.length; i++) if (CAT_RULES[i][0].test(t)) return CAT_RULES[i][1];
   return null;
 }

@@ -57,7 +57,7 @@ function isNoise_(ln) {
   return false;
 }
 function splitParas_(text, noMerge) {
-  var lines = String(text || '').replace(/\r\n?/g, noMerge ? ' ' : '\n').split(/\n/).map(function (s) { return s.replace(/[ \t　 ]+/g, ' ').trim(); }).filter(function (s) { return !s || !isNoise_(s); });
+  var lines = String(text || '').replace(/\r\n?/g, noMerge ? ' ' : '\n').split(/\n/).map(function (s) { return s.replace(/[ \t\u3000\u00a0]+/g, ' ').trim(); }).filter(function (s) { return !s || !isNoise_(s); });
   var paras = [], cur = null;
   lines.forEach(function (ln) {
     if (!ln) { cur = null; return; }

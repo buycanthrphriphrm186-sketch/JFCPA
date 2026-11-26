@@ -27,7 +27,7 @@ function cleanSourceText_(t) {
   }
   if (/&(#\d+|#x[0-9a-f]+|[a-z]+);/i.test(t)) t = decodeEntities_(t);
   if (/\\u[0-9a-fA-F]{4}/.test(t)) t = t.replace(/\\u([0-9a-fA-F]{4})/g, function (m, h) { return String.fromCharCode(parseInt(h, 16)); });
-  return t.replace(/[ \t ]+/g, ' ').replace(/ *\n[ \n]*/g, '\n').trim();
+  return t.replace(/[ \t\u00a0]+/g, ' ').replace(/ *\n[ \n]*/g, '\n').trim();
 }
 function isBinaryText_(t) { return /^(%PDF|GIF8|PK\u0003|\u0089PNG)/.test(String(t || '').slice(0, 8)); }
 function cleanArticles_(out) {

@@ -2116,7 +2116,7 @@ var CAT_RULES = [
 ];
 
 function lawCategory_(title) {
-  var t = String(title || '').replace(/[​‌‍﻿]/g, '').replace(/^\s+/, '');
+  var t = String(title || '').replace(/[\u200b\u200c\u200d\ufeff]/g, '').replace(/^\s+/, '');
   for (var i = 0; i < CAT_RULES.length; i++) if (CAT_RULES[i][0].test(t)) return CAT_RULES[i][1];
   return null;
 }
@@ -3081,7 +3081,7 @@ function isNoise_(ln) {
   return false;
 }
 function splitParas_(text, noMerge) {
-  var lines = String(text || '').replace(/\r\n?/g, noMerge ? ' ' : '\n').split(/\n/).map(function (s) { return s.replace(/[ \t　 ]+/g, ' ').trim(); }).filter(function (s) { return !s || !isNoise_(s); });
+  var lines = String(text || '').replace(/\r\n?/g, noMerge ? ' ' : '\n').split(/\n/).map(function (s) { return s.replace(/[ \t\u3000\u00a0]+/g, ' ').trim(); }).filter(function (s) { return !s || !isNoise_(s); });
   var paras = [], cur = null;
   lines.forEach(function (ln) {
     if (!ln) { cur = null; return; }
@@ -4320,7 +4320,7 @@ function cleanSourceText_(t) {
   }
   if (/&(#\d+|#x[0-9a-f]+|[a-z]+);/i.test(t)) t = decodeEntities_(t);
   if (/\\u[0-9a-fA-F]{4}/.test(t)) t = t.replace(/\\u([0-9a-fA-F]{4})/g, function (m, h) { return String.fromCharCode(parseInt(h, 16)); });
-  return t.replace(/[ \t ]+/g, ' ').replace(/ *\n[ \n]*/g, '\n').trim();
+  return t.replace(/[ \t\u00a0]+/g, ' ').replace(/ *\n[ \n]*/g, '\n').trim();
 }
 function isBinaryText_(t) { return /^(%PDF|GIF8|PK\u0003|\u0089PNG)/.test(String(t || '').slice(0, 8)); }
 function cleanArticles_(out) {
@@ -5996,7 +5996,7 @@ function explainDefs20_(secs, text) {
 /* คำอธิบายที่เรียบเรียงจากข้อมูลจริงทั้งหมด (ไม่ใช้ AI และไม่แต่งข้อเท็จจริง) */
 function explainRule20_(title, cat, secs, i) {
   var s = secs[i], text = String(s.text || '').trim(), no = s.no;
-  var raw = text.replace(/(\S)[ \t ]+\(\s*([0-9๐-๙]{1,3}|[ก-ฮ])\s*\)[ \t ]+/g, function (m, prev, k) { return /[0-9๐-๙]/.test(prev) ? m : prev + '\n(' + k + ') '; });
+  var raw = text.replace(/(\S)[ \t\u00a0]+\(\s*([0-9๐-๙]{1,3}|[ก-ฮ])\s*\)[ \t\u00a0]+/g, function (m, prev, k) { return /[0-9๐-๙]/.test(prev) ? m : prev + '\n(' + k + ') '; });
   var lines = raw.split(/\n+/).map(function (x) { return x.trim(); }).filter(Boolean);
   var paras = [], items = [];
   lines.forEach(function (ln) { if (/^\(\s*([0-9๐-๙]{1,3}|[ก-ฮ])\s*\)/.test(ln)) items.push(ln); else paras.push(ln); });
@@ -6227,7 +6227,7 @@ function worldSrcUrl20_(cc, id) {
 function htmlToText20_(h) {
   h = String(h || '').replace(/<(script|style|noscript|nav|header|footer)[\s\S]*?<\/\1>/gi, ' ').replace(/<br\s*\/?>/gi, '\n').replace(/<\/(p|div|li|tr|h[1-6]|table|section|article)>/gi, '\n').replace(/<[^>]+>/g, ' ');
   h = h.replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&#(\d+);/g, function (m, n) { return String.fromCharCode(Number(n)); });
-  return h.replace(/[ \t ]+/g, ' ').replace(/ *\n */g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+  return h.replace(/[ \t\u00a0]+/g, ' ').replace(/ *\n */g, '\n').replace(/\n{3,}/g, '\n\n').trim();
 }
 var apiForeignLawV19_ = ROUTES.foreignLaw.fn;
 function apiForeignLawV20_(p, ctx) {

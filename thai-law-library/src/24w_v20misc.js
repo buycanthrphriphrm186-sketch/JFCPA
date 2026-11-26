@@ -109,7 +109,7 @@ var R20 = false; new MutationObserver(function () { if (R20) return; R20 = true;
     return r;
   };
 })();
-/* ลบข้อความ “< target="_top"” ที่อาจหลุดมาเป็นตัวอักษรท้ายหน้า (เกิดจากการแปลงหน้าเว็บของ Apps Script) */
+/* ลบข้อความแท็ก base ที่อาจหลุดมาเป็นตัวอักษรท้ายหน้า (เกิดจากการแปลงหน้าเว็บของ Apps Script) */
 (function () {
   var clean = function () {
     try {

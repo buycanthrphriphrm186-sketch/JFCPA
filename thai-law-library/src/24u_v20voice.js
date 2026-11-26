@@ -20,7 +20,7 @@ function v20Voice(g) {
   return g === 'm' ? (male || fem || vs[0]) : (fem || vs[0]);
 }
 function v20Norm(t) {
-  return String(t || '').replace(/พ\.ศ\.\s*/g, 'พุทธศักราช ').replace(/ฯลฯ/g, 'และอื่น ๆ').replace(/[“”"]/g, '').replace(/[ \t ]+/g, ' ').trim();
+  return String(t || '').replace(/พ\.ศ\.\s*/g, 'พุทธศักราช ').replace(/ฯลฯ/g, 'และอื่น ๆ').replace(/[“”"]/g, '').replace(/[ \t\u00a0]+/g, ' ').trim();
 }
 /* แบ่งเป็นช่วงสั้น (≤ 180 ตัวอักษร) ตามวรรค/อนุมาตรา เพื่อให้อ่านต่อเนื่องและเว้นจังหวะหายใจ */
 function v20Pieces(text) {
