@@ -10445,6 +10445,19 @@ var R20 = false; new MutationObserver(function () { if (R20) return; R20 = true;
     return r;
   };
 })();
+/* ลบข้อความ “< target="_top"” ที่อาจหลุดมาเป็นตัวอักษรท้ายหน้า (เกิดจากการแปลงหน้าเว็บของ Apps Script) */
+(function () {
+  var clean = function () {
+    try {
+      var w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null), n, bad = [];
+      while ((n = w.nextNode())) { if (/^\s*<?\s*(base\s+)?target\s*=\s*["']?_top["']?\s*>?\s*$/i.test(n.nodeValue)) bad.push(n); }
+      bad.forEach(function (x) { x.parentNode && x.parentNode.removeChild(x); });
+    } catch (e) {}
+  };
+  clean(); if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', clean);
+  window.addEventListener('load', clean); setTimeout(clean, 1500); setTimeout(clean, 5000);
+  try { new MutationObserver(function (ms) { for (var i = 0; i < ms.length; i++) for (var j = 0; j < ms[i].addedNodes.length; j++) if (ms[i].addedNodes[j].nodeType === 3) return clean(); }).observe(document.body, { childList: true }); } catch (e) {}
+})();
 </script>
 <script>
 /* v20: ข้อกำหนดการใช้งาน 50 ข้อ (สร้างจาก tools/terms/*.txt ด้วย tools/terms/build.py) */
