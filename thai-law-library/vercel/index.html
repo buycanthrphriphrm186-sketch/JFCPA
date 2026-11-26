@@ -66,8 +66,12 @@
     f.setAttribute('allowfullscreen', '');
     f.referrerPolicy = 'strict-origin-when-cross-origin';
     f.src = url;
-    f.onload = function () { document.getElementById('boot').classList.add('gone'); };
-    setTimeout(function () { msg.textContent = 'ระบบกำลังโหลด อาจใช้เวลาสักครู่ในการเข้าใช้งานครั้งแรก'; }, 6000);
+    var loaded = false;
+    f.onload = function () { loaded = true; document.getElementById('boot').classList.add('gone'); };
+    setTimeout(function () { if (!loaded) msg.textContent = 'ระบบกำลังโหลด อาจใช้เวลาสักครู่ในการเข้าใช้งานครั้งแรก'; }, 6000);
+    /* สำรอง: ถ้าเบราว์เซอร์ไม่แสดงระบบภายในกรอบ ให้เปิดเว็บไซต์เวอร์ชันล่าสุดโดยตรง */
+    setTimeout(function () { if (loaded) return; msg.innerHTML = 'ถ้าหน้าเว็บยังไม่แสดง <a id="goDirect" href="' + url + '" style="display:inline-block;margin-top:10px;padding:10px 18px;border-radius:12px;background:#1d5fd1;color:#fff;text-decoration:none;font-weight:700">เปิดเว็บไซต์คลังกฎหมาย</a>'; }, 12000);
+    setTimeout(function () { if (!loaded) location.replace(url); }, 25000);
     document.body.insertBefore(f, document.body.firstChild);
   };
   try { localStorage.removeItem('tll.appUrl'); } catch (e) {}
