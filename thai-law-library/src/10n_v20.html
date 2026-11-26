@@ -1,0 +1,27 @@
+<style>
+/* v20: กันข้อความ/ป้ายยาวล้นขอบขวา และไม่ตัดคำด้วยเครื่องหมาย - */
+html,body{max-width:100%}
+body{overflow-x:hidden}
+@supports (overflow:clip){body{overflow-x:clip}}
+.prose p,.law-text p,.rte-page p,.fv-text p{hyphens:none;-webkit-hyphens:none;overflow-wrap:anywhere}
+.fv-reader,.fv-in,.fv-meta,.panel,.law-item,.flip,.card,.modal,.p11{max-width:100%;min-width:0}
+.fv-title,.fv-title h3,.grow{min-width:0}
+.fv-title h3,.law-item .li-t,.flip h3,.flip h4,.view-head h1,.view-head h2{overflow-wrap:anywhere}
+.dk-laws{max-width:100%}
+.dk-laws .chip,.fv-meta .chip,.ex19 .chip,.dk20-info .chip{white-space:normal;height:auto;min-height:30px;max-width:100%;text-align:left;line-height:1.35;padding-top:5px;padding-bottom:5px;overflow-wrap:anywhere}
+.fv-meta .small{overflow-wrap:anywhere}
+.table-scroll{max-width:100%;overflow-x:auto}
+/* ข้อมูลประกอบคำพิพากษา (ไอคอน) */
+.dk20-info{margin:18px 0 6px;display:flex;flex-direction:column;gap:10px}
+.dk20-i{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.dk20-ic{flex:0 0 38px;height:38px;border-radius:11px;display:grid;place-items:center;background:var(--sky-50,#eef3fb);color:var(--sky-600,#1d5fd1)}
+.dk20-ic svg{width:20px;height:20px}
+.dk20-l{font-weight:700;margin-bottom:4px}
+.dk20-i p{margin:0;overflow-wrap:anywhere}
+.dk20-g{margin:0 0 8px}.dk20-g b{overflow-wrap:anywhere}
+.dk20-links{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:4px}
+.dk20-links .linklike{background:none;border:0;padding:2px 0;color:var(--sky-600,#1d5fd1);text-decoration:underline;cursor:pointer;font:inherit}
+.otp-left{display:flex;align-items:center;gap:6px}.otp-left svg{width:16px;height:16px}.otp-left.bad{color:var(--bad)}
+.auth-card .or:has(+ .social.g20){display:flex}.g20-note{text-align:center;margin:8px 0 0}.g20p .g20-ol{margin:6px 0 10px;padding-left:1.4em}.g20p .g20-ol li{margin:0 0 6px}
+.prose:has(.t20-c) p{font-size:1.08rem;line-height:1.7}.t20-intro{font-weight:600}.t20-toc{margin:10px 0 18px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface-soft,#f6f8fb)}.t20-toc ol{margin:6px 0 0;padding-left:1.6em;columns:2 260px;column-gap:24px}.t20-toc li{margin:0 0 4px;break-inside:avoid}.t20-toc a{color:inherit}.t20-c{scroll-margin-top:12px}.t20-c h3{margin:18px 0 8px}.t20-n{font-weight:700;margin-right:4px}
+</style>

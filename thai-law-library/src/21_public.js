@@ -413,6 +413,15 @@ var TITLES = ['นาย', 'นาง', 'นางสาว', 'เด็กช�
 var MEMBER_TYPES = ['นักเรียน', 'นักศึกษา', 'บุคลากรทางกฎหมาย', 'ข้าราชการ / พนักงานภาครัฐ', 'พนักงานเอกชน', 'ประชาชนทั่วไป', 'อื่น ๆ'];
 var EDU_LEVELS = ['มัธยมศึกษาตอนต้น', 'มัธยมศึกษาตอนปลาย', 'ประกาศนียบัตรวิชาชีพ (ปวช.)', 'ประกาศนียบัตรวิชาชีพชั้นสูง (ปวส.)', 'ปริญญาตรี', 'ปริญญาโท', 'ปริญญาเอก', 'อื่น ๆ'];
 var FACULTIES = ['คณะนิติศาสตร์', 'คณะรัฐศาสตร์', 'คณะรัฐประศาสนศาสตร์', 'คณะสังคมศาสตร์', 'คณะอื่น ๆ'];
+var STUDENT_GRADES = ['มัธยมศึกษาปีที่ 1 (ม.1)', 'มัธยมศึกษาปีที่ 2 (ม.2)', 'มัธยมศึกษาปีที่ 3 (ม.3)', 'มัธยมศึกษาปีที่ 4 (ม.4)', 'มัธยมศึกษาปีที่ 5 (ม.5)', 'มัธยมศึกษาปีที่ 6 (ม.6)', 'อื่น ๆ'];
+var UNI_LEVELS = ['ประกาศนียบัตรวิชาชีพ (ปวช.)', 'ประกาศนียบัตรวิชาชีพชั้นสูง (ปวส.)', 'ปริญญาตรี', 'ประกาศนียบัตรบัณฑิต', 'ปริญญาโท', 'ปริญญาเอก', 'เนติบัณฑิต', 'อื่น ๆ'];
+var WORK_FORM = {
+  'บุคลากรทางกฎหมาย': { org: 'หน่วยงาน สำนักงาน หรือศาลที่สังกัด', pos: 'ตำแหน่ง', car: 'สายงานทางกฎหมาย', list: ['ผู้พิพากษา', 'อัยการ', 'ทนายความ', 'นิติกร', 'เจ้าหน้าที่ศาล', 'เจ้าพนักงานบังคับคดี', 'พนักงานสอบสวน', 'เจ้าหน้าที่ราชทัณฑ์', 'ที่ปรึกษากฎหมาย', 'อาจารย์ทางนิติศาสตร์', 'อื่น ๆ'], req: true, carReq: true },
+  'ข้าราชการ / พนักงานภาครัฐ': { org: 'ส่วนราชการหรือหน่วยงานของรัฐที่สังกัด', pos: 'ตำแหน่ง', car: 'ประเภทบุคลากรภาครัฐ', list: ['ข้าราชการพลเรือน', 'ข้าราชการตำรวจ', 'ข้าราชการทหาร', 'ข้าราชการครูและบุคลากรทางการศึกษา', 'ข้าราชการส่วนท้องถิ่น', 'พนักงานราชการ', 'พนักงานรัฐวิสาหกิจ', 'พนักงานมหาวิทยาลัย', 'ลูกจ้างประจำ', 'อื่น ๆ'], req: true, carReq: true },
+  'พนักงานเอกชน': { org: 'ชื่อบริษัทหรือองค์กรที่สังกัด', pos: 'ตำแหน่ง', car: 'ฝ่ายหรือลักษณะงาน', list: ['ฝ่ายกฎหมาย', 'ฝ่ายทรัพยากรบุคคล', 'ฝ่ายบัญชีและการเงิน', 'ฝ่ายจัดซื้อและสัญญา', 'ฝ่ายขายและการตลาด', 'ฝ่ายเทคโนโลยีสารสนเทศ', 'ฝ่ายบริหาร', 'ฝ่ายปฏิบัติการ', 'อื่น ๆ'], req: true, carReq: false },
+  'ประชาชนทั่วไป': { org: 'หน่วยงานหรือองค์กร (ถ้ามี)', pos: 'ตำแหน่ง (ถ้ามี)', car: 'อาชีพ (ไม่บังคับ)', list: ['ค้าขาย / ธุรกิจส่วนตัว', 'เกษตรกร', 'รับจ้างทั่วไป', 'อาชีพอิสระ', 'แม่บ้าน / พ่อบ้าน', 'ผู้เกษียณอายุ', 'อื่น ๆ'], req: false, carReq: false },
+  'อื่น ๆ': { org: 'หน่วยงานหรือองค์กร (ถ้ามี)', pos: 'ตำแหน่ง (ถ้ามี)', car: 'สายงานหรืออาชีพ (ไม่บังคับ)', list: ['ผู้พิพากษา', 'อัยการ', 'ทนายความ', 'นิติกร', 'ข้าราชการ', 'พนักงานเอกชน', 'อาชีพอิสระ', 'อื่น ๆ'], req: false, carReq: false }
+};
 var CAREERS = ['ผู้พิพากษา', 'อัยการ', 'ทนายความ', 'นิติกร', 'เจ้าหน้าที่ศาล', 'เจ้าหน้าที่ราชทัณฑ์', 'นักกฎหมาย', 'ข้าราชการ', 'อื่น ๆ'];
 var RECOVERY_QS = ['ชื่อโรงเรียนประถมศึกษาแห่งแรกของท่าน', 'ชื่อสัตว์เลี้ยงตัวแรกของท่าน', 'จังหวัดที่ท่านเกิด', 'ชื่อเล่นของเพื่อนสนิทในวัยเด็ก', 'กฎหมายฉบับแรกที่ท่านอ่านจนจบ', 'กำหนดคำถามเอง'];
 
@@ -474,11 +483,13 @@ function regStep(n) {
       '<div class="row" style="margin-top:20px"><button class="btn" id="rBack2">' + ic('arrowL') + ' ย้อนกลับ</button><span class="spacer"></span><button class="btn k" id="rNext2">ถัดไป ' + ic('arrowR') + '</button></div>';
     function fields() {
       var t = REG.memberType || '', box = $('#rTypeFields'), e = REG.education || {}, w = REG.work || {};
-      if (t === 'นักเรียน' || t === 'นักศึกษา') {
-        box.innerHTML = '<div class="grid g2 enter">' + textField('eSchool', 'ชื่อมหาวิทยาลัยหรือสถานศึกษา', e.school, true) + selectField('eFac', 'คณะ', FACULTIES, e.facultySel || e.faculty, true, 'eFacO') + textField('eMajor', 'สาขาวิชา', e.major, true) + selectField('eLevel', 'ระดับการศึกษา', EDU_LEVELS, e.levelSel || e.level, true, 'eLevelO') + selectField('eYear', 'ชั้นปีที่กำลังศึกษา', ['ปีที่ 1', 'ปีที่ 2', 'ปีที่ 3', 'ปีที่ 4', 'ปีที่ 5', 'ปีที่ 6', 'อื่น ๆ'], e.yearSel || e.year, true, 'eYearO') + '</div>';
+      if (t === 'นักเรียน') {
+        box.innerHTML = '<div class="grid g2 enter">' + textField('eSchool', 'ชื่อโรงเรียน', e.school, true) + selectField('eYear', 'ระดับชั้น', STUDENT_GRADES, e.yearSel || e.year, true, 'eYearO') + '</div>';
+      } else if (t === 'นักศึกษา') {
+        box.innerHTML = '<div class="grid g2 enter">' + textField('eSchool', 'ชื่อมหาวิทยาลัยหรือสถาบันอุดมศึกษา', e.school, true) + selectField('eFac', 'คณะ', FACULTIES, e.facultySel || e.faculty, true, 'eFacO') + textField('eMajor', 'สาขาวิชา', e.major, true) + selectField('eLevel', 'ระดับการศึกษา', UNI_LEVELS, e.levelSel || e.level, true, 'eLevelO') + selectField('eYear', 'ชั้นปีที่กำลังศึกษา', ['ปีที่ 1', 'ปีที่ 2', 'ปีที่ 3', 'ปีที่ 4', 'ปีที่ 5', 'ปีที่ 6', 'อื่น ๆ'], e.yearSel || e.year, true, 'eYearO') + '</div>';
       } else if (t) {
-        box.innerHTML = '<div class="grid g2 enter">' + textField('wOrg', t === 'ประชาชนทั่วไป' || t === 'อื่น ๆ' ? 'หน่วยงานหรือองค์กร (ถ้ามี)' : 'หน่วยงานหรือองค์กรที่สังกัด', w.org, !(t === 'ประชาชนทั่วไป' || t === 'อื่น ๆ')) + textField('wPos', 'ตำแหน่งงาน' + (t === 'ประชาชนทั่วไป' || t === 'อื่น ๆ' ? ' (ถ้ามี)' : ''), w.position, !(t === 'ประชาชนทั่วไป' || t === 'อื่น ๆ')) + selectField('wCareer', 'สายงานหรือสาขาอาชีพ', CAREERS, w.careerSel || w.career, t === 'บุคลากรทางกฎหมาย', 'wCareerO') + textField('wExp', 'ประสบการณ์ทำงาน (ไม่บังคับ)', w.experience, false, { ph: 'เช่น 3 ปี' }) +
-          (t === 'อื่น ๆ' ? textField('wOther', 'โปรดระบุสถานะ', w.otherType, true) : '') + '</div>';
+        var W = WORK_FORM[t] || WORK_FORM['อื่น ๆ'];
+        box.innerHTML = '<div class="grid g2 enter">' + (t === 'อื่น ๆ' ? textField('wOther', 'โปรดระบุสถานะ', w.otherType, true) : '') + textField('wOrg', W.org, w.org, W.req) + textField('wPos', W.pos, w.position, W.req) + selectField('wCareer', W.car, W.list, w.careerSel || w.career, W.carReq, 'wCareerO') + textField('wExp', 'ประสบการณ์ทำงาน (ไม่บังคับ)', w.experience, false, { ph: 'เช่น 3 ปี' }) + '</div>';
       } else box.innerHTML = '';
     }
     fields();
@@ -489,16 +500,20 @@ function regStep(n) {
       var ok = true;
       function need(id, v, msg) { setErr(id, v ? '' : msg); if (!v) ok = false; }
       function sv(id) { var s = $('#' + id); return s.value === 'อื่น ๆ' || s.value === 'คณะอื่น ๆ' ? ($('#' + id + 'O').value.trim() ? 'อื่น ๆ: ' + $('#' + id + 'O').value.trim() : '') : s.value; }
-      if (t === 'นักเรียน' || t === 'นักศึกษา') {
+      if (t === 'นักเรียน') {
+        REG.education = { school: $('#eSchool').value.trim(), level: 'มัธยมศึกษา', year: sv('eYear'), yearSel: $('#eYear').value };
+        REG.work = {};
+        need('eSchool', REG.education.school, 'กรุณากรอกชื่อโรงเรียน'); need('eYear', REG.education.year, 'กรุณาเลือกหรือระบุระดับชั้น');
+      } else if (t === 'นักศึกษา') {
         REG.education = { school: $('#eSchool').value.trim(), faculty: sv('eFac'), facultySel: $('#eFac').value, major: $('#eMajor').value.trim(), level: sv('eLevel'), levelSel: $('#eLevel').value, year: sv('eYear'), yearSel: $('#eYear').value };
         REG.work = {};
-        need('eSchool', REG.education.school, 'กรุณากรอกชื่อสถานศึกษา'); need('eFac', REG.education.faculty, 'กรุณาเลือกหรือระบุคณะ'); need('eMajor', REG.education.major, 'กรุณากรอกสาขาวิชา'); need('eLevel', REG.education.level, 'กรุณาเลือกระดับการศึกษา'); need('eYear', REG.education.year, 'กรุณาเลือกชั้นปี');
+        need('eSchool', REG.education.school, 'กรุณากรอกชื่อมหาวิทยาลัยหรือสถาบัน'); need('eFac', REG.education.faculty, 'กรุณาเลือกหรือระบุคณะ'); need('eMajor', REG.education.major, 'กรุณากรอกสาขาวิชา'); need('eLevel', REG.education.level, 'กรุณาเลือกระดับการศึกษา'); need('eYear', REG.education.year, 'กรุณาเลือกชั้นปี');
       } else {
-        var reqd = !(t === 'ประชาชนทั่วไป' || t === 'อื่น ๆ');
+        var W2 = WORK_FORM[t] || WORK_FORM['อื่น ๆ'];
         REG.work = { org: $('#wOrg').value.trim(), position: $('#wPos').value.trim(), career: sv('wCareer'), careerSel: $('#wCareer').value, experience: $('#wExp').value.trim(), otherType: $('#wOther') ? $('#wOther').value.trim() : '' };
         REG.education = {};
-        if (reqd) { need('wOrg', REG.work.org, 'กรุณากรอกหน่วยงาน'); need('wPos', REG.work.position, 'กรุณากรอกตำแหน่งงาน'); }
-        if (t === 'บุคลากรทางกฎหมาย') need('wCareer', REG.work.career, 'กรุณาเลือกสายงาน');
+        if (W2.req) { need('wOrg', REG.work.org, 'กรุณากรอก' + W2.org.replace(/\s*\(.*\)$/, '')); need('wPos', REG.work.position, 'กรุณากรอกตำแหน่ง'); }
+        if (W2.carReq) need('wCareer', REG.work.career, 'กรุณาเลือก' + W2.car);
         if (t === 'อื่น ๆ') need('wOther', REG.work.otherType, 'กรุณาระบุสถานะ');
       }
       if (ok) regStep(3);

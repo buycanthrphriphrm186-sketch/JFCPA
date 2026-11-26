@@ -383,17 +383,17 @@ document.addEventListener('click', function (e) {
 
 /* รหัสผ่านชั้นที่ 2: รหัส 6 หลักทางอีเมล (หลังรหัสชั้นที่ 1 และ 3 ถูกต้อง) */
 function otpFlow(r, remember) {
-  var ticket = r.ticket, needEmail = !!r.needEmail, cool = 0, iv = null;
+  var ticket = r.ticket, needEmail = !!r.needEmail, cool = 0, valid = 0, iv = null;
   modal({
-    title: 'รหัสผ่านชั้นที่ 2 (ทางอีเมล)', icon: 'mail', sub: needEmail ? 'บัญชีนี้ยังไม่มีอีเมล กรุณาระบุอีเมลเพื่อรับรหัส' : (r.msg || ''), dismiss: false, cancel: 'ยกเลิก', ok: 'ยืนยันรหัส',
+    title: 'รหัสผ่านชั้นที่ 2 (ทางอีเมล)', icon: 'mail', sub: needEmail ? 'บัญชีนี้ยังไม่มีอีเมล กรุณาระบุอีเมลเพื่อรับรหัส' : (r.msg || ''), dismiss: false, cancel: 'ยกเลิก', ok: 'ยืนยัน',
     html: '<div class="col" style="gap:12px">' +
       '<div id="otpEmailW" class="' + (needEmail ? '' : 'hidden') + '">' + textField('otpEmail', 'อีเมลสำหรับรับรหัส', '', true, { type: 'email', ac: 'email', ph: 'name@example.com' }) + '<button type="button" class="btn sm k" id="otpSend" style="margin-top:8px">' + ic('send') + ' ส่งรหัสไปยังอีเมลนี้</button></div>' +
       '<div class="field"><label for="otpCode">รหัส 6 หลักจากอีเมล <span class="req">*</span></label><div class="input otp-in">' + ic('key') + '<input id="otpCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]*" placeholder="••••••"></div><div class="err" id="otpCodeE"></div><div class="hint">รหัสหมดอายุใน 10 นาที และกรอกผิดได้ไม่เกิน 5 ครั้ง หากไม่พบอีเมล กรุณาตรวจสอบโฟลเดอร์จดหมายขยะ</div></div>' +
-      '<button type="button" class="btn sm ghost" id="otpResend">' + ic('refresh') + ' ส่งรหัสใหม่</button></div>',
+      '<div class="small muted otp-left" id="otpLeft" aria-live="polite"></div><p class="tiny muted" style="margin:0">กรอกรหัสครบ 6 หลักแล้วกดปุ่ม “ยืนยัน” เพื่อดำเนินการต่อ</p>' + '<button type="button" class="btn sm ghost" id="otpResend">' + ic('refresh') + ' ส่งรหัสใหม่</button></div>',
     onOpen: function (m) {
       var rs = $('#otpResend', m);
-      function tick() { if (cool > 0) { rs.disabled = true; rs.innerHTML = ic('refresh') + ' ส่งรหัสใหม่ได้ในอีก ' + Math.floor(cool / 60) + ':' + ('0' + cool % 60).slice(-2) + ' นาที'; cool--; } else { rs.disabled = false; rs.innerHTML = ic('refresh') + ' ส่งรหัสใหม่'; clearInterval(iv); iv = null; } }
-      function startCool() { cool = 60; if (!iv) iv = setInterval(tick, 1000); tick(); }
+      function tick() { var lf = $('#otpLeft', m); if (lf) { if (valid > 0) { lf.innerHTML = ic('clock') + ' รหัสนี้ใช้ได้อีก <b>' + Math.floor(valid / 60) + ':' + ('0' + valid % 60).slice(-2) + '</b> นาที'; lf.classList.remove('bad'); valid--; } else { lf.innerHTML = ic('alert') + ' รหัสหมดอายุแล้ว กรุณากด “ส่งรหัสใหม่”'; lf.classList.add('bad'); } } if (cool > 0) { rs.disabled = true; rs.innerHTML = ic('refresh') + ' ส่งรหัสใหม่ได้ในอีก ' + Math.floor(cool / 60) + ':' + ('0' + cool % 60).slice(-2) + ' นาที'; cool--; } else { rs.disabled = false; rs.innerHTML = ic('refresh') + ' ส่งรหัสใหม่'; clearInterval(iv); iv = null; } }
+      function startCool() { cool = 60; valid = 600; if (!iv) iv = setInterval(tick, 1000); tick(); }
       if (!needEmail) startCool();
       function send(email) {
         return api('resendOtp', { ticket: ticket, email: email || '' }).then(function (x) { toast('ส่งรหัสแล้ว', x.msg, 'ok'); needEmail = false; $('#otpEmailW', m).classList.add('hidden'); startCool(); $('#otpCode', m).focus(); })
@@ -401,7 +401,7 @@ function otpFlow(r, remember) {
       }
       var sb = $('#otpSend', m); if (sb) sb.onclick = function () { var em = $('#otpEmail', m).value.trim(); if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em)) { setErr('otpEmail', 'กรุณากรอกอีเมลที่ถูกต้อง'); return; } setErr('otpEmail', ''); send(em); };
       rs.onclick = function () { if (needEmail) { $('#otpEmail', m).focus(); return; } send(''); };
-      var ci = $('#otpCode', m); ci.addEventListener('input', function () { ci.value = ci.value.replace(/\D/g, '').slice(0, 6); if (ci.value.length === 6) m.querySelector('[data-ok]').click(); });
+      var ci = $('#otpCode', m); ci.addEventListener('input', function () { ci.value = ci.value.replace(/\D/g, '').slice(0, 6); var eb = $('#otpCodeE', m); if (eb && ci.value.length === 6) eb.textContent = ''; });
     },
     onOk: function (m) {
       var code = $('#otpCode', m).value.trim();
