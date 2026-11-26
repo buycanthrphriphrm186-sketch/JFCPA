@@ -55,8 +55,11 @@
 (function () {
   var RE = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
   var list = (window.TLL_APP_URLS || [window.TLL_APP_URL]).filter(function (u) { return RE.test(String(u || '')); });
+  /* รายการ URL เพิ่มเติมจาก GitHub (อัปเดตได้โดยไม่ต้อง Deploy Vercel ใหม่) — รอไม่เกิน 1.5 วินาที */
+  var EXTRA = 'https://raw.githubusercontent.com/buycanthrphriphrm186-sketch/JFCPA/claude/legal-ai-website-system-4h1org/thai-law-library/db/app-urls.json';
+  var go = function () {
   var msg = document.getElementById('bootMsg');
-  if (!list.length) { msg.textContent = 'เว็บไซต์กำลังเตรียมเปิดให้บริการ กรุณากลับมาใหม่อีกครั้งในภายหลัง'; return; }
+  if (!list.length && false) { msg.textContent = 'เว็บไซต์กำลังเตรียมเปิดให้บริการ กรุณากลับมาใหม่อีกครั้งในภายหลัง'; return; }
   var KEY = 'tll.appUrl', started = false;
   var open = function (url) {
     if (started) return; started = true;
@@ -73,7 +76,7 @@
   var ver = function (v) { return String(v || '0').split('.').reduce(function (a, x) { return a * 1000 + (parseInt(x, 10) || 0); }, 0); };
   /* ตรวจทุก URL พร้อมกัน แล้วเปิดเวอร์ชันล่าสุด (รอไม่เกิน 4 วินาที) */
   var best = null, left = list.length;
-  var done = function () { var u = best ? best.u : (function () { try { return localStorage.getItem(KEY); } catch (e) { return null; } })() || list[0]; try { localStorage.setItem(KEY, u); } catch (e) {} open(u); };
+  var done = function () { var u = best ? best.u : list[0]; try { localStorage.setItem(KEY, u); } catch (e) {} open(u); };
   var timer = setTimeout(done, 4000);
   list.forEach(function (u, i) {
     var ctl = window.AbortController ? new AbortController() : null;
@@ -83,6 +86,12 @@
     }).catch(function () {}).then(function () { if (--left === 0) { clearTimeout(timer); done(); } });
     if (ctl) setTimeout(function () { ctl.abort(); }, 3900);
   });
+  };
+  var once = false, run = function () { if (once) return; once = true; go(); };
+  var t0 = setTimeout(run, 1500);
+  fetch(EXTRA + '?t=' + Math.floor(Date.now() / 60000), { credentials: 'omit' }).then(function (r) { return r.json(); }).then(function (j) {
+    (j && j.urls || []).forEach(function (u) { if (RE.test(String(u)) && list.indexOf(u) < 0) list.unshift(u); });
+  }).catch(function () {}).then(function () { clearTimeout(t0); run(); });
 })();
 </script>
 <noscript><p style="text-align:center">กรุณาเปิดใช้งาน JavaScript เพื่อใช้งานคลังกฎหมาย</p></noscript>

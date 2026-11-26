@@ -1,0 +1,8 @@
+{
+ "note": "รายการ URL ของ Apps Script ที่หน้าเว็บ Vercel ตรวจหาเวอร์ชันล่าสุด (แก้ไฟล์นี้แล้ว push ได้เลย ไม่ต้อง Deploy Vercel ใหม่)",
+ "urls": [
+  "https://script.google.com/macros/s/AKfycbzNRFPlkGmgsg8lQcwCyk_7OdQr5X-zh7w7xRT8SSQLyuis_jRtE3sEyn9kG_f-jn0D/exec",
+  "https://script.google.com/macros/s/AKfycbyBrr9vpNZyfN4ctTj9Tppe2GXTYl5IK5GUuAxSR-0QRABk-xOxHVAnUwlpjn6YGCvr/exec",
+  "https://script.google.com/macros/s/AKfycby2_h8DqIYr0Ky5Km4OW6DKjwwN2ToWYmzNO9K8hLraIPesnjMZrEcl3VaoXD7mvf5o/exec"
+ ]
+}
