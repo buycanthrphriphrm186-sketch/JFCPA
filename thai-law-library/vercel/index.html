@@ -54,15 +54,12 @@
 <script>
 (function () {
   var RE = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
-  var list = (window.TLL_APP_URLS || [window.TLL_APP_URL]).filter(function (u) { return RE.test(String(u || '')); });
-  /* รายการ URL เพิ่มเติมจาก GitHub (อัปเดตได้โดยไม่ต้อง Deploy Vercel ใหม่) — รอไม่เกิน 1.5 วินาที */
+  var URL0 = RE.test(String(window.TLL_APP_URL || '')) ? window.TLL_APP_URL : '';
+  /* URL หลักล่าสุดจาก GitHub (เปลี่ยนได้โดยไม่ต้อง Deploy Vercel ใหม่) — รอไม่เกิน 1.2 วินาที ถ้าไม่ได้ใช้ URL ใน config.js */
   var EXTRA = 'https://raw.githubusercontent.com/buycanthrphriphrm186-sketch/JFCPA/claude/legal-ai-website-system-4h1org/thai-law-library/db/app-urls.json';
-  var go = function () {
-  var msg = document.getElementById('bootMsg');
-  if (!list.length && false) { msg.textContent = 'เว็บไซต์กำลังเตรียมเปิดให้บริการ กรุณากลับมาใหม่อีกครั้งในภายหลัง'; return; }
-  var KEY = 'tll.appUrl', started = false;
+  var msg = document.getElementById('bootMsg'), started = false;
   var open = function (url) {
-    if (started) return; started = true;
+    if (started || !url) return; started = true;
     var f = document.createElement('iframe');
     f.id = 'app'; f.title = 'THAI LAW LIBRARY | คลังกฎหมาย';
     f.allow = 'fullscreen; clipboard-write; geolocation; autoplay';
@@ -73,25 +70,11 @@
     setTimeout(function () { msg.textContent = 'ระบบกำลังโหลด อาจใช้เวลาสักครู่ในการเข้าใช้งานครั้งแรก'; }, 6000);
     document.body.insertBefore(f, document.body.firstChild);
   };
-  var ver = function (v) { return String(v || '0').split('.').reduce(function (a, x) { return a * 1000 + (parseInt(x, 10) || 0); }, 0); };
-  /* ตรวจทุก URL พร้อมกัน แล้วเปิดเวอร์ชันล่าสุด (รอไม่เกิน 4 วินาที) */
-  var best = null, left = list.length;
-  var done = function () { var u = best ? best.u : list[0]; try { localStorage.setItem(KEY, u); } catch (e) {} open(u); };
-  var timer = setTimeout(done, 4000);
-  list.forEach(function (u, i) {
-    var ctl = window.AbortController ? new AbortController() : null;
-    fetch(u + '?api=version', { signal: ctl ? ctl.signal : undefined, credentials: 'omit' }).then(function (r) { return r.json(); }).then(function (j) {
-      var score = j && j.ok && j.v ? ver(j.v) : (j && j.ok ? 1 : 0);
-      if (score && (!best || score > best.s || (score === best.s && i < best.i))) best = { u: u, s: score, i: i };
-    }).catch(function () {}).then(function () { if (--left === 0) { clearTimeout(timer); done(); } });
-    if (ctl) setTimeout(function () { ctl.abort(); }, 3900);
-  });
-  };
-  var once = false, run = function () { if (once) return; once = true; go(); };
-  var t0 = setTimeout(run, 1500);
-  fetch(EXTRA + '?t=' + Math.floor(Date.now() / 60000), { credentials: 'omit' }).then(function (r) { return r.json(); }).then(function (j) {
-    (j && j.urls || []).forEach(function (u) { if (RE.test(String(u)) && list.indexOf(u) < 0) list.unshift(u); });
-  }).catch(function () {}).then(function () { clearTimeout(t0); run(); });
+  try { localStorage.removeItem('tll.appUrl'); } catch (e) {}
+  var t0 = setTimeout(function () { open(URL0); }, 1200);
+  fetch(EXTRA + '?t=' + Math.floor(Date.now() / 60000), { credentials: 'omit', cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (j) {
+    clearTimeout(t0); open(j && RE.test(String(j.primary || '')) ? j.primary : URL0);
+  }).catch(function () { clearTimeout(t0); open(URL0); });
 })();
 </script>
 <noscript><p style="text-align:center">กรุณาเปิดใช้งาน JavaScript เพื่อใช้งานคลังกฎหมาย</p></noscript>

@@ -1,8 +1,3 @@
-/* URL ของ Apps Script Web App (ลงท้ายด้วย /exec) — ใส่ได้หลายรายการ หน้าเว็บจะตรวจทุก URL ด้วย ?api=version
-   แล้วเปิด URL ที่เป็นเวอร์ชันล่าสุดให้อัตโนมัติ (Deploy Apps Script เวอร์ชันใหม่แล้ว ไม่ต้อง Deploy Vercel ใหม่) */
-window.TLL_APP_URLS = [
-  'https://script.google.com/macros/s/AKfycbzNRFPlkGmgsg8lQcwCyk_7OdQr5X-zh7w7xRT8SSQLyuis_jRtE3sEyn9kG_f-jn0D/exec',
-  'https://script.google.com/macros/s/AKfycbyBrr9vpNZyfN4ctTj9Tppe2GXTYl5IK5GUuAxSR-0QRABk-xOxHVAnUwlpjn6YGCvr/exec',
-  'https://script.google.com/macros/s/AKfycby2_h8DqIYr0Ky5Km4OW6DKjwwN2ToWYmzNO9K8hLraIPesnjMZrEcl3VaoXD7mvf5o/exec'
-];
-window.TLL_APP_URL = window.TLL_APP_URLS[0];
+/* URL ของ Apps Script Web App เวอร์ชันล่าสุด (เวอร์ชัน 1.0.0 / รุ่นภายใน 20) — หน้าเว็บเปิด URL นี้เท่านั้น
+   ถ้ามี URL ใหม่ แก้ "primary" ใน thai-law-library/db/app-urls.json แล้ว push ได้ทันที ไม่ต้อง Deploy Vercel ใหม่ */
+window.TLL_APP_URL = 'https://script.google.com/macros/s/AKfycbyI1fWd1IrNhTc29dD3FPX6UFxkbOOiG1l1qiDUGGhQtOCfkIpsOgqNgAYD_iJmn2LZ/exec';
