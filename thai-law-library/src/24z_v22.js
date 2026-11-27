@@ -65,7 +65,8 @@ function pv22Paginator() {
   }
   var cur = newPage(), stack = [];   // stack = กล่องที่ซ้อนอยู่ (ต้องสร้างซ้ำบนหน้าใหม่)
   var body = function () { return cur.parentNode; };
-  var fits = function () { return cur.offsetHeight <= body().clientHeight + 0.5; };
+  var padV = function () { var cs = W.getComputedStyle(body()); return (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0); };
+  var fits = function () { return cur.offsetHeight <= body().clientHeight - padV() + 0.5; };
   var target = function () { return stack.length ? stack[stack.length - 1] : cur; };
   var isEmpty = function () { return !cur.firstChild || (cur.textContent.trim() === '' && !cur.querySelector('img,table')); };
   function breakPage() {
@@ -150,28 +151,30 @@ function pv22Build(html, meta) {
     });
     [].slice.call(doc.querySelectorAll('script')).forEach(function (s) { s.remove(); });
     var own = !!doc.getElementById('pdf11');   // เอกสารรุ่นใหม่ (คำพิพากษา/คำอธิบาย) มีรูปแบบของตัวเองแล้ว
-    var pageM = own ? '1.6cm 2cm 1.5cm 3cm' : '1.6cm 2cm 1.5cm 2.5cm';
+    /* ขอบกระดาษ 12.7 มม. (ค่ามาตรฐานของเครื่องพิมพ์ทุกยี่ห้อ รวมถึง iPad/iPhone) + ระยะภายใน = ขอบบน 1.6 ซม. ขวา 2 ซม. ล่าง 1.5 ซม. ซ้าย 3 ซม. (2.5 ซม.)
+       หน้าเอกสารจึงไม่ล้นกระดาษ (เดิมล้นจนเกิดหน้าว่างสลับกันเมื่อพิมพ์บน iPad) */
+    var pageM = own ? '3.3mm 7.3mm 2.3mm 17.3mm' : '3.3mm 7.3mm 2.3mm 12.3mm';
     var css = ff + (own ? '' : PV22_CSS15) +
-      '@page{size:A4;margin:0}html,body{margin:0;padding:0}' +
+      '@page{size:A4;margin:12.7mm}html,body{margin:0;padding:0}' +
       'span.z{font-size:0 !important}' +
-      '.pv-page{width:210mm;height:296.6mm;padding:' + pageM + ';display:flex;flex-direction:column;background:#fff;overflow:hidden;position:relative;page-break-after:always;break-after:page}' +
+      '.pv-page{width:184mm;height:268mm;padding:' + pageM + ';display:flex;flex-direction:column;background:#fff;overflow:hidden;position:relative;page-break-after:always;break-after:page}' +
       '.pv-page:last-child{page-break-after:auto;break-after:auto}' +
-      '.pv-b{flex:1 1 auto;min-height:0;overflow:hidden}.pv-c{display:flow-root}' +
+      '.pv-b{flex:1 1 auto;min-height:0;overflow:hidden;padding:7pt 0 5pt}.pv-c{display:flow-root}' +
       '.pv-h .rh,.pv-f .rf{display:grid !important;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:8pt;white-space:nowrap}' +
       '.pv-h .rh{border-bottom:.75pt solid #000;padding:0 0 3pt;margin:0 0 12pt}.pv-f .rf{border-top:.75pt solid #000;padding:3pt 0 0;margin:12pt 0 0;grid-template-columns:minmax(0,1fr) auto}' +
       '.pv-h .rh *,.pv-f .rf *{font-size:13pt !important;line-height:1.25 !important;white-space:nowrap;text-indent:0 !important}' +
       '.pv-h .rh .lt,.pv-f .rf>span:first-child{overflow:hidden;text-overflow:ellipsis}.pv-f .rf>span:last-child{text-align:right}' +
       '.pv-h .pgno{text-align:center;font-weight:bold}.pv-h .brand{display:flex;align-items:center;justify-content:flex-end;gap:6pt;font-weight:bold}.pv-h .brand img{width:1.15cm;height:1.15cm;display:block}' +
       '.pv-cont{text-indent:0 !important;margin-top:0 !important;border-top:0 !important;padding-top:0 !important}p.pv-jl{text-align-last:justify !important}' +
-      '@media screen{html{background:#5b6472}body{padding:12px 0 40px}.pv-page{margin:0 auto 14px;box-shadow:0 4px 18px rgba(0,0,0,.35);zoom:var(--z,1)}}' +
-      '@media print{html,body{background:#fff}.pv-page{margin:0;box-shadow:none;zoom:1 !important}}';
+      '@media screen{html{background:#5b6472}body{padding:12px 0 40px}.pv-page{margin:calc(12.7mm + 4px) auto calc(25.4mm + 14px);outline:12.7mm solid #fff;box-shadow:0 0 0 12.7mm #fff,0 4px 18px 12.7mm rgba(0,0,0,.35);zoom:var(--z,1)}}' +
+      '@media print{html,body{background:#fff}.pv-page{margin:0;box-shadow:none;outline:0;zoom:1 !important}}';
     var st = doc.createElement('style'); st.id = 'pv22css'; st.textContent = css; doc.head.appendChild(st);
     var bodyHtml = doc.body.innerHTML;
     doc.body.innerHTML = '<div id="pv22src">' + bodyHtml + '</div><div id="pv22book"></div>';
     var sc = doc.createElement('script');
     sc.textContent = 'window.PV22META=' + JSON.stringify(meta).replace(/</g, '\\u003c') + ';window.pv22Go=' + pv22Paginator.toString() + ';' +
-      'function pv22Fit(){var w=document.documentElement.clientWidth,z=Math.min(1,(w-16)/793.7);document.documentElement.style.setProperty("--z",z.toFixed(3));}pv22Fit();addEventListener("resize",pv22Fit);' +
-      'function pv22Start(){if(window.PV22DONE!=null)return;window.PV22DONE=0;try{pv22Go();}catch(e){window.PV22DONE=-1;try{parent.postMessage({pv22:"error",msg:String(e&&e.message||e)},"*");}catch(x){}}}' +
+      'function pv22Fit(){var w=document.documentElement.clientWidth,z=Math.min(1,(w-16)/793.7);document.documentElement.style.setProperty("--z",z.toFixed(3));}addEventListener("resize",function(){if(window.PV22DONE>0)pv22Fit();});' +
+      'function pv22Start(){if(window.PV22DONE!=null)return;window.PV22DONE=0;try{pv22Go();pv22Fit();}catch(e){window.PV22DONE=-1;try{parent.postMessage({pv22:"error",msg:String(e&&e.message||e)},"*");}catch(x){}}}' +
       'var f=document.fonts;var t0=setTimeout(pv22Start,3000);if(f&&f.load){Promise.all([f.load("16pt \\"TH Sarabun New\\""),f.load("bold 16pt \\"TH Sarabun New\\"")]).then(function(){return f.ready;}).then(function(){clearTimeout(t0);pv22Start();}).catch(function(){});}';
     doc.body.appendChild(sc);
     return '<!doctype html>' + doc.documentElement.outerHTML;
@@ -228,5 +231,53 @@ printHtml = function (html) {
   v18Pick = function () { if (V18.voice !== 'f' || !document.documentElement.classList.contains('tts-on')) V18.voice = 'm'; return Promise.resolve(V18.voice); };
   var chk = function () { try { api('ttsStatus', {}, { silent: true }).then(function (r) { var on = !!(r && r.on); document.documentElement.classList.toggle('tts-on', on); if (!on) V18.voice = 'm'; }).catch(function () {}); } catch (e) {} };
   setTimeout(chk, 2500);
+})();
+
+/* ---------- ปุ่ม “แสดงเพิ่มเติม”: คงตำแหน่งการเลื่อนไว้ที่เดิม (เดิมหน้ากระโดดกลับขึ้นไปมาตราแรก) ---------- */
+(function () {
+  var SEL = '#ex19More,#v18More,#dt18More,#dkMore,#dkMore9,#fcMore,#twMore';
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest(SEL); if (!b) return;
+    var y = window.scrollY || document.documentElement.scrollTop || 0, until = Date.now() + 1500;
+    var stop = function () { until = 0; }; ['wheel', 'touchstart', 'keydown'].forEach(function (ev) { window.addEventListener(ev, stop, { once: true, passive: true }); });
+    var keep = function () { if (Date.now() >= until) return; var now = window.scrollY || document.documentElement.scrollTop || 0; if (now < y - 40) window.scrollTo({ top: y, behavior: 'instant' }); if (Date.now() < until) requestAnimationFrame(keep); };
+    requestAnimationFrame(keep);
+  }, true);
+})();
+
+/* ---------- รับคำสั่งจากระบบหลังบ้านแบบทั่วไป (LIVE_UI และคีย์ UI_*) — มีผลทันทีที่ ping/pulse รอบถัดไป ---------- */
+var LIVE22 = { sig: '', t0: Date.now() };
+function liveUiApply(ui, flags) {
+  var sig = JSON.stringify([ui || null, flags || null]);
+  if (sig === LIVE22.sig) return; LIVE22.sig = sig;
+  ui = ui || {}; flags = flags || {};
+  var arr = function (a) { return Array.isArray(a) ? a.filter(function (x) { return typeof x === 'string' && x.length < 300 && !/[{}<]/.test(x); }) : []; };
+  var css = '';
+  arr(ui.hide).forEach(function (q) { css += q + '{display:none !important}'; });
+  arr(ui.show).forEach(function (q) { css += q + '{display:revert !important}'; });
+  if (typeof ui.css === 'string') css += ui.css.replace(/<\/?style/gi, '').slice(0, 20000);
+  var st = document.getElementById('liveui22'); if (!st) { st = document.createElement('style'); st.id = 'liveui22'; document.head.appendChild(st); }
+  st.textContent = css;
+  try { Object.keys(ui.text || {}).slice(0, 50).forEach(function (q) { if (/[{}<]/.test(q)) return; document.querySelectorAll(q).forEach(function (el) { el.textContent = String(ui.text[q]).slice(0, 2000); }); }); } catch (e) {}
+  var b = document.getElementById('liveban22');
+  if (ui.banner && ui.banner.text) {
+    var bid = String(ui.banner.id || ui.banner.text).slice(0, 80), closed = false;
+    try { closed = sessionStorage.getItem('tll.liveban') === bid; } catch (e) {}
+    if (!closed) {
+      if (!b) { b = h('<div id="liveban22" class="liveban22" role="status"><span class="t"></span><button class="icon-btn" aria-label="ปิดประกาศ">' + ic('x') + '</button></div>'); document.body.appendChild(b); b.querySelector('button').onclick = function () { try { sessionStorage.setItem('tll.liveban', b.getAttribute('data-id')); } catch (e) {} b.remove(); }; }
+      b.setAttribute('data-id', bid); b.className = 'liveban22 ' + (/^(info|warn|bad|ok)$/.test(ui.banner.type) ? ui.banner.type : 'info');
+      b.querySelector('.t').textContent = String(ui.banner.text).slice(0, 1000);
+    }
+  } else if (b) b.remove();
+  var root = document.documentElement;
+  [].slice.call(root.attributes).forEach(function (a) { if (/^data-ui-/.test(a.name)) root.removeAttribute(a.name); });
+  Object.keys(flags).forEach(function (k) { root.setAttribute('data-ui-' + k.slice(3).toLowerCase().replace(/_/g, '-'), String(flags[k]).slice(0, 200)); });
+  window.LIVE_UI_FLAGS = flags; window.LIVE_UI = ui;
+  try { window.dispatchEvent(new CustomEvent('liveui', { detail: { ui: ui, flags: flags } })); } catch (e) {}
+  if (ui.reload) { var rt = Date.parse(ui.reload); var done = ''; try { done = localStorage.getItem('tll.livereload') || ''; } catch (e) {} if (rt && rt <= Date.now() && rt > LIVE22.t0 - 86400000 && done !== String(ui.reload)) { try { localStorage.setItem('tll.livereload', String(ui.reload)); } catch (e) {} location.reload(); } }
+}
+(function () {
+  var base = applyModes;
+  applyModes = function (m) { var r = base.apply(this, arguments); try { if (m && (m.ui || m.uiFlags || LIVE22.sig)) liveUiApply(m.ui, m.uiFlags); } catch (e) {} return r; };
 })();
 </script>
