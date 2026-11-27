@@ -149,25 +149,8 @@ function ex21Print(x) {
   });
 }
 
-/* ---------- วงกลมหมุนระหว่างรอข้อมูลจากระบบ ---------- */
-var SP21 = { n: 0, t: null, el: null };
-function sp21Show(on) {
-  if (!SP21.el) { SP21.el = h('<div class="sp21-wrap" role="status" aria-live="polite"><span class="sp21"></span><span>กำลังโหลด…</span></div>'); document.body.appendChild(SP21.el); }
-  SP21.el.classList.toggle('on', !!on);
-}
-(function () {
-  var QUIET = /^(ping|pulse|guestBeat|ttsStatus|creatorProfile|logClient|logError|clientError|track|stats|rtPulse|heartbeat)$/;
-  var baseApi = api;
-  api = function (action, payload, opt) {
-    var quiet = (opt && opt.silent) || QUIET.test(String(action));
-    var p = baseApi.apply(this, arguments);
-    if (quiet || !p || !p.then) return p;
-    SP21.n++; clearTimeout(SP21.t); SP21.t = setTimeout(function () { if (SP21.n > 0) sp21Show(true); }, 450);
-    var done = function () { SP21.n = Math.max(0, SP21.n - 1); if (!SP21.n) { clearTimeout(SP21.t); sp21Show(false); } };
-    p.then(done, done);
-    return p;
-  };
-})();
+/* ---------- (ยกเลิก) ป้าย “กำลังโหลด…” ลอยกลางจอ — แสดงสถานะการโหลดในแต่ละรายการแทน ---------- */
+function sp21Show() {}
 
 /* ---------- เครื่องเล่นเสียง: วงกลมหมุนระหว่างเตรียมเสียง ---------- */
 (function () {
@@ -179,9 +162,6 @@ function sp21Show(on) {
   };
 })();
 
-/* ---------- ปุ่มเข้าสู่ระบบด้วย Google: แสดงในหน้าเข้าสู่ระบบเสมอ ---------- */
-socialButtons = function (mode) {
-  if (mode !== 'login') return '';
-  return '<div class="social g20"><a href="#" data-oauth="google">' + BRAND.google + '<span>เข้าสู่ระบบด้วย Google</span></a></div><p class="tiny muted g20-note">ใช้ได้กับบัญชี Google ที่ใช้อีเมลเดียวกับที่กรอกไว้ตอนสมัครสมาชิก</p>';
-};
+/* ---------- ไม่มีปุ่มเข้าสู่ระบบด้วย Google (ยังไม่ได้เชื่อมต่อบริการของ Google จริง) ---------- */
+socialButtons = function () { return ''; };
 </script>

@@ -1,6 +1,6 @@
 {
  "note": "URL หลักของเว็บไซต์คลังกฎหมาย (Apps Script เวอร์ชันล่าสุด) — หน้าเว็บ Vercel เปิด primary เท่านั้น แก้แล้ว push ได้เลย ไม่ต้อง Deploy Vercel ใหม่",
- "primary": "https://script.google.com/macros/s/AKfycbyI1fWd1IrNhTc29dD3FPX6UFxkbOOiG1l1qiDUGGhQtOCfkIpsOgqNgAYD_iJmn2LZ/exec",
- "version": "20.0.0",
+ "primary": "https://script.google.com/macros/s/AKfycbzohDWAI9s9F7ghu6s_MeZ9CM3pv-09v6prpTGlhsdrXmc9_FisNn6A43SREtQdfRwT/exec",
+ "version": "21.0.0",
  "label": "1.0.0"
 }
