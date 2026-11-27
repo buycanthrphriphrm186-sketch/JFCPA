@@ -10464,7 +10464,7 @@ var R20 = false; new MutationObserver(function () { if (R20) return; R20 = true;
   var clean = function () {
     try {
       var w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null), n, bad = [];
-      while ((n = w.nextNode())) { if (/^\s*<?\s*(base\s+)?target\s*=\s*["']?_top["']?\s*>?\s*$/i.test(n.nodeValue)) bad.push(n); }
+      while ((n = w.nextNode())) { if (/^\s*\x3c?\s*(base\s+)?target\s*=\s*["']?_top["']?\s*>?\s*$/i.test(n.nodeValue)) bad.push(n); }
       bad.forEach(function (x) { x.parentNode && x.parentNode.removeChild(x); });
     } catch (e) {}
   };

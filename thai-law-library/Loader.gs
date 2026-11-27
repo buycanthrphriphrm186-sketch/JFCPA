@@ -13,7 +13,7 @@ var TLL_TTL = 600;
 var TLL_CHUNK = 25000;
 
 function tllFetch_(name) {
-  var c = CacheService.getScriptCache(), k = 'tllsrc2_' + name.replace(/\W/g, '_');
+  var c = CacheService.getScriptCache(), k = 'tllsrc3_' + name.replace(/\W/g, '_');
   try {
     var n = Number(c.get(k + '_n') || 0);
     if (n > 0) {
@@ -37,7 +37,7 @@ function tllFetch_(name) {
       else DriveApp.createFile(backupName, txt, 'text/plain');
     } else {
       var it2 = DriveApp.getFilesByName(backupName);
-      if (it2.hasNext()) txt = it2.next().getBlob().getDataAsString('UTF-8');
+      if (it2.hasNext()) { txt = it2.next().getBlob().getDataAsString('UTF-8'); if (!tllValid_(name, txt)) txt = null; }
     }
   } catch (e) {}
   if (!txt) return null;
@@ -56,13 +56,14 @@ function tllValid_(name, txt) {
     if (txt.indexOf('function renderIndex_') < 0) return false;
     try { new Function(txt); return true; } catch (e) { return false; }
   }
-  return txt.indexOf('window.__BOOT__') > -1 && txt.indexOf('</html>') > -1;
+  // หน้าเว็บต้องมีแท็กแม่แบบ <? ของ Apps Script เพียงจุดเดียว (ค่าเริ่มต้นของหน้าเว็บ) ถ้ามีมากกว่านี้ HtmlService จะแสดง SyntaxError
+  return txt.indexOf('window.__BOOT__') > -1 && txt.indexOf('</html>') > -1 && txt.split('<' + '?').length === 2;
 }
 
 /** ล้างแคชให้ดึงโค้ดล่าสุดทันที (เลือกฟังก์ชันนี้แล้วกด เรียกใช้) */
 function tllRefresh() {
   var c = CacheService.getScriptCache();
-  ['Code.gs', 'Index.html'].forEach(function (name) { c.remove('tllsrc2_' + name.replace(/\W/g, '_') + '_n'); });
+  ['Code.gs', 'Index.html'].forEach(function (name) { c.remove('tllsrc2_' + name.replace(/\W/g, '_') + '_n'); c.remove('tllsrc3_' + name.replace(/\W/g, '_') + '_n'); });
   Logger.log('โหลดโค้ดล่าสุดแล้ว: ' + (tllFetch_('Code.gs') ? 'Code.gs ✓ ' : 'Code.gs ✗ ') + (tllFetch_('Index.html') ? 'Index.html ✓' : 'Index.html ✗'));
 }
 
