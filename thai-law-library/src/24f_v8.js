@@ -31,7 +31,7 @@
       var b = document.getElementById('regBody'); if (!b) return;
       if (n === 1 && !document.getElementById('rPhone')) {
         var em = document.getElementById('rEmail'), host = em && em.closest('.field');
-        if (host) host.insertAdjacentHTML('afterend', '<div style="margin-top:12px">' + textField('rPhone', 'หมายเลขโทรศัพท์ (เบอร์เดียวกับที่ใช้กับ LINE)', REG.phone || '', true, { type: 'tel', ac: 'tel', max: 20, ph: '08x-xxx-xxxx', hint: 'ใช้แสดงในหน้าเข้าสู่ระบบ และใช้ยืนยันการเชื่อมต่อการแจ้งเตือนทาง LINE (แก้ไขได้ภายหลังที่หน้าโปรไฟล์)' }) + '</div>');
+        if (host) host.insertAdjacentHTML('afterend', '<div style="margin-top:12px">' + textField('rPhone', 'หมายเลขโทรศัพท์', REG.phone || '', true, { type: 'tel', ac: 'tel', max: 20, ph: '08x-xxx-xxxx', hint: 'ใช้สำหรับการติดต่อสอบถามข้อมูล การยืนยันตัวตน และการแจ้งเหตุขัดข้องเกี่ยวกับบัญชีหรือการใช้งานระบบ โดยผู้ดูแลระบบ หมายเลขนี้จะแสดงในหน้าเข้าสู่ระบบและแก้ไขได้ภายหลังที่หน้าโปรไฟล์' }) + '</div>');
         if (!b.dataset.phHook) {
           b.dataset.phHook = '1';
           b.addEventListener('click', function (e) {
@@ -55,7 +55,7 @@
     var userField = document.getElementById('lUser'); if (!userField) return;
     var host = userField.closest('.field'); if (!host || document.getElementById('lPhone')) return;
     host.insertAdjacentHTML('afterend',
-      '<div class="field ph-lock"><label for="lPhone">หมายเลขโทรศัพท์ (ใช้เชื่อมต่อการแจ้งเตือนทาง LINE)</label>' +
+      '<div class="field ph-lock"><label for="lPhone">หมายเลขโทรศัพท์</label>' +
       '<div class="input locked">' + ic('phone') + '<input id="lPhone" type="tel" readonly tabindex="-1" aria-readonly="true" value="' + esc(ph) + '" placeholder="จะแสดงเบอร์ที่กรอกตอนสมัครสมาชิก">' + ic('lock') + '</div>' +
       '<div class="hint small muted">' + (ph ? 'เบอร์ตามที่กรอกตอนสมัครสมาชิก — แก้ไขในหน้านี้ไม่ได้ หลังเข้าสู่ระบบแล้วแก้ไขได้ที่ โปรไฟล์ › แก้ไขข้อมูล' : 'ยังไม่มีเบอร์ที่บันทึกในอุปกรณ์นี้ เบอร์จะแสดงหลังสมัครสมาชิกหรือเข้าสู่ระบบครั้งแรกบนอุปกรณ์นี้') + '</div></div>');
   };

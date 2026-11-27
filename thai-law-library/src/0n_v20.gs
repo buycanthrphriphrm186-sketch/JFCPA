@@ -210,7 +210,7 @@ function creatorRaw20_() {
   var maint = false;
   try { var sm = JSON.parse(sec || '{}'), m = sm.creator || sm.creatorProfile || sm.intro; if (m && m.on) { var n = Date.now(), st = m.start ? Date.parse(m.start) : 0, en = m.end ? Date.parse(m.end) : 0; maint = (!st || st <= n) && (!en || en > n); } } catch (e) {}
   var out = JSON.stringify({ raw: raw, maint: maint });
-  try { if (out.length < 95000) c.put('cr20raw', out, 10); } catch (e) {}
+  try { if (out.length < 95000) c.put('cr20raw', out, 3); } catch (e) {}
   return out;
 }
 function creatorProfile20_() {

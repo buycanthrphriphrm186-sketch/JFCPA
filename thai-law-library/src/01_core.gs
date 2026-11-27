@@ -121,7 +121,8 @@ function doPost(e) {
 }
 
 function renderIndex_(boot) {
-  var t = HtmlService.createTemplateFromFile('Index');
+  var html = null; try { if (typeof tllFetch_ === 'function') html = tllFetch_('Index.html'); } catch (e) { html = null; }
+  var t = html ? HtmlService.createTemplate(html) : HtmlService.createTemplateFromFile('Index');
   t.bootJson = JSON.stringify(boot).replace(/</g, '\\u003c').split(String.fromCharCode(0x2028)).join('\\u2028').split(String.fromCharCode(0x2029)).join('\\u2029');
   return t.evaluate()
     .setTitle('THAI LAW LIBRARY | คลังกฎหมาย')

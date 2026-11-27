@@ -1,0 +1,14 @@
+<style>
+/* v21: วงกลมหมุนระหว่างรอ · คำพิพากษาในคำอธิบาย · ธงคำตอบ 3 ส่วน */
+.sp21{display:inline-block;width:18px;height:18px;border-radius:50%;border:2.5px solid var(--sky-100,#dbe8fb);border-top-color:var(--sky-600,#1d5fd1);animation:sp21 .8s linear infinite;vertical-align:middle;flex:none}
+.sp21.sm{width:14px;height:14px;border-width:2px}
+@keyframes sp21{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.sp21{animation-duration:2s}}
+.sp21-wrap{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 74px);transform:translate(-50%,-8px);z-index:9000;display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:var(--surface,#fff);color:var(--ink,#0e1116);box-shadow:0 6px 22px rgba(15,23,42,.16);font-size:.92rem;opacity:0;pointer-events:none;transition:opacity .15s,transform .15s}
+.sp21-wrap.on{opacity:1;transform:translate(-50%,0)}
+.ex19-h{position:relative}.ex21-print{float:right;margin:0 0 8px 10px}
+.ex21-cases{margin-top:6px}.ex21-case{padding:10px 12px;border:1px solid var(--line);border-radius:12px;margin:0 0 8px;background:var(--surface-soft,#f7f9fc)}
+.ex21-case .linklike{background:none;border:0;padding:0;color:var(--sky-600,#1d5fd1);text-decoration:underline;font-weight:700;cursor:pointer;font:inherit;text-align:left}
+.ex21-case p{margin:6px 0 4px;overflow-wrap:anywhere}
+.ex21-ap{margin:0 0 10px}.ex21-ap h5{margin:8px 0 4px;font-size:1rem}
+</style>
